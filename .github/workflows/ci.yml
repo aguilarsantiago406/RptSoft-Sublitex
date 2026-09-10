@@ -1,0 +1,50 @@
+name: SIPES CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: sipes_dev
+          POSTGRES_PASSWORD: sipes_password
+          POSTGRES_DB: sipes_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run Linter & Build
+        run: |
+          npm run build
+
+      - name: Run Tests
+        env:
+          DATABASE_URL: "postgresql://sipes_dev:sipes_password@localhost:5432/sipes_test_db?schema=public"
+        run: npm test
