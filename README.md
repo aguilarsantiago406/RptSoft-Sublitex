@@ -1,98 +1,114 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🧵 SIPES — Sistema de Gestión Operativa de Pedidos Sublitex
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Bienvenido al repositorio central de **SIPES** (*Sistema de Información y Pedidos para la Empresa Sublitex*), desarrollado por **APM Inversiones E.I.R.L.**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Este sistema nace como la solución definitiva a los dolores operativos, mermas textiles y errores de despacho en la confección deportiva y escolar mediante sublimación digital, tras un análisis exhaustivo de pedidos reales históricos (como el caso emblemático del pedido **PROMO 2002**).
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🎯 Misión Central del Sistema
 
-## Project setup
+> *"Garantizar que la **prenda** (y no la persona) sea la unidad física contable del sistema y que **ningún total se escriba nunca a mano**."*
 
-```bash
-$ npm install
+---
+
+## 🏛️ Arquitectura del Repositorio
+
+El proyecto adopta una estructura modular desacoplada por frentes de trabajo, permitiendo que múltiples equipos desarrollen en paralelo sin colisiones de código ni dependencias circulares:
+
+```text
+RptSoft-Sublitex/
+├── README.md                      # Documentación general del repositorio
+│
+└── Backend/                       # Núcleo de la API RESTful (NestJS + Prisma + PostgreSQL)
+    ├── prisma/                    # Esquema declarativo y migraciones
+    │   ├── schema.prisma          # Definición oficial de las 26 entidades del sistema
+    │   └── constraints.sql        # Triggers y restricciones complejas en PostgreSQL
+    │
+    └── src/
+        ├── core/                  # 🧠 Núcleo transversal compartido
+        │   ├── prisma/            # PrismaModule (@Global) y PrismaService
+        │   └── filters/           # PrismaExceptionFilter (captura de errores SQL)
+        │
+        └── modules/               # 📦 Módulos agrupados por Dominio Funcional
+            ├── 1-nucleo-comercial/   # 🛡️ FRENTE BK1: Pedido base, clientes y catálogos
+            ├── 2-operacion-prendas/  # ⚙️ FRENTE BK2: Participantes, prendas, excepciones y personalizaciones
+            ├── 3-diseno/             # 🎨 FRENTE DISEÑO: Versionado y aprobación gráfica
+            ├── 4-taller-produccion/  # 🖨️ FRENTE PRODUCCIÓN: Nesting, corte y archivos TIF
+            └── 5-auditoria/          # 🔍 FRENTE AUDITORÍA: Trazabilidad inmutable (append-only)
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+## 👥 División de Frentes de Trabajo
 
-# watch mode
-$ npm run start:dev
+### 🛡️ Frente Backend 1 (Guardián / Pedido y Catálogos)
+* **Responsabilidad:** Mantenimiento del catálogo de reglas de negocio, esquema de base de datos (`schema.prisma`) y candados SQL (`constraints.sql`).
+* **Módulos:** Autenticación de personal (`Usuario`), `Cliente`, `Pedido` (con bloques `DISENO`, `LISTA` y `COMERCIAL`), Catálogos maestros cerrados (`TipoProducto`, `TallaCatalogo`, `Atributo`, `ValorAtributo`, `UbicacionPersonalizacion`), `Grupo`, `ValorConfiguracion`, `ColorPedido` (códigos HEX estrictos) y `Tarifa`.
 
-# production mode
-$ npm run start:prod
-```
+### ⚙️ Frente Backend 2 (Corazón Operativo / Participantes y Prendas - Sprint 1)
+* **Responsabilidad:** Garantizar la precisión contable de lo que se enviará al taller de confección.
+* **Módulos:**
+  1. **`participantes/`**: Registro de personas reales (`nombrePersona`), enlaces sin contraseña para WhatsApp (`enlaceToken`) y ciclo de vida (`PENDIENTE` ➔ `REGISTRADO` ➔ `CONFIRMADO`).
+  2. **`prendas/`**: Unidad física contable. Registro de fichas mínimas (talla, género, apodo `nombreEnPrenda`, número `"S/N"` o texto), tipos de prenda (`VENTA`, `OBSEQUIO`, `MUESTRA` con costo $0.00) y cálculo automático del **Resumen de Producción** multiplicando por las piezas físicas reales (`camisetas`, `shorts`, `medias`).
+  3. **`excepciones/`**: Registro de deltas de confección (`prendaId`, `atributoId`, `valorAtributoId`) sin duplicar la configuración global del grupo.
+  4. **`personalizaciones/`**: Estampados de texto libre vinculados obligatoriamente a una ubicación declarada.
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ npm run test
+## 🛡️ Reglas de Negocio Esenciales Reflejadas en el Código
 
-# e2e tests
-$ npm run test:e2e
+1. **La Prenda es la Unidad Contable (R-E01, R-E07):**  
+   Una persona puede tener múltiples prendas asignadas (por ejemplo: un jugador de campo que además solicita una camiseta de arquero). Los conteos de corte y costura se realizan siempre sobre `Prenda`, nunca sobre `Participante`.
+2. **Conteo por Piezas Físicas (R-K03):**  
+   Cada producto declara explícitamente cuántas camisetas, shorts y medias contiene. El resumen de producción multiplica las prendas por estas piezas para evitar que pedidos se despachen incompletos.
+3. **El Número de Prenda es Texto (R-K04):**  
+   El campo `numero` admite `"S/N"` (*Sin Número*), diferenciando a una prenda terminada sin número de una prenda pendiente por registrar (`null`).
+4. **Prendas de Obsequio y Muestra (R-K02):**  
+   Se fabrican y cuentan en el total físico de producción, pero su aporte al importe cobrado es estrictamente `$0.00`.
+5. **Arquitectura Delta para Excepciones (R-C01, R-C05):**  
+   Si una prenda cambia un atributo respecto al grupo, solo se guarda la diferencia puntual. La base de datos rechaza excepciones que coincidan con el valor general del grupo para evitar redundancias.
+6. **Autenticación Híbrida (R-D05, R-J01):**  
+   El personal interno y coordinadores usan **JWT**. Los participantes entran desde su celular mediante un **token único temporal sin contraseña** enviado por WhatsApp.
 
-# test coverage
-$ npm run test:cov
-```
+---
 
-## Deployment
+## 🚀 Guía de Inicio Rápido (Desarrollo Local)
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Prerrequisitos
+* **Node.js** (v18 o superior)
+* **npm**
+* Instancia de **PostgreSQL** activa
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Pasos de Instalación
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+1. **Navegar a la carpeta del Backend:**
+   ```bash
+   cd Backend
+   ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+2. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
 
-## Resources
+3. **Configurar variables de entorno:**  
+   Crea un archivo `.env` en la raíz de `Backend/` con la cadena de conexión a tu base de datos:
+   ```env
+   DATABASE_URL="postgresql://usuario:password@localhost:5432/sipes_db?schema=public"
+   PORT=3000
+   ```
 
-Check out a few resources that may come in handy when working with NestJS:
+4. **Generar el cliente de Prisma:**
+   ```bash
+   npx prisma generate
+   ```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+5. **Iniciar el servidor en modo desarrollo:**
+   ```bash
+   npm run start:dev
+   ```
 
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+6. **Acceder a la documentación Swagger:**  
+   Una vez iniciado el servidor, abre en tu navegador:
+   * 📑 **Swagger UI:** [http://localhost:3000/api/docs](http://localhost:3000/api/docs)

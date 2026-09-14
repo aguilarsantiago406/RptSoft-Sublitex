@@ -1,7 +1,24 @@
-node_modules
-dist
+# Ignorar dependencias, compilados y secretos en cualquier subcarpeta
+node_modules/
+dist/
+coverage/
 .env
-.agents
-.claude
-.cursor
-.devin
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema Operativo y Editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# AI Tooling & Caches
+.agents/
+.claude/
+.cursor/
+.devin/
+.gemini/
