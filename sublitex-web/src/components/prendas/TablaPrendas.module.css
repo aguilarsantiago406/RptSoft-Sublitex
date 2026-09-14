@@ -1,0 +1,223 @@
+/* Contenedor y Tabla */
+.tableWrapper {
+  overflow-x: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.table {
+  border-collapse: collapse;
+  font-size: 12px;
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.theadRow {
+  background: #1c5a3e;
+  color: #fff;
+}
+
+.th {
+  padding: 7px 10px;
+  border: 1px solid #14442e;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* Filas */
+.filaObsequio {
+  background-color: #e3f2fd;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.filaPar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.filaImpar {
+  background-color: #fcfcfc;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Celdas Base */
+.td {
+  padding: 4px 8px;
+  border: 1px solid #eee;
+}
+
+.tdIndex {
+  padding: 5px 8px;
+  border: 1px solid #eee;
+  text-align: center;
+  color: #666;
+}
+
+.tdCenter {
+  padding: 4px 8px;
+  border: 1px solid #eee;
+  text-align: center;
+}
+
+.tdRight {
+  padding: 5px 8px;
+  border: 1px solid #eee;
+  text-align: right;
+}
+
+.tdNombrePrenda {
+  padding: 4px 8px;
+  border: 1px solid #eee;
+  min-width: 120px;
+}
+
+.tdNombrePersona {
+  padding: 4px 8px;
+  border: 1px solid #eee;
+  min-width: 150px;
+}
+
+.tdNumero {
+  padding: 4px 8px;
+  border: 1px solid #eee;
+  text-align: center;
+  width: 60px;
+}
+
+.tdPersonalizacion {
+  padding: 4px 8px;
+  border: 1px solid #eee;
+  min-width: 150px;
+}
+
+/* Controles de Formulario */
+.input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 12px;
+  font-family: inherit;
+  padding: 2px 0;
+}
+
+.inputBold {
+  font-weight: bold;
+}
+
+.inputNumero {
+  text-align: center;
+  width: 50px;
+}
+
+.select {
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  background: transparent;
+  font-size: 11px;
+  padding: 2px 4px;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+}
+
+.selectTalla {
+  font-weight: 600;
+  text-align: center;
+}
+
+.selectTipoObsequio {
+  font-weight: 600;
+  color: #b78103;
+}
+
+.selectTipoVenta {
+  font-weight: 600;
+  color: #2e7d32;
+}
+
+.checkbox {
+  cursor: pointer;
+}
+
+/* Elementos Específicos */
+.colorWrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.colorSwatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid #888;
+}
+
+.personalizacionItem {
+  font-style: italic;
+  color: #283593;
+  display: block;
+}
+
+.sinPersonalizacion {
+  color: #999;
+}
+
+.recargoActivo {
+  color: #b78103;
+}
+
+.recargoInactivo {
+  color: #999;
+}
+
+.precioUnitarioObsequio {
+  font-weight: bold;
+  color: #777;
+}
+
+.precioUnitarioVenta {
+  font-weight: bold;
+  color: #000;
+}
+
+.faltantesError {
+  color: #c62828;
+  font-weight: bold;
+}
+
+.faltantesOk {
+  color: #2e7d32;
+  font-weight: normal;
+}
+
+/* Totales */
+.tfootRow {
+  background: #e8f5e9;
+  font-weight: bold;
+  border-top: 2px solid #2e7d32;
+}
+
+.tdTotal {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  text-align: right;
+}
+
+.tdTotalDestacado {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  text-align: right;
+  color: #1b5e20;
+  font-size: 13px;
+}
+
+.tdTotalCenter {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
