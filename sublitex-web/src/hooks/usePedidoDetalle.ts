@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { PedidoDetalle } from "@/types/pedidos";
 import type { CatalogoCompleto, Tarifa } from "@/types/prendas";
+import { leerMensajeError } from "@/lib/api";
 
 /**
  * Carga el paquete base de la pantalla de detalle — contrato §2.2, §3.3:
@@ -56,7 +57,7 @@ export function usePedidoDetalle(pedidoId: string) {
 
 async function validar<T>(res: Response): Promise<T> {
   if (!res.ok) {
-    throw new Error(`Error ${res.status}: la API respondió con error`);
+    throw new Error(await leerMensajeError(res));
   }
   return res.json() as Promise<T>;
 }

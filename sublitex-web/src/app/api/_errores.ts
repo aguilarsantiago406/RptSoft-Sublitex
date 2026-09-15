@@ -2,12 +2,17 @@ import { NextResponse } from "next/server";
 
 /**
  * Cuerpo de error consistente para TODOS los endpoints del contrato (§1.3).
+ * Forma exacta: { error: { codigo: "R-...", mensaje, detalle } }.
  * Un solo lugar para construirlo: mismo shape, mismo formato de mensaje.
  */
-export interface ApiError {
+export interface ApiErrorDetalle {
   codigo: string;
   mensaje: string;
   detalle?: unknown;
+}
+
+export interface ApiError {
+  error: ApiErrorDetalle;
 }
 
 export function errorApi(
@@ -16,11 +21,22 @@ export function errorApi(
   status: number,
   detalle?: unknown
 ): NextResponse<ApiError> {
-  const cuerpo: ApiError = { codigo, mensaje };
-  if (detalle !== undefined) cuerpo.detalle = detalle;
+  const cuerpo: ApiError = { error: { codigo, mensaje } };
+  if (detalle !== undefined) cuerpo.error.detalle = detalle;
   return NextResponse.json(cuerpo, { status });
 }
 
 export function noEncontrado(recurso: string, id: string): NextResponse<ApiError> {
-  return errorApi("NOT_FOUND", `No se encontró ${recurso}: ${id}`, 404);
+  return errorApi(
+    "R-NOT_FOUND",
+    `No se encontró ${recurso}: ${id}`,
+    404
+  );
+}
+
+export function errorValidacion(
+  mensaje: string,
+  detalle?: unknown
+): NextResponse<ApiError> {
+  return errorApi("R-VALIDACION", mensaje, 400, detalle);
 }

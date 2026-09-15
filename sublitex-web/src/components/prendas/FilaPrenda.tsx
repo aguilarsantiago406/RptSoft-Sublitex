@@ -12,7 +12,6 @@ import { calcularPiezas } from "@/domain/calculoPiezas";
 import { calcularPrecio, valorEfectivo } from "@/domain/calculoPrecios";
 import { validarPrenda } from "@/domain/validacionPrenda";
 import { CeldaEditable } from "./CeldaEditable";
-import styles from "./TablaPrendas.module.css";
 
 export interface FilaPrendaProps {
   prenda: PrendaItem;
@@ -20,10 +19,26 @@ export interface FilaPrendaProps {
   colores: ColorPedido[];
   tarifas: Tarifa[];
   catalogo: CatalogoCompleto;
+  valorHeredadoDe?: (atributo: string) => string | undefined;
+  dorsalDuplicado?: boolean;
   onActualizarPrenda: (idPrenda: string, update: UpdatePrenda) => void;
+  onEliminarFila?: (idPrenda: string) => void;
 }
 
 const ATRIBUTOS_CONFIG = ["CORTE", "CUELLO", "TELA", "ACABADO"] as const;
+
+const td =
+  "border border-slate-200 px-2 py-1 text-slate-800 dark:border-slate-700/60 dark:text-slate-200";
+const tdCenter =
+  "border border-slate-200 px-2 py-1 text-center text-slate-800 dark:border-slate-700/60 dark:text-slate-200";
+const tdRight =
+  "border border-slate-200 px-2 py-1 text-right tabular-nums text-slate-800 dark:border-slate-700/60 dark:text-slate-200";
+
+const input =
+  "w-full rounded border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-400/30 dark:[color-scheme:dark] dark:border-slate-700/60 dark:bg-slate-800/90 dark:text-slate-100 dark:placeholder:text-slate-500";
+
+const select =
+  "rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[11px] text-slate-800 outline-none transition-colors focus:border-slate-400 focus:ring-1 focus:ring-slate-400/30 dark:[color-scheme:dark] dark:border-slate-700/60 dark:bg-slate-800/90 dark:text-slate-100";
 
 export function FilaPrenda({
   prenda,
@@ -31,7 +46,10 @@ export function FilaPrenda({
   colores,
   tarifas,
   catalogo,
+  valorHeredadoDe,
+  dorsalDuplicado,
   onActualizarPrenda,
+  onEliminarFila,
 }: FilaPrendaProps) {
   const precio = calcularPrecio(prenda, tarifas);
   const piezas = calcularPiezas(prenda.producto, catalogo);
@@ -42,18 +60,20 @@ export function FilaPrenda({
     catalogo.tallasPorProducto.find((tp) => tp.productoCodigo === prenda.producto)?.tallas ?? [];
 
   const rowClass = esObsequioOMuestra
-    ? styles.filaObsequio
+    ? "bg-blue-50 dark:bg-sky-950/40"
     : index % 2 === 0
-    ? styles.filaPar
-    : styles.filaImpar;
+    ? "bg-white dark:bg-slate-900"
+    : "bg-slate-50 dark:bg-slate-800/50";
 
   return (
     <tr className={rowClass}>
       {/* 1. # */}
-      <td className={styles.tdIndex}>{index + 1}</td>
+      <td className="border border-slate-200 px-2 py-1 text-center text-slate-500 dark:border-slate-700/60 dark:text-slate-400">
+        {index + 1}
+      </td>
 
       {/* 2. Nombre en prenda */}
-      <td className={styles.tdNombrePrenda}>
+      <td className="border border-slate-200 px-2 py-1 dark:border-slate-700/60">
         <input
           type="text"
           value={prenda.nombreEnPrenda}
@@ -65,12 +85,12 @@ export function FilaPrenda({
             })
           }
           placeholder="EN PRENDA"
-          className={`${styles.input} ${styles.inputBold}`}
+          className={`${input} min-w-[110px] font-bold`}
         />
       </td>
 
       {/* 3. Nombre de la persona */}
-      <td className={styles.tdNombrePersona}>
+      <td className="border border-slate-200 px-2 py-1 dark:border-slate-700/60">
         <input
           type="text"
           value={prenda.nombrePersona}
@@ -82,12 +102,12 @@ export function FilaPrenda({
             })
           }
           placeholder="Nombre completo"
-          className={styles.input}
+          className={`${input} min-w-[130px]`}
         />
       </td>
 
       {/* 4. Producto */}
-      <td className={styles.td}>
+      <td className={td}>
         <select
           value={prenda.producto}
           onChange={(e) =>
@@ -97,7 +117,7 @@ export function FilaPrenda({
               valor: e.target.value,
             })
           }
-          className={styles.select}
+          className={select}
         >
           {catalogo.productos.map((p) => (
             <option key={p.codigo} value={p.codigo}>
@@ -108,7 +128,7 @@ export function FilaPrenda({
       </td>
 
       {/* 5. Talla */}
-      <td className={styles.tdCenter}>
+      <td className={tdCenter}>
         <select
           value={prenda.talla}
           onChange={(e) =>
@@ -118,7 +138,7 @@ export function FilaPrenda({
               valor: e.target.value,
             })
           }
-          className={`${styles.select} ${styles.selectTalla}`}
+          className={`${select} min-w-[46px] text-center font-semibold`}
         >
           {tallas.map((t) => (
             <option key={t.codigo} value={t.codigo}>
@@ -129,7 +149,7 @@ export function FilaPrenda({
       </td>
 
       {/* 6. Número */}
-      <td className={styles.tdNumero}>
+      <td className={dorsalDuplicado ? "border border-red-400 bg-red-50 dark:border-red-500/60 dark:bg-red-500/10" : tdCenter}>
         <input
           type="text"
           value={prenda.numero}
@@ -141,16 +161,26 @@ export function FilaPrenda({
             })
           }
           placeholder="S/N"
-          className={`${styles.input} ${styles.inputNumero}`}
+          title={dorsalDuplicado ? "Dorsal repetido en el grupo" : "Dorsal"}
+          className={`${input} min-w-[48px] text-center ${
+            dorsalDuplicado
+              ? "border-red-400 focus:border-red-500 focus:ring-red-500/40 dark:border-red-500/70"
+              : ""
+          }`}
         />
+        {dorsalDuplicado && (
+          <span className="block text-center text-[9px] font-bold text-red-600 dark:text-red-400">
+            repetido
+          </span>
+        )}
       </td>
 
       {/* 7. Color */}
-      <td className={styles.td}>
-        <div className={styles.colorWrapper}>
+      <td className={td}>
+        <div className="flex items-center gap-1">
           {prenda.color && (
             <span
-              className={styles.colorSwatch}
+              className="h-3 w-3 shrink-0 rounded border border-slate-400 dark:border-slate-500"
               style={{ backgroundColor: prenda.color.codigoHex }}
             />
           )}
@@ -162,7 +192,7 @@ export function FilaPrenda({
                 onActualizarPrenda(prenda.id, { tipo: "color", color });
               }
             }}
-            className={styles.select}
+            className={select}
           >
             {colores.map((c) => (
               <option key={c.id} value={c.id}>
@@ -174,7 +204,7 @@ export function FilaPrenda({
       </td>
 
       {/* 8. Género */}
-      <td className={styles.td}>
+      <td className={td}>
         <select
           value={prenda.genero}
           onChange={(e) =>
@@ -184,7 +214,7 @@ export function FilaPrenda({
               valor: e.target.value,
             })
           }
-          className={styles.select}
+          className={select}
         >
           {catalogo.generos.map((g) => (
             <option key={g} value={g}>
@@ -208,6 +238,7 @@ export function FilaPrenda({
             opciones={opciones}
             esExcepcion={efectivo?.origen === "EXCEPCION"}
             disabled={!efectivo}
+            valorHeredado={valorHeredadoDe?.(atributo)}
             onCambio={(attr, val) =>
               onActualizarPrenda(prenda.id, {
                 tipo: "valor",
@@ -220,7 +251,7 @@ export function FilaPrenda({
       })}
 
       {/* 13. Arquero */}
-      <td className={styles.tdCenter}>
+      <td className={tdCenter}>
         <input
           type="checkbox"
           checked={prenda.esArquero}
@@ -231,12 +262,12 @@ export function FilaPrenda({
               valor: e.target.checked,
             })
           }
-          className={styles.checkbox}
+          className="h-3.5 w-3.5 cursor-pointer accent-emerald-700 dark:accent-emerald-400"
         />
       </td>
 
       {/* 14. Tipo */}
-      <td className={styles.td}>
+      <td className={td}>
         <select
           value={prenda.tipoPrenda}
           onChange={(e) =>
@@ -246,8 +277,10 @@ export function FilaPrenda({
               valor: e.target.value,
             })
           }
-          className={`${styles.select} ${
-            esObsequioOMuestra ? styles.selectTipoObsequio : styles.selectTipoVenta
+          className={`${select} font-semibold ${
+            esObsequioOMuestra
+              ? "text-amber-700 dark:text-amber-300"
+              : "text-emerald-700 dark:text-emerald-300"
           }`}
         >
           {catalogo.tiposPrenda.map((t) => (
@@ -259,52 +292,78 @@ export function FilaPrenda({
       </td>
 
       {/* 15. Personalización */}
-      <td className={styles.tdPersonalizacion}>
+      <td className="border border-slate-200 px-2 py-1 dark:border-slate-700/60">
         {prenda.personalizaciones.length > 0 ? (
           prenda.personalizaciones.map((p) => (
-            <span key={p.ubicacion} className={styles.personalizacionItem}>
+            <span
+              key={p.ubicacion}
+              className="block text-xs italic text-blue-800 dark:text-blue-300"
+            >
               {p.ubicacion}: {p.contenido}
             </span>
           ))
         ) : (
-          <span className={styles.sinPersonalizacion}>Sin personalización</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">
+            Sin personalización
+          </span>
         )}
       </td>
 
       {/* 16. Precio base */}
-      <td className={styles.tdRight}>{precio.precioBase.toFixed(2)}</td>
+      <td className={tdRight}>{precio.precioBase.toFixed(2)}</td>
 
       {/* 17–20. Recargos */}
-      <td className={`${styles.tdRight} ${precio.recTalla > 0 ? styles.recargoActivo : styles.recargoInactivo}`}>
+      <td className={`${tdRight} ${precio.recTalla > 0 ? "font-semibold text-amber-700 dark:text-amber-300" : "text-slate-400 dark:text-slate-500"}`}>
         {precio.recTalla > 0 ? `+${precio.recTalla.toFixed(2)}` : "0"}
       </td>
-      <td className={`${styles.tdRight} ${precio.recTela > 0 ? styles.recargoActivo : styles.recargoInactivo}`}>
+      <td className={`${tdRight} ${precio.recTela > 0 ? "font-semibold text-amber-700 dark:text-amber-300" : "text-slate-400 dark:text-slate-500"}`}>
         {precio.recTela > 0 ? `+${precio.recTela.toFixed(2)}` : "0"}
       </td>
-      <td className={`${styles.tdRight} ${precio.recCuello > 0 ? styles.recargoActivo : styles.recargoInactivo}`}>
+      <td className={`${tdRight} ${precio.recCuello > 0 ? "font-semibold text-amber-700 dark:text-amber-300" : "text-slate-400 dark:text-slate-500"}`}>
         {precio.recCuello > 0 ? `+${precio.recCuello.toFixed(2)}` : "0"}
       </td>
-      <td className={`${styles.tdRight} ${precio.recAcabado > 0 ? styles.recargoActivo : styles.recargoInactivo}`}>
+      <td className={`${tdRight} ${precio.recAcabado > 0 ? "font-semibold text-amber-700 dark:text-amber-300" : "text-slate-400 dark:text-slate-500"}`}>
         {precio.recAcabado > 0 ? `+${precio.recAcabado.toFixed(2)}` : "0"}
       </td>
 
       {/* 21. PRECIO UNIT. */}
       <td
-        className={`${styles.tdRight} ${
-          esObsequioOMuestra ? styles.precioUnitarioObsequio : styles.precioUnitarioVenta
+        className={`${tdRight} ${
+          esObsequioOMuestra
+            ? "font-bold text-slate-500 dark:text-slate-400"
+            : "font-bold text-slate-900 dark:text-slate-50"
         }`}
       >
         S/ {precio.precioUnitario.toFixed(2)}
       </td>
 
       {/* 22–24. Piezas físicas */}
-      <td className={styles.tdCenter}>{piezas.camisetas}</td>
-      <td className={styles.tdCenter}>{piezas.shorts}</td>
-      <td className={styles.tdCenter}>{piezas.medias}</td>
+      <td className={tdCenter}>{piezas.camisetas}</td>
+      <td className={tdCenter}>{piezas.shorts}</td>
+      <td className={tdCenter}>{piezas.medias}</td>
 
       {/* 25. Qué falta */}
-      <td className={`${styles.td} ${faltantes.length > 0 ? styles.faltantesError : styles.faltantesOk}`}>
-        {faltantes.length > 0 ? faltantes.join(", ") : "✓"}
+      <td className={`${td} ${
+        dorsalDuplicado
+          ? "font-bold text-red-700 dark:text-red-400"
+          : faltantes.length > 0
+          ? "font-bold text-red-700 dark:text-red-400"
+          : "text-emerald-700 dark:text-emerald-400"
+      }`}>
+        {faltantes.length > 0 ? faltantes.join(", ") : dorsalDuplicado ? "dorsal repetido" : "✓"}
+      </td>
+
+      {/* 26. Acciones de fila */}
+      <td className="border border-slate-200 px-2 py-1 text-center dark:border-slate-700/60">
+        <button
+          type="button"
+          onClick={() => onEliminarFila?.(prenda.id)}
+          title="Eliminar esta fila de la grilla"
+          aria-label={`Eliminar fila ${index + 1}`}
+          className="flex h-5 w-5 items-center justify-center rounded text-slate-400 transition-colors hover:bg-red-100 hover:text-red-700 dark:text-slate-500 dark:hover:bg-red-500/20 dark:hover:text-red-400"
+        >
+          ✕
+        </button>
       </td>
     </tr>
   );

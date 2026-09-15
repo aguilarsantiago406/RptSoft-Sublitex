@@ -10,6 +10,18 @@ export type EstadoPedido =
   | "ENTREGADO"
   | "CANCELADO";
 
+export type EstadoAprobacionDiseno =
+  | "PENDIENTE_REVISION"
+  | "APROBADO"
+  | "POR_CORREGIR";
+
+export interface DisenoPedido {
+  estadoAprobacion: EstadoAprobacionDiseno;
+  trabajadoPor: string;
+  ultimaActualizacion: string;
+  instrucciones: string;
+}
+
 /** Resumen liviano para la tabla de /pedidos — contrato §3.1 */
 export interface PedidoResumen {
   id: string;
@@ -41,6 +53,35 @@ export interface GrupoDetalle {
   configuracion: ValorConfiguracion[];
 }
 
+/**
+ * Desglose de piezas por talla — para el panel de Resumen de Producción (§6).
+ * Cada entrada resume cuántas prendas (y sus piezas físicas derivadas del BOM)
+ * caen en esa talla dentro del grupo.
+ */
+export interface DesgloseTalla {
+  talla: string;
+  prendas: number;
+  camisetas: number;
+  shorts: number;
+  medias: number;
+}
+
+/**
+ * Resumen de producción — GET /api/pedidos/:id/resumen-produccion.
+ * Piezas físicas calculadas desde el BOM de cada prenda (R-K03),
+ * nunca escritas a mano.
+ */
+export interface ResumenProduccion {
+  pedidoId: string;
+  grupoId: string;
+  grupoNombre: string;
+  totalPrendas: number;
+  camisetas: number;
+  shorts: number;
+  medias: number;
+  porTalla: DesgloseTalla[];
+}
+
 /** Objeto que devuelve GET /api/pedidos/:id — contrato §3.3 (sin prendas) */
 export interface PedidoDetalle {
   id: string;
@@ -56,5 +97,6 @@ export interface PedidoDetalle {
   fechaCompromiso: string | null;
   observaciones?: string;
   colores: ColorPedido[]; // a nivel de pedido — R-K05
+  diseno: DisenoPedido; // bloque de diseño & mockup §3
   grupos: GrupoDetalle[];
 }

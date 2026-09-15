@@ -1,16 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GrillaGrupo } from "@/services/grupoPrendasMock";
-import type {
-  Genero,
-  PrendaItem,
-  TextoPrenda,
-  TipoPrenda,
-  UpdatePrenda,
-  ValorEfectivo,
-} from "@/types/prendas";
+import type { PrendaItem, UpdatePrenda } from "@/types/prendas";
 import type { ValorConfiguracion } from "@/types/pedidos";
+import { aplicarUpdate } from "@/domain/actualizarPrenda";
+import { leerMensajeError } from "@/lib/api";
+
+interface UseGrupoPrendasOpciones {
+  /** Se invoca si la sincronización mock (PATCH /api/prendas/:id) falla */
+  onSyncError?: (mensaje: string) => void;
+}
 
 interface UseGrupoPrendasResultado {
   grupo: GrillaGrupo | null;
@@ -18,24 +18,40 @@ interface UseGrupoPrendasResultado {
   cargando: boolean;
   error: string | null;
   actualizarPrenda: (idPrenda: string, update: UpdatePrenda) => void;
+  agregarFila: () => void;
+  eliminarFila: (idPrenda: string) => void;
+  valorHeredadoDe: (atributo: string) => string | undefined;
 }
+
+let contadorNuevo = 0;
 
 /**
  * Carga la grilla COMPLETA del grupo — contrato §5.1.
  * Editar una celda genera una EXCEPCION (R-C08): al devolver el valor al que
  * el grupo hereda, la celda vuelve a HEREDADO.
  *
+ * La edición es optimista: actualiza el estado local y, además, dispara
+ * PATCH /api/prendas/:id (contrato §5.2) como simulación de persistencia.
+ * Si la simulación falla se avisa por `onSyncError`; la celda sigue editada.
+ *
  * configuracion: valores base del grupo (desde /api/pedidos/:id, §3.3)
  * para saber cuándo una excepción deja de ser tal.
  */
 export function useGrupoPrendas(
   grupoId: string | undefined,
-  configuracion?: ValorConfiguracion[]
+  configuracion?: ValorConfiguracion[],
+  opciones: UseGrupoPrendasOpciones = {}
 ): UseGrupoPrendasResultado {
   const [grupo, setGrupo] = useState<GrillaGrupo | null>(null);
   const [prendas, setPrendas] = useState<PrendaItem[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const onSyncErrorRef = useRef(opciones.onSyncError);
+  const idsServer = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    onSyncErrorRef.current = opciones.onSyncError;
+  }, [opciones.onSyncError]);
 
   useEffect(() => {
     if (!grupoId) return;
@@ -45,7 +61,9 @@ export function useGrupoPrendas(
     fetch(`/api/grupos/${grupoId}/prendas`)
       .then((res) => {
         if (!res.ok) {
-          throw new Error(`Error ${res.status}: no se pudo cargar la grilla`);
+          return leerMensajeError(res).then((msg) => {
+            throw new Error(msg);
+          });
         }
         return res.json() as Promise<GrillaGrupo>;
       })
@@ -53,6 +71,7 @@ export function useGrupoPrendas(
         if (montado) {
           setGrupo(data);
           setPrendas(data.prendas);
+          idsServer.current = new Set(data.prendas.map((p) => p.id));
           setCargando(false);
         }
       })
@@ -73,6 +92,11 @@ export function useGrupoPrendas(
     [configuracion]
   );
 
+  const valorHeredadoDe = useCallback(
+    (atributo: string) => configBase.get(atributo),
+    [configBase]
+  );
+
   const actualizarPrenda = useCallback(
     (idPrenda: string, update: UpdatePrenda) => {
       setPrendas((actuales) =>
@@ -80,80 +104,86 @@ export function useGrupoPrendas(
           p.id === idPrenda ? aplicarUpdate(p, update, configBase) : p
         )
       );
+
+      // Simulación de persistencia: PATCH /api/prendas/:id (contrato §5.2).
+      // Las filas agregadas en el cliente aún no existen en el mock server,
+      // así que no se sincronizan (evita toasts de error ruidosos).
+      if (!idsServer.current.has(idPrenda)) return;
+
+      fetch(`/api/prendas/${idPrenda}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(update),
+      })
+        .then((res) => {
+          if (!res.ok) {
+            return leerMensajeError(res).then((msg) => {
+              throw new Error(msg);
+            });
+          }
+        })
+        .catch((err: Error) => {
+          onSyncErrorRef.current?.(err.message);
+        });
     },
     [configBase]
   );
 
-  return { grupo, prendas, cargando, error, actualizarPrenda };
-}
+  const agregarFila = useCallback(() => {
+    setPrendas((actuales) => {
+      const plantilla = actuales[actuales.length - 1] ?? actuales[0];
+      const id = `${plantilla?.id ?? "nueva"}-${++contadorNuevo}`;
 
-function aplicarUpdate(
-  p: PrendaItem,
-  update: UpdatePrenda,
-  configBase: Map<string, string>
-): PrendaItem {
-  switch (update.tipo) {
-    case "valor": {
-      const existente = p.valores.find((v) => v.atributo === update.atributo);
-      if (!existente) return p;
+      const filaNueva: PrendaItem = plantilla
+        ? {
+            ...plantilla,
+            id,
+            participanteId: `${plantilla.participanteId}-nuevo`,
+            nombreEnPrenda: "",
+            nombrePersona: "",
+            numero: "S/N",
+            esArquero: false,
+            personalizaciones: [],
+            valores: plantilla.valores.map((v) => ({
+              ...v,
+              origen: "HEREDADO",
+              motivo: undefined,
+            })),
+          }
+        : {
+            id,
+            participanteId: "",
+            nombreEnPrenda: "",
+            nombrePersona: "",
+            producto: "",
+            talla: "",
+            numero: "S/N",
+            genero: "SIN_ESPECIFICAR",
+            tipoPrenda: "VENTA",
+            esArquero: false,
+            color: null,
+            valores: [],
+            personalizaciones: [],
+          };
 
-      return {
-        ...p,
-        valores: p.valores.map((v) =>
-          v.atributo === update.atributo
-            ? resolverOrigen(v, update.valor, configBase.get(update.atributo))
-            : v
-        ),
-      };
-    }
+      return [...actuales, filaNueva];
+    });
+  }, []);
 
-    case "color":
-      return { ...p, color: update.color };
+  const eliminarFila = useCallback((idPrenda: string) => {
+    setPrendas((actuales) =>
+      actuales.filter((p) => p.id !== idPrenda)
+    );
+  }, []);
 
-    case "booleano":
-      return { ...p, esArquero: update.valor };
-
-    case "texto":
-      return aplicarTexto(p, update.campo, update.valor);
-  }
-}
-
-function resolverOrigen(
-  prev: ValorEfectivo,
-  nuevo: string,
-  base?: string
-): ValorEfectivo {
-  if (nuevo === prev.valor) return prev;
-  if (base !== undefined && nuevo === base) {
-    return { atributo: prev.atributo, valor: nuevo, origen: "HEREDADO" };
-  }
   return {
-    atributo: prev.atributo,
-    valor: nuevo,
-    origen: "EXCEPCION",
-    motivo: "Editado en grilla",
+    grupo,
+    prendas,
+    cargando,
+    error,
+    actualizarPrenda,
+    agregarFila,
+    eliminarFila,
+    valorHeredadoDe,
   };
-}
-
-function aplicarTexto(
-  p: PrendaItem,
-  campo: TextoPrenda,
-  valor: string
-): PrendaItem {
-  switch (campo) {
-    case "nombreEnPrenda":
-      return { ...p, nombreEnPrenda: valor.toUpperCase() };
-    case "nombrePersona":
-      return { ...p, nombrePersona: valor };
-    case "numero":
-      return { ...p, numero: valor };
-    case "producto":
-      return { ...p, producto: valor };
-    case "talla":
-      return { ...p, talla: valor };
-    case "genero":
-      return { ...p, genero: valor as Genero };
-    case "tipoPrenda":
-      return { ...p, tipoPrenda: valor as TipoPrenda };
-  }
 }

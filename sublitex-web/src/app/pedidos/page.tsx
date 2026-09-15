@@ -1,160 +1,222 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { EstadoPedido, PedidoResumen } from "@/types/pedidos";
-
-// ---------------------------------------------------------------------------
-// Estilos de estado
-// ---------------------------------------------------------------------------
-
-const ESTADO_LABEL: Record<EstadoPedido, string> = {
-  BORRADOR: "Borrador",
-  EN_CONFIGURACION: "En configuración",
-  EN_RECOLECCION: "En recolección",
-  EN_REVISION: "En revisión",
-  CERRADO: "Cerrado",
-  EN_PRODUCCION: "En producción",
-  ENTREGADO: "Entregado",
-  CANCELADO: "Cancelado",
-};
-
-const ESTADO_COLOR: Record<EstadoPedido, { bg: string; color: string }> = {
-  BORRADOR: { bg: "#f0f0f0", color: "#666" },
-  EN_CONFIGURACION: { bg: "#e3f0ff", color: "#1565c0" },
-  EN_RECOLECCION: { bg: "#fff3cd", color: "#b45309" },
-  EN_REVISION: { bg: "#fce4ec", color: "#c2185b" },
-  CERRADO: { bg: "#e8f5e9", color: "#2e7d32" },
-  EN_PRODUCCION: { bg: "#e8eaf6", color: "#3949ab" },
-  ENTREGADO: { bg: "#e8f5e9", color: "#1b5e20" },
-  CANCELADO: { bg: "#fbe9e7", color: "#bf360c" },
-};
-
-// ---------------------------------------------------------------------------
-// Componente de Vista
-// ---------------------------------------------------------------------------
+import { ESTADO_LABEL, ESTADO_BADGE, ESTADOS_PEDIDO } from "@/lib/estados";
+import { leerMensajeError } from "@/lib/api";
+import { ModalNuevoPedido } from "@/components/pedidos/ModalNuevoPedido";
 
 export default function ListaPedidos() {
   const [pedidos, setPedidos] = useState<PedidoResumen[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState<EstadoPedido | "TODOS">("TODOS");
+  const [modalAbierto, setModalAbierto] = useState(false);
 
-  useEffect(() => {
+  const [recargando, setRecargando] = useState(false);
+
+  function cargar() {
+    setRecargando(true);
     fetch("/api/pedidos")
       .then((res) => {
-        if (!res.ok) throw new Error("Error al consultar /api/pedidos");
-        return res.json();
+        if (!res.ok) return leerMensajeError(res).then((m) => { throw new Error(m); });
+        return res.json() as Promise<PedidoResumen[]>;
       })
-      .then((data: PedidoResumen[]) => {
+      .then((data) => {
         setPedidos(data);
-        setCargando(false);
+        setError(null);
       })
-      .catch((err: Error) => {
-        setError(err.message);
+      .catch((err: Error) => setError(err.message))
+      .finally(() => {
         setCargando(false);
+        setRecargando(false);
       });
+  }
+
+  useEffect(() => {
+    let montado = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/pedidos");
+        if (!res.ok) throw new Error(await leerMensajeError(res));
+        const data = (await res.json()) as PedidoResumen[];
+        if (montado) {
+          setPedidos(data);
+          setError(null);
+        }
+      } catch (err) {
+        if (montado) setError(err instanceof Error ? err.message : "Error inesperado");
+      } finally {
+        if (montado) setCargando(false);
+      }
+    })();
+    return () => {
+      montado = false;
+    };
   }, []);
 
+  const filtrados = useMemo(() => {
+    const q = busqueda.trim().toLowerCase();
+    return pedidos.filter((p) => {
+      const coincideBusqueda =
+        !q ||
+        p.codigo.toLowerCase().includes(q) ||
+        p.cliente.nombre.toLowerCase().includes(q);
+      const coincideEstado =
+        filtroEstado === "TODOS" || p.estado === filtroEstado;
+      return coincideBusqueda && coincideEstado;
+    });
+  }, [pedidos, busqueda, filtroEstado]);
+
   return (
-    <main style={{ padding: "2rem", fontFamily: "Arial, sans-serif", maxWidth: 960, margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-        <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Pedidos</h1>
+    <main className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+          Pedidos
+        </h1>
         <button
-          style={{
-            background: "#1565c0",
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            padding: "8px 18px",
-            cursor: "pointer",
-            fontWeight: 600,
-          }}
+          type="button"
+          onClick={() => setModalAbierto(true)}
+          className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 dark:border-slate-700/60 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700"
         >
           + Nuevo pedido
         </button>
       </div>
 
+      {/* Filtros */}
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          type="search"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="Buscar por código o cliente…"
+          className="w-full max-w-xs rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-400/30 dark:[color-scheme:dark] dark:border-slate-700/60 dark:bg-slate-800/90 dark:text-slate-100 dark:placeholder:text-slate-500"
+        />
+        <select
+          value={filtroEstado}
+          onChange={(e) => setFiltroEstado(e.target.value as EstadoPedido | "TODOS")}
+          aria-label="Filtrar por estado"
+          className="rounded-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-slate-400 focus:ring-1 focus:ring-slate-400/30 dark:[color-scheme:dark] dark:border-slate-700/60 dark:bg-slate-800/90 dark:text-slate-100"
+        >
+          <option value="TODOS">Todos los estados</option>
+          {ESTADOS_PEDIDO.map((e) => (
+            <option key={e} value={e}>
+              {ESTADO_LABEL[e]}
+            </option>
+          ))}
+        </select>
+        {(busqueda || filtroEstado !== "TODOS") && (
+          <button
+            type="button"
+            onClick={() => {
+              setBusqueda("");
+              setFiltroEstado("TODOS");
+            }}
+            className="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+          >
+            Limpiar
+          </button>
+        )}
+        {recargando && (
+          <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
+            Actualizando…
+          </span>
+        )}
+      </div>
+
       {cargando && (
-        <div style={{ padding: "2rem", textAlign: "center", color: "#666" }}>
-          Cargando pedidos desde la API...
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60 dark:backdrop-blur-md dark:text-slate-400">
+          Cargando pedidos desde la API…
         </div>
       )}
 
       {error && (
-        <div style={{ padding: "1rem", background: "#fee2e2", color: "#b91c1c", borderRadius: 6, marginBottom: "1rem" }}>
+        <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-500/50 dark:bg-red-500/10 dark:text-red-300">
           Error: {error}
         </div>
       )}
 
       {!cargando && !error && (
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-          <thead>
-            <tr style={{ background: "#f7f7f7", textAlign: "left" }}>
-              <th style={{ padding: "10px 12px", borderBottom: "2px solid #e0e0e0" }}>Código</th>
-              <th style={{ padding: "10px 12px", borderBottom: "2px solid #e0e0e0" }}>Cliente</th>
-              <th style={{ padding: "10px 12px", borderBottom: "2px solid #e0e0e0" }}>Estado</th>
-              <th style={{ padding: "10px 12px", borderBottom: "2px solid #e0e0e0", textAlign: "center" }}>Prendas</th>
-              <th style={{ padding: "10px 12px", borderBottom: "2px solid #e0e0e0" }}>Entrega</th>
-              <th style={{ padding: "10px 12px", borderBottom: "2px solid #e0e0e0" }} />
-            </tr>
-          </thead>
-          <tbody>
-            {pedidos.map((p, i) => {
-              const estadoStyle = ESTADO_COLOR[p.estado];
-              return (
-                <tr
-                  key={p.id}
-                  style={{ background: i % 2 === 0 ? "#fff" : "#fafafa", borderBottom: "1px solid #eee" }}
-                >
-                  <td style={{ padding: "10px 12px", fontWeight: 600, fontFamily: "monospace" }}>
-                    {p.codigo}
-                  </td>
-                  <td style={{ padding: "10px 12px" }}>{p.cliente.nombre}</td>
-                  <td style={{ padding: "10px 12px" }}>
-                    <span
-                      style={{
-                        background: estadoStyle.bg,
-                        color: estadoStyle.color,
-                        borderRadius: 20,
-                        padding: "3px 10px",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {ESTADO_LABEL[p.estado]}
-                    </span>
-                  </td>
-                  <td style={{ padding: "10px 12px", textAlign: "center" }}>
-                    {p.totalPrendas > 0 ? p.totalPrendas : "—"}
-                  </td>
-                  <td style={{ padding: "10px 12px", color: p.fechaCompromiso ? "#333" : "#aaa" }}>
-                    {p.fechaCompromiso
-                      ? new Date(p.fechaCompromiso).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" })
-                      : "Sin fecha"}
-                  </td>
-                  <td style={{ padding: "10px 12px" }}>
-                    <Link
-                      href={`/pedidos/${p.id}`}
-                      style={{
-                        background: "#1565c0",
-                        color: "#fff",
-                        borderRadius: 4,
-                        padding: "5px 12px",
-                        textDecoration: "none",
-                        fontSize: 12,
-                        fontWeight: 600,
-                      }}
-                    >
-                      Ver
-                    </Link>
-                  </td>
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60 dark:backdrop-blur-md dark:shadow-none">
+          {filtrados.length === 0 ? (
+            <div className="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+              Sin resultados con los filtros seleccionados.
+            </div>
+          ) : (
+            <table className="w-full border-collapse text-sm text-slate-800 dark:text-slate-200">
+              <thead>
+                <tr className="bg-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-700 dark:bg-slate-900/90 dark:text-slate-300">
+                  <th className="px-4 py-2.5">Código</th>
+                  <th className="px-4 py-2.5">Cliente</th>
+                  <th className="px-4 py-2.5">Estado</th>
+                  <th className="px-4 py-2.5 text-center">Prendas</th>
+                  <th className="px-4 py-2.5">Entrega</th>
+                  <th className="px-4 py-2.5" />
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {filtrados.map((p, i) => {
+                  const { chip, dot } = ESTADO_BADGE[p.estado];
+                  return (
+                    <tr
+                      key={p.id}
+                      className={`border-b border-slate-200 transition-colors hover:bg-slate-50 dark:border-slate-700/60 dark:hover:bg-slate-800/60 ${
+                        i % 2 === 0
+                          ? "bg-white dark:bg-transparent"
+                          : "bg-slate-50 dark:bg-slate-800/40"
+                      }`}
+                    >
+                      <td className="px-4 py-2.5 font-mono font-semibold">
+                        {p.codigo}
+                      </td>
+                      <td className="px-4 py-2.5">{p.cliente.nombre}</td>
+                      <td className="px-4 py-2.5">
+                        <span
+                          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${chip}`}
+                        >
+                          <span
+                            className={`inline-block h-1.5 w-1.5 rounded-full ring-1 ring-black/5 dark:ring-white/10 ${dot}`}
+                            aria-hidden="true"
+                          />
+                          {ESTADO_LABEL[p.estado]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-center tabular-nums">
+                        {p.totalPrendas > 0 ? p.totalPrendas : "—"}
+                      </td>
+                      <td className="px-4 py-2.5 tabular-nums text-slate-600 dark:text-slate-300">
+                        {p.fechaCompromiso
+                          ? new Date(p.fechaCompromiso).toLocaleDateString("es-PE", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : "Sin fecha"}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <Link
+                          href={`/pedidos/${p.id}`}
+                          className="inline-block rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800 transition-colors hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 dark:border-slate-700/60 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700"
+                        >
+                          Ver
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
       )}
+
+      <ModalNuevoPedido
+        abierto={modalAbierto}
+        onCerrar={() => setModalAbierto(false)}
+        onCreate={cargar}
+      />
     </main>
   );
 }

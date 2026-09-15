@@ -23,6 +23,12 @@ export const pedidoDetalleMock: PedidoDetalle = {
     { id: "c2", nombre: "Dorado", codigoHex: "#CC9933" },
     { id: "c3", nombre: "Negro", codigoHex: "#060604" },
   ],
+  diseno: {
+    estadoAprobacion: "PENDIENTE_REVISION",
+    trabajadoPor: "Diseño Sublitex",
+    ultimaActualizacion: "2026-09-12T14:30:00Z",
+    instrucciones: "Escudo termosellado en pecho izquierdo, dorsal recalcado en espalda y nombre por delante en mayúsculas.",
+  },
   grupos: [
     {
       id: "grp_001",

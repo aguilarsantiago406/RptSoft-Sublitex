@@ -1,10 +1,16 @@
-import type { PedidoResumen } from "@/types/pedidos";
+import type { EstadoPedido, PedidoResumen } from "@/types/pedidos";
 
-/**
- * ARCHIVO DE DATOS MOCK: lista de pedidos — contrato §3.1.
- * Liviano: solo lo necesario para pintar la tabla principal.
- */
-export const pedidosListaMock: PedidoResumen[] = [
+/** Cuerpo aceptado por POST /api/pedidos — formulario básico de creación */
+export interface NuevoPedidoInput {
+  clienteNombre: string;
+  clienteTelefono?: string;
+  ciudad?: string;
+  fechaCompromiso?: string | null;
+  observaciones?: string;
+  estado?: EstadoPedido;
+}
+
+let pedidosSimulados: PedidoResumen[] = [
   {
     id: "ped_001",
     codigo: "SUB-000842",
@@ -60,3 +66,33 @@ export const pedidosListaMock: PedidoResumen[] = [
     fechaPedido: "2026-08-20T09:00:00Z",
   },
 ];
+
+let contadorSimulado = 848;
+
+/**
+ * ARCHIVO DE DATOS MOCK: lista de pedidos — contrato §3.1 (light).
+ * La lista original queda bajo llave en este archivo; los pedidos creados
+ * por POST /api/pedidos se agregan en memoria (no persisten entre reinicios).
+ */
+
+export function leerPedidos(): PedidoResumen[] {
+  return pedidosSimulados;
+}
+
+export function crearPedido(input: NuevoPedidoInput): PedidoResumen {
+  const nuevo: PedidoResumen = {
+    id: `ped_${(++contadorSimulado).toString().padStart(3, "0")}`,
+    codigo: `SUB-${contadorSimulado.toString().padStart(6, "0")}`,
+    cliente: {
+      id: `cli_${contadorSimulado}`,
+      nombre: input.clienteNombre.trim(),
+    },
+    estado: input.estado ?? "BORRADOR",
+    totalPrendas: 0,
+    fechaCompromiso: input.fechaCompromiso ?? null,
+    fechaPedido: new Date().toISOString(),
+  };
+
+  pedidosSimulados = [nuevo, ...pedidosSimulados];
+  return nuevo;
+}

@@ -35,3 +35,29 @@ export function validarPrenda(
 
   return faltantes;
 }
+
+/**
+ * Unicidad de dorsal por grupo — §2 (Frente 2).
+ * Devuelve el Set de ids de prendas cuyo NÚMERO se repite (ignorando
+ * mayúsculas, espacios y dorsales vacíos). La grilla resalta esas filas y
+ * el contador de "dorsal repetido" aparece en la columna "Qué falta".
+ */
+export function marcarDorsalesDuplicados(prendas: PrendaItem[]): Set<string> {
+  const porDorsal = new Map<string, string[]>();
+
+  for (const prenda of prendas) {
+    const numero = prenda.numero.trim().toUpperCase();
+    if (!numero) continue;
+    const ids = porDorsal.get(numero) ?? [];
+    ids.push(prenda.id);
+    porDorsal.set(numero, ids);
+  }
+
+  const duplicados = new Set<string>();
+  for (const ids of porDorsal.values()) {
+    if (ids.length > 1) {
+      for (const id of ids) duplicados.add(id);
+    }
+  }
+  return duplicados;
+}
