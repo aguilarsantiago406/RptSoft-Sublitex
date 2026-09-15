@@ -5,54 +5,39 @@ import type {
   CatalogoCompleto,
   ColorPedido,
   PrendaItem,
-  Tarifa,
   UpdatePrenda,
 } from "@/types/prendas";
-import { calcularPiezas } from "@/domain/calculoPiezas";
-import { calcularPrecio, valorEfectivo } from "@/domain/calculoPrecios";
-import { validarPrenda } from "@/domain/validacionPrenda";
 import { CeldaEditable } from "./CeldaEditable";
 import styles from "./TablaPrendas.module.css";
 
-export interface FilaPrendaProps {
+export interface FilaParticipanteProps {
   prenda: PrendaItem;
   index: number;
   colores: ColorPedido[];
-  tarifas: Tarifa[];
   catalogo: CatalogoCompleto;
   onActualizarPrenda: (idPrenda: string, update: UpdatePrenda) => void;
 }
 
-const ATRIBUTOS_CONFIG = ["CORTE", "CUELLO", "TELA", "ACABADO"] as const;
-
-export function FilaPrenda({
+export function FilaParticipante({
   prenda,
   index,
   colores,
-  tarifas,
   catalogo,
   onActualizarPrenda,
-}: FilaPrendaProps) {
-  const precio = calcularPrecio(prenda, tarifas);
-  const piezas = calcularPiezas(prenda.producto, catalogo);
-  const faltantes = validarPrenda(prenda, catalogo);
+}: FilaParticipanteProps) {
   const esObsequioOMuestra = prenda.tipoPrenda !== "VENTA";
 
   const tallas =
     catalogo.tallasPorProducto.find((tp) => tp.productoCodigo === prenda.producto)?.tallas ?? [];
 
-  const rowClass = esObsequioOMuestra
-    ? styles.filaObsequio
-    : index % 2 === 0
-    ? styles.filaPar
-    : styles.filaImpar;
+  const rowClass = esObsequioOMuestra ? styles.filaObsequio : index % 2 === 0 ? styles.filaPar : styles.filaImpar;
 
   return (
     <tr className={rowClass}>
-      {/* 1. # */}
+      {/* # */}
       <td className={styles.tdIndex}>{index + 1}</td>
 
-      {/* 2. Nombre en prenda */}
+      {/* Nombre en prenda */}
       <td className={styles.tdNombrePrenda}>
         <input
           type="text"
@@ -69,7 +54,7 @@ export function FilaPrenda({
         />
       </td>
 
-      {/* 3. Nombre de la persona */}
+      {/* Nombre de la persona */}
       <td className={styles.tdNombrePersona}>
         <input
           type="text"
@@ -86,7 +71,7 @@ export function FilaPrenda({
         />
       </td>
 
-      {/* 4. Producto */}
+      {/* Producto */}
       <td className={styles.td}>
         <select
           value={prenda.producto}
@@ -107,7 +92,7 @@ export function FilaPrenda({
         </select>
       </td>
 
-      {/* 5. Talla */}
+      {/* Talla */}
       <td className={styles.tdCenter}>
         <select
           value={prenda.talla}
@@ -128,7 +113,7 @@ export function FilaPrenda({
         </select>
       </td>
 
-      {/* 6. Número */}
+      {/* Número */}
       <td className={styles.tdNumero}>
         <input
           type="text"
@@ -145,7 +130,7 @@ export function FilaPrenda({
         />
       </td>
 
-      {/* 7. Color */}
+      {/* Color */}
       <td className={styles.td}>
         <div className={styles.colorWrapper}>
           {prenda.color && (
@@ -173,7 +158,7 @@ export function FilaPrenda({
         </div>
       </td>
 
-      {/* 8. Género */}
+      {/* Género */}
       <td className={styles.td}>
         <select
           value={prenda.genero}
@@ -194,32 +179,7 @@ export function FilaPrenda({
         </select>
       </td>
 
-      {/* 9–12. Corte, Cuello, Tela, Acabado */}
-      {ATRIBUTOS_CONFIG.map((atributo) => {
-        const efectivo = valorEfectivo(prenda, atributo);
-        const opciones =
-          catalogo.atributos.find((a) => a.codigo === atributo)?.valores ?? [];
-
-        return (
-          <CeldaEditable
-            key={atributo}
-            atributo={atributo}
-            valor={efectivo?.valor ?? ""}
-            opciones={opciones}
-            esExcepcion={efectivo?.origen === "EXCEPCION"}
-            disabled={!efectivo}
-            onCambio={(attr, val) =>
-              onActualizarPrenda(prenda.id, {
-                tipo: "valor",
-                atributo: attr,
-                valor: val,
-              })
-            }
-          />
-        );
-      })}
-
-      {/* 13. Arquero */}
+      {/* Arquero */}
       <td className={styles.tdCenter}>
         <input
           type="checkbox"
@@ -235,7 +195,7 @@ export function FilaPrenda({
         />
       </td>
 
-      {/* 14. Tipo */}
+      {/* Tipo */}
       <td className={styles.td}>
         <select
           value={prenda.tipoPrenda}
@@ -258,7 +218,7 @@ export function FilaPrenda({
         </select>
       </td>
 
-      {/* 15. Personalización */}
+      {/* Personalización */}
       <td className={styles.tdPersonalizacion}>
         {prenda.personalizaciones.length > 0 ? (
           prenda.personalizaciones.map((p) => (
@@ -269,42 +229,6 @@ export function FilaPrenda({
         ) : (
           <span className={styles.sinPersonalizacion}>Sin personalización</span>
         )}
-      </td>
-
-      {/* 16. Precio base */}
-      <td className={styles.tdRight}>{precio.precioBase.toFixed(2)}</td>
-
-      {/* 17–20. Recargos */}
-      <td className={`${styles.tdRight} ${precio.recTalla > 0 ? styles.recargoActivo : styles.recargoInactivo}`}>
-        {precio.recTalla > 0 ? `+${precio.recTalla.toFixed(2)}` : "0"}
-      </td>
-      <td className={`${styles.tdRight} ${precio.recTela > 0 ? styles.recargoActivo : styles.recargoInactivo}`}>
-        {precio.recTela > 0 ? `+${precio.recTela.toFixed(2)}` : "0"}
-      </td>
-      <td className={`${styles.tdRight} ${precio.recCuello > 0 ? styles.recargoActivo : styles.recargoInactivo}`}>
-        {precio.recCuello > 0 ? `+${precio.recCuello.toFixed(2)}` : "0"}
-      </td>
-      <td className={`${styles.tdRight} ${precio.recAcabado > 0 ? styles.recargoActivo : styles.recargoInactivo}`}>
-        {precio.recAcabado > 0 ? `+${precio.recAcabado.toFixed(2)}` : "0"}
-      </td>
-
-      {/* 21. PRECIO UNIT. */}
-      <td
-        className={`${styles.tdRight} ${
-          esObsequioOMuestra ? styles.precioUnitarioObsequio : styles.precioUnitarioVenta
-        }`}
-      >
-        S/ {precio.precioUnitario.toFixed(2)}
-      </td>
-
-      {/* 22–24. Piezas físicas */}
-      <td className={styles.tdCenter}>{piezas.camisetas}</td>
-      <td className={styles.tdCenter}>{piezas.shorts}</td>
-      <td className={styles.tdCenter}>{piezas.medias}</td>
-
-      {/* 25. Qué falta */}
-      <td className={`${styles.td} ${faltantes.length > 0 ? styles.faltantesError : styles.faltantesOk}`}>
-        {faltantes.length > 0 ? faltantes.join(", ") : "✓"}
       </td>
     </tr>
   );

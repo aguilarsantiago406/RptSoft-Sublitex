@@ -1,106 +1,223 @@
+/* =============================================================================
+   Grilla de prendas — tres secciones temáticas
+   ============================================================================= */
+
+.grilla {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 18px;
+}
+
+/* --- Secciones --- */
+.seccion {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.seccionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+.seccionTitulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-strong);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.seccionTitulo::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+.seccionSubtitulo {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
 /* Contenedor y Tabla */
 .tableWrapper {
   overflow-x: auto;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .table {
-  border-collapse: collapse;
-  font-size: 12px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12.5px;
   width: 100%;
   text-align: left;
   white-space: nowrap;
 }
 
 .theadRow {
-  background: #1c5a3e;
-  color: #fff;
+  background: var(--thead-bg);
+  color: var(--thead-text);
+}
+
+.stickyHeader {
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .th {
-  padding: 7px 10px;
-  border: 1px solid #14442e;
+  padding: 10px 12px;
+  border-right: 1px solid var(--thead-border);
   font-weight: 600;
-  font-size: 11px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.th:last-child {
+  border-right: none;
 }
 
 /* Filas */
 .filaObsequio {
-  background-color: #e3f2fd;
-  border-bottom: 1px solid #e0e0e0;
+  background-color: var(--obsequio-bg);
 }
 
 .filaPar {
-  background-color: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
+  background-color: var(--row-even);
 }
 
 .filaImpar {
-  background-color: #fcfcfc;
-  border-bottom: 1px solid #e0e0e0;
+  background-color: var(--row-odd);
+}
+
+.filaObsequio:hover,
+.filaPar:hover,
+.filaImpar:hover {
+  background-color: var(--row-hover);
+}
+
+.filaObsequio:hover {
+  background-color: var(--obsequio-hover);
 }
 
 /* Celdas Base */
 .td {
-  padding: 4px 8px;
-  border: 1px solid #eee;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  vertical-align: middle;
 }
 
 .tdIndex {
-  padding: 5px 8px;
-  border: 1px solid #eee;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   text-align: center;
-  color: #666;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11.5px;
+  background: var(--surface-muted);
 }
 
 .tdCenter {
-  padding: 4px 8px;
-  border: 1px solid #eee;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   text-align: center;
 }
 
 .tdRight {
-  padding: 5px 8px;
-  border: 1px solid #eee;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .tdNombrePrenda {
-  padding: 4px 8px;
-  border: 1px solid #eee;
-  min-width: 120px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  min-width: 130px;
 }
 
 .tdNombrePersona {
-  padding: 4px 8px;
-  border: 1px solid #eee;
-  min-width: 150px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  min-width: 160px;
 }
 
 .tdNumero {
-  padding: 4px 8px;
-  border: 1px solid #eee;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   text-align: center;
   width: 60px;
 }
 
 .tdPersonalizacion {
-  padding: 4px 8px;
-  border: 1px solid #eee;
-  min-width: 150px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  min-width: 160px;
+}
+
+/* Referencia de prenda (tablas 2 y 3) */
+.nombreRef {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-strong);
+}
+
+.badgeExcepciones {
+  display: inline-block;
+  margin-left: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border: 1px solid var(--excepcion-border);
 }
 
 /* Controles de Formulario */
 .input {
   width: 100%;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
   outline: none;
   background: transparent;
-  font-size: 12px;
+  font-size: 12.5px;
   font-family: inherit;
-  padding: 2px 0;
+  color: var(--text-strong);
+  padding: 4px 6px;
+  transition: all 0.12s ease;
+}
+
+.input:hover {
+  border-color: var(--border);
+  background: var(--surface-raised);
+}
+
+.input:focus {
+  border-color: var(--primary);
+  background: var(--surface-raised);
+  box-shadow: 0 0 0 2px rgba(28, 90, 62, 0.15);
 }
 
 .inputBold {
@@ -109,18 +226,25 @@
 
 .inputNumero {
   text-align: center;
-  width: 50px;
+  width: 48px;
 }
 
 .select {
-  border: 1px solid #d1d5db;
-  border-radius: 3px;
-  background: transparent;
-  font-size: 11px;
-  padding: 2px 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: 12px;
+  padding: 4px 6px;
   cursor: pointer;
   outline: none;
   font-family: inherit;
+  transition: border-color 0.12s ease;
+}
+
+.select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(28, 90, 62, 0.15);
 }
 
 .selectTalla {
@@ -130,16 +254,26 @@
 
 .selectTipoObsequio {
   font-weight: 600;
-  color: #b78103;
+  color: var(--accent);
 }
 
 .selectTipoVenta {
   font-weight: 600;
-  color: #2e7d32;
+  color: var(--success);
 }
 
-.checkbox {
-  cursor: pointer;
+/* Celda de atributo con origen (R-C06) */
+.celdaExcepcion {
+  background: var(--excepcion-bg) !important;
+}
+
+.celdaInactiva {
+  opacity: 0.85;
+}
+
+.selectExcepcion {
+  font-weight: bold;
+  border-color: var(--excepcion-border);
 }
 
 /* Elementos Específicos */
@@ -151,73 +285,82 @@
 
 .colorSwatch {
   display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  border: 1px solid #888;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
 .personalizacionItem {
   font-style: italic;
-  color: #283593;
+  color: var(--info);
   display: block;
+  font-size: 11.5px;
 }
 
 .sinPersonalizacion {
-  color: #999;
+  color: var(--text-muted);
+  font-size: 11.5px;
 }
 
 .recargoActivo {
-  color: #b78103;
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .recargoInactivo {
-  color: #999;
+  color: var(--text-muted);
 }
 
 .precioUnitarioObsequio {
   font-weight: bold;
-  color: #777;
+  color: var(--text-muted);
 }
 
 .precioUnitarioVenta {
   font-weight: bold;
-  color: #000;
+  color: var(--text-strong);
+  font-size: 13px;
 }
 
 .faltantesError {
-  color: #c62828;
+  color: var(--danger);
   font-weight: bold;
+  font-size: 11px;
 }
 
 .faltantesOk {
-  color: #2e7d32;
+  color: var(--success);
   font-weight: normal;
 }
 
 /* Totales */
 .tfootRow {
-  background: #e8f5e9;
+  background: var(--tfoot-bg);
   font-weight: bold;
-  border-top: 2px solid #2e7d32;
+  border-top: 2px solid var(--tfoot-border);
 }
 
 .tdTotal {
-  padding: 8px 10px;
-  border: 1px solid #ccc;
+  padding: 11px 12px;
+  border-right: 1px solid var(--border);
   text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
 }
 
 .tdTotalDestacado {
-  padding: 8px 10px;
-  border: 1px solid #ccc;
+  padding: 11px 12px;
+  border-right: 1px solid var(--border);
   text-align: right;
-  color: #1b5e20;
-  font-size: 13px;
+  color: var(--tfoot-border);
+  font-size: 13.5px;
+  font-weight: 800;
 }
 
 .tdTotalCenter {
-  padding: 8px 10px;
-  border: 1px solid #ccc;
+  padding: 11px 12px;
+  border-right: 1px solid var(--border);
   text-align: center;
 }

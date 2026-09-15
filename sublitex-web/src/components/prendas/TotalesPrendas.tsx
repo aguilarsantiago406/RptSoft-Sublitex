@@ -8,11 +8,13 @@ interface TotalesPrendasProps {
   totales: TotalesPedido;
 }
 
+/** Totales de la tabla de precios y producción (colabel: tomamos mismas columnas que FilaPrecio) */
 export function TotalesPrendas({ totales }: TotalesPrendasProps) {
   return (
     <tfoot>
       <tr className={styles.tfootRow}>
-        <td colSpan={15} className={styles.tdTotal}>
+        {/* # + referencia + base (3) */}
+        <td className={styles.tdTotal} colSpan={2}>
           TOTALES
         </td>
         <td className={styles.tdTotal}>S/ {totales.totalBase.toFixed(2)}</td>

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import styles from "./TablaPrendas.module.css";
 
 interface CeldaEditableProps {
   atributo: string;
@@ -11,17 +12,6 @@ interface CeldaEditableProps {
   onCambio: (atributo: string, valor: string) => void;
 }
 
-const selectEstilo: React.CSSProperties = {
-  border: "1px solid #d1d5db",
-  borderRadius: 3,
-  background: "transparent",
-  fontSize: 11,
-  padding: "2px 4px",
-  cursor: "pointer",
-  outline: "none",
-  fontFamily: "inherit",
-};
-
 export function CeldaEditable({
   atributo,
   valor,
@@ -30,23 +20,30 @@ export function CeldaEditable({
   disabled,
   onCambio,
 }: CeldaEditableProps) {
+  const cellClass = [
+    styles.td,
+    esExcepcion ? styles.celdaExcepcion : styles.celdaInactiva,
+  ].join(" ");
+
+  const selectClass = [
+    styles.select,
+    esExcepcion ? styles.selectExcepcion : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <td
-      style={{
-        padding: "4px 8px",
-        border: "1px solid #eee",
-        background: esExcepcion ? "#fff3cd" : "inherit",
-      }}
-    >
+    <td className={cellClass} data-atributo={atributo}>
       <select
         value={valor}
         onChange={(e) => onCambio(atributo, e.target.value)}
         disabled={disabled}
-        style={{
-          ...selectEstilo,
-          background: "transparent",
-          fontWeight: esExcepcion ? "bold" : "normal",
-        }}
+        className={selectClass}
+        title={
+          esExcepcion
+            ? `Excepción —${atributo} hereda "${valor}", este valor difiere del grupo`
+            : `Heredado del grupo — ${valor}`
+        }
       >
         {opciones.length === 0 ? (
           <option value="">—</option>
