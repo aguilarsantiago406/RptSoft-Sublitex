@@ -165,10 +165,6 @@ export default function PaginaDetallePedido({ params }: PageProps) {
                 Obsequio / Muestra
               </span>
             </div>
-            <span>
-              {grupoGrilla.grupo.nombre} · {resumen.excepciones} excepción
-              {resumen.excepciones === 1 ? "" : "es"}
-            </span>
           </div>
         </>
       }

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import type {
   CatalogoCompleto,
   ColorPedido,
@@ -9,7 +9,7 @@ import type {
   TotalesPedido,
   UpdatePrenda,
 } from "@/types/prendas";
-import { FilaParticipante } from "./FilaParticipante";
+import { TarjetaParticipante } from "./TarjetaParticipante";
 import { FilaAtributos } from "./FilaAtributos";
 import { FilaPrecio } from "./FilaPrecio";
 import { TotalesPrendas } from "./TotalesPrendas";
@@ -24,28 +24,7 @@ export interface TablaPrendasProps {
   onActualizarPrenda: (idPrenda: string, update: UpdatePrenda) => void;
 }
 
-const columnasParticipante = [
-  "#",
-  "Nombre en prenda",
-  "Persona",
-  "Producto",
-  "Talla",
-  "Número",
-  "Color",
-  "Género",
-  "Arquero",
-  "Tipo",
-  "Personalización",
-];
-
-const columnasAtributos = [
-  "#",
-  "Prenda",
-  "Corte",
-  "Cuello",
-  "Tela",
-  "Acabado escudo",
-];
+const columnasAtributos = ["#", "Prenda", "Corte", "Cuello", "Tela", "Acabado escudo"];
 
 const columnasPrecio = [
   "#",
@@ -70,51 +49,59 @@ export function TablaPrendas({
   totales,
   onActualizarPrenda,
 }: TablaPrendasProps) {
+  const [abierto, setAbierto] = useState<Record<string, boolean>>({
+    atributos: false,
+    precios: false,
+  });
+
+  const resumenTarjetas = useMemo(() => {
+    const excepciones = prendas.reduce(
+      (acc, p) => acc + p.valores.filter((v) => v.origen === "EXCEPCION").length,
+      0
+    );
+    const obsequios = prendas.filter((p) => p.tipoPrenda !== "VENTA").length;
+    return { excepciones, obsequios };
+  }, [prendas]);
+
+  const toggle = (clave: string) =>
+    setAbierto((prev) => ({ ...prev, [clave]: !prev[clave] }));
+
   return (
     <div className={styles.grilla}>
-      {/* 1 — Participantes y prendas */}
+      {/* 1 — Participantes: tarjetas */}
       <section className={styles.seccion}>
         <header className={styles.seccionHeader}>
           <h3 className={styles.seccionTitulo}>Participantes y prendas</h3>
           <p className={styles.seccionSubtitulo}>
-            Identidad, producto, talla, número y tipo
+            {prendas.length} prendas
+            {resumenTarjetas.excepciones > 0 &&
+              ` · ${resumenTarjetas.excepciones} excepciones`}
+            {resumenTarjetas.obsequios > 0 &&
+              ` · ${resumenTarjetas.obsequios} obsequio/muestra`}
           </p>
         </header>
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead className={styles.stickyHeader}>
-              <tr className={styles.theadRow}>
-                {columnasParticipante.map((col) => (
-                  <th key={col} className={styles.th}>
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {prendas.map((prenda, i) => (
-                <FilaParticipante
-                  key={prenda.id}
-                  prenda={prenda}
-                  index={i}
-                  colores={colores}
-                  catalogo={catalogo}
-                  onActualizarPrenda={onActualizarPrenda}
-                />
-              ))}
-            </tbody>
-          </table>
+        <div className={styles.tarjetas}>
+          {prendas.map((prenda, i) => (
+            <TarjetaParticipante
+              key={prenda.id}
+              prenda={prenda}
+              index={i}
+              colores={colores}
+              catalogo={catalogo}
+              onActualizarPrenda={onActualizarPrenda}
+            />
+          ))}
         </div>
       </section>
 
-      {/* 2 — Atributos de confección */}
-      <section className={styles.seccion}>
-        <header className={styles.seccionHeader}>
-          <h3 className={styles.seccionTitulo}>Atributos de confección</h3>
-          <p className={styles.seccionSubtitulo}>
-            Valores efectivos: lo que cada prenda hereda del grupo o excepciona
-          </p>
-        </header>
+      {/* 2 — Atributos de confección (colapsable) */}
+      <SeccionColapsable
+        titulo="Atributos de confección"
+        subtitulo="Corte, cuello, tela y acabado de cada prenda"
+        abierto={!!abierto.atributos}
+        onToggle={() => toggle("atributos")}
+        resumen={`${resumenTarjetas.excepciones} excepción${resumenTarjetas.excepciones === 1 ? "" : "es"}`}
+      >
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
             <thead className={styles.stickyHeader}>
@@ -139,16 +126,16 @@ export function TablaPrendas({
             </tbody>
           </table>
         </div>
-      </section>
+      </SeccionColapsable>
 
-      {/* 3 — Precios y producción */}
-      <section className={styles.seccion}>
-        <header className={styles.seccionHeader}>
-          <h3 className={styles.seccionTitulo}>Precios y producción</h3>
-          <p className={styles.seccionSubtitulo}>
-            Tarifa oficial (R-K10) y piezas físicas por producto (R-K03)
-          </p>
-        </header>
+      {/* 3 — Precios y producción (colapsable) */}
+      <SeccionColapsable
+        titulo="Precios y producción"
+        subtitulo="Tarifa oficial (R-K10) y piezas físicas por producto (R-K03)"
+        abierto={!!abierto.precios}
+        onToggle={() => toggle("precios")}
+        resumen={`S/ ${totales.importeTotal.toFixed(2)}`}
+      >
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
             <thead className={styles.stickyHeader}>
@@ -174,7 +161,54 @@ export function TablaPrendas({
             <TotalesPrendas totales={totales} />
           </table>
         </div>
-      </section>
+      </SeccionColapsable>
     </div>
+  );
+}
+
+// =============================================================================
+// Sección plegable
+// =============================================================================
+
+interface SeccionColapsableProps {
+  titulo: string;
+  subtitulo: string;
+  abierto: boolean;
+  onToggle: () => void;
+  resumen?: string;
+  children: React.ReactNode;
+}
+
+function SeccionColapsable({
+  titulo,
+  subtitulo,
+  abierto,
+  onToggle,
+  resumen,
+  children,
+}: SeccionColapsableProps) {
+  return (
+    <section className={`${styles.seccion} ${styles.seccionColapsable}`}>
+      <button
+        className={`${styles.seccionHeader} ${styles.seccionHeaderBtn}`}
+        onClick={onToggle}
+        aria-expanded={abierto}
+      >
+        <span className={styles.seccionTitulo}>{titulo}</span>
+        <span className={styles.seccionDerecha}>
+          {resumen && <span className={styles.seccionResumen}>{resumen}</span>}
+          <span className={styles.chevron}>{abierto ? "▾" : "▸"}</span>
+        </span>
+      </button>
+      <p className={styles.seccionSubtituloAside}>{subtitulo}</p>
+      <div
+        className={`${styles.seccionCuerpo} ${
+          abierto ? styles.seccionCuerpoAbierto : ""
+        }`}
+        hidden={!abierto}
+      >
+        {children}
+      </div>
+    </section>
   );
 }

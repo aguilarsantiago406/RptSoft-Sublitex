@@ -1,11 +1,11 @@
 /* =============================================================================
-   Grilla de prendas — tres secciones temáticas
+   Grilla de prendas — tarjetas + secciones plegables
    ============================================================================= */
 
 .grilla {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   padding: 18px;
 }
 
@@ -20,17 +20,30 @@
 
 .seccionHeader {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  padding: 14px 18px 10px;
+  padding: 13px 18px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-muted);
+  cursor: default;
+}
+
+.seccionHeaderBtn {
+  width: 100%;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.seccionHeaderBtn:hover {
+  background: var(--row-hover);
 }
 
 .seccionTitulo {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--text-strong);
   display: inline-flex;
@@ -41,7 +54,7 @@
 .seccionTitulo::before {
   content: "";
   width: 4px;
-  height: 16px;
+  height: 15px;
   border-radius: 2px;
   background: var(--primary);
 }
@@ -49,6 +62,172 @@
 .seccionSubtitulo {
   font-size: 11.5px;
   color: var(--text-muted);
+}
+
+.seccionSubtituloAside {
+  margin: 0;
+  padding: 6px 18px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted);
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.seccionDerecha {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.seccionResumen {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+}
+
+.chevron {
+  font-size: 12px;
+  color: var(--text-muted);
+  width: 16px;
+  text-align: center;
+}
+
+.seccionCuerpo {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+
+.seccionCuerpoAbierto {
+  max-height: 1200px;
+  opacity: 1;
+}
+
+/* --- Tarjetas de participantes --- */
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+  padding: 18px;
+}
+
+.card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
+}
+
+.cardObsequio {
+  background: var(--obsequio-bg);
+  border-color: var(--info);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardIndex {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 999px;
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardNombre {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cardPersona {
+  font-size: 13px;
+  color: var(--text);
+  border-radius: 6px;
+}
+
+.cardFields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.cardField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardFieldLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.inputCard {
+  width: 100%;
+}
+
+.cardColor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+}
+
+.cardArquero {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.cardPersonalizacion {
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+  font-style: italic;
+  color: var(--info);
+  font-size: 11.5px;
+}
+
+.cardPersonalizacion span {
+  display: block;
 }
 
 /* Contenedor y Tabla */
