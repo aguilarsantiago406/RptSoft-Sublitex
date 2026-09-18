@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, GoneException, BadRequestException } from '@nestjs/common';
 import { ParticipantesService } from './participantes.service';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 
 describe('🔴 TDD BK2: ParticipantesService (Bloque D)', () => {
   let service: ParticipantesService;

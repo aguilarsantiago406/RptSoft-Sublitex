@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrendasService } from './prendas.service';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 
 describe('🔴 TDD BK2: PrendasService (Bloque E y K)', () => {
   let service: PrendasService;

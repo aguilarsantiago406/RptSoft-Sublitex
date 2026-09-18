@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { GrupoService } from './grupo.service';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CreateGrupoDto, PoliticaNumeracion } from './dto/create-grupo.dto';
 import { UpdatePoliticaDto } from './dto/update-politica.dto';
 

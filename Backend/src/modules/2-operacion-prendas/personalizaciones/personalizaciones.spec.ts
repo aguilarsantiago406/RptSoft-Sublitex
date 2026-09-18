@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PersonalizacionesService } from './personalizaciones.service';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 
 describe('🔴 TDD BK2: PersonalizacionesService (Bloque F - Estampados)', () => {
   let service: PersonalizacionesService;

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExcepcionesService } from './excepciones.service';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 
 describe('🔴 TDD BK2: ExcepcionesService (Bloque C - Deltas)', () => {
   let service: ExcepcionesService;

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, GoneException } from '@nestjs/common';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CreateParticipanteDto } from './dto/create-participante.dto';
 import { GuardarFichaEnlaceDto } from './dto/guardar-ficha-enlace.dto';
 import * as crypto from 'crypto';

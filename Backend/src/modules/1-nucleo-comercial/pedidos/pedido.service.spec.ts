@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PedidoService } from './pedido.service';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 import { EstadoPedido } from './estado-pedido.enum';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdateEstadoDto } from './dto/update-estado.dto';
