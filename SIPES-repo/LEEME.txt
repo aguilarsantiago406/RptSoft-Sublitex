@@ -1,0 +1,15 @@
+SIPES - SIstema de PEdidos Sublitex
+Archivos de codigo. Los sube el guardian (Backend 1) al repositorio, el primer dia.
+NO van a Google Drive: si existen en dos lados, en tres semanas no coinciden.
+
+  prisma/schema.prisma          el modelo de datos
+  prisma/01_constraints.sql     las restricciones que Prisma no puede expresar.
+                                Se aplica como migracion manual:
+                                  prisma migrate dev --create-only --name constraints
+                                y se pega este contenido en el .sql generado.
+                                Tienen que quedar 8 triggers. Verificar con:
+                                  SELECT tgname FROM pg_trigger WHERE NOT tgisinternal ORDER BY tgname;
+  fixtures/PROMO2002_prendas.csv  las 28 filas del pedido real, para sembrar la base
+                                  y para que frontend monte el simulador sin inventar datos.
+  docs/reportes/REPORTE-SEMANA-N.md  la plantilla del reporte del viernes.
+                                     Se copia como REPORTE-SEMANA-1.md y se llena ahi.

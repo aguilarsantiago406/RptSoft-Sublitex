@@ -1,0 +1,911 @@
+// =============================================================================
+// SIPES — SIstema de PEdidos Sublitex
+// (el acronimo se define una sola vez, en el catalogo de reglas; aqui se repite igual)
+// Modelo de datos del NÚCLEO · v0.2 · catálogo de reglas v0.2 + bloque K
+// Actualizado 2026-09-07 tras analizar nueve pedidos reales y la matriz comercial.
+//
+// Cada modelo cita las reglas que lo justifican. Si cambias una regla, busca
+// su identificador acá y revisa qué se rompe.
+//
+// IMPORTANTE: este schema NO es suficiente por sí solo. Cinco reglas críticas
+// (R-G03, R-G06, R-H12, R-C05, R-I02) sólo se pueden garantizar con las
+// migraciones SQL de 01_constraints.sql. Sin ellas, el modelo permite
+// exactamente los errores que el sistema existe para evitar.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Para generar el diagrama entidad-relación que pide el §37 del requerimiento:
+//   npm i -D prisma-erd-generator @mermaid-js/mermaid-cli
+// y descomentar:
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   output   = "../docs/modelo-datos.svg"
+// }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// ENUMERACIONES
+// =============================================================================
+
+/// R-A05 · Estado global del pedido. Los estados de cada bloque van aparte.
+enum EstadoPedido {
+  BORRADOR
+  EN_CONFIGURACION
+  EN_RECOLECCION
+  EN_REVISION
+  CERRADO
+  EN_PRODUCCION
+  ENTREGADO
+  CANCELADO
+}
+
+/// R-H01 · Los tres bloques que se cierran de forma independiente.
+enum TipoBloque {
+  DISENO
+  LISTA
+  COMERCIAL
+}
+
+enum EstadoBloque {
+  ABIERTO
+  EN_REVISION
+  CERRADO
+}
+
+/// R-G01 · La corrección más importante de la v0.2 del catálogo.
+/// LIBRE es el valor por defecto: en una promoción, cuatro personas con el
+/// número 7 es lo normal, no un error.
+enum PoliticaNumeracion {
+  LIBRE
+  UNICA
+}
+
+/// R-D03
+enum EstadoParticipante {
+  PENDIENTE
+  REGISTRADO
+  CONFIRMADO
+}
+
+enum EstadoDiseno {
+  BORRADOR
+  PROPUESTO
+  APROBADO
+  RECHAZADO
+}
+
+/// R-J01 · Siete roles. El Participante no es un Usuario: entra por enlace
+/// firmado sin cuenta (R-D05).
+enum RolUsuario {
+  ADMINISTRADOR
+  COORDINADOR_OPERATIVO
+  VENDEDORA
+  COORDINADOR_CLIENTE
+  DISENO
+  PRODUCCION
+}
+
+/// R-K01 · El género de la persona, el corte de la prenda y el cuello son TRES
+/// campos distintos. En un pedido real había mujeres con cuello V y sin corte
+/// princesa: tratarlos como un solo campo obliga a poner corte princesa a
+/// todas o a ninguna.
+enum Genero {
+  HOMBRE
+  MUJER
+  NINO
+  NINA
+  SIN_ESPECIFICAR
+}
+
+/// R-K02 · Una prenda de obsequio o de muestra se fabrica pero no se cobra.
+/// Cuenta para producción y no para el importe.
+enum TipoPrenda {
+  VENTA
+  OBSEQUIO
+  MUESTRA
+}
+
+/// R-K10 · Los conceptos tarifados. Ningún precio se escribe a mano en un
+/// pedido: siempre sale de una Tarifa vigente.
+enum TipoTarifa {
+  PRODUCTO
+  RECARGO_TALLA
+  RECARGO_TELA
+  RECARGO_CUELLO
+  RECARGO_ACABADO
+  ADICIONAL
+  COSTO_INTERNO
+}
+
+enum TipoComprobante {
+  NINGUNO
+  BOLETA
+  FACTURA
+}
+
+/// R-I04 · Un cambio del participante se atribuye al participante, nunca al
+/// coordinador que le pasó el enlace.
+enum OrigenCambio {
+  USUARIO
+  PARTICIPANTE
+  SISTEMA
+  GHL
+}
+
+// =============================================================================
+// USUARIOS
+// =============================================================================
+
+model Usuario {
+  id     String     @id @default(cuid())
+  email  String     @unique
+  nombre String
+  rol    RolUsuario
+  activo Boolean    @default(true)
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  pedidosCreados      Pedido[]           @relation("PedidoCreadoPor")
+  pedidosCoordinados  Pedido[]           @relation("PedidoCoordinador")
+  pedidosVendidos     Pedido[]           @relation("PedidoVendedora")
+  excepcionesCreadas  ExcepcionPrenda[]
+  bloquesCerrados     BloquePedido[]
+  versionesCreadas    VersionBloque[]
+  cambiosRegistrados  RegistroCambio[]
+  disenosAprobados    Diseno[]
+  confirmacionesEmitidas Confirmacion[]
+  nestingsCreados        Nesting[] @relation("NestingCreador")
+
+  @@index([rol])
+}
+
+// =============================================================================
+// CLIENTE
+// Entidad propia de Sublitex desde la decisión de aplazar GoHighLevel.
+// Un cliente es una ORGANIZACIÓN o un grupo, no una persona: el colegio, la
+// promoción, el club. La persona que responde por él es el coordinador del
+// cliente, que es un Usuario (R-A01).
+// =============================================================================
+
+enum TipoCliente {
+  COLEGIO
+  PROMOCION
+  CLUB
+  EMPRESA
+  PARTICULAR
+}
+
+model Cliente {
+  id     String      @id @default(cuid())
+  tipo   TipoCliente
+  nombre String
+
+  telefono String?
+  ciudad   String?
+
+  /// Se llena si más adelante se conecta GoHighLevel. Nulo por ahora.
+  ghlContactId String?
+
+  activo        Boolean  @default(true)
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  pedidos Pedido[]
+
+  @@index([tipo])
+  @@index([nombre])
+}
+
+// =============================================================================
+// PEDIDO
+// =============================================================================
+
+model Pedido {
+  id     String @id @default(cuid())
+  /// R-A03 · Legible, porque va a viajar por WhatsApp igual. SUB-000842
+  codigo String @unique
+
+  /// El cliente es una entidad propia de Sublitex.
+  /// DECISIÓN 2026-09-06: GoHighLevel queda fuera del alcance inicial. Sólo
+  /// aporta cliente, teléfono y ciudad, y no está preparado para gestionar las
+  /// tablas y variables del pedido. El pedido nace en Sublitex.
+  clienteId String
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+
+  /// Vendedora asignada. Rol VENDEDORA.
+  vendedoraId String?
+  vendedora   Usuario? @relation("PedidoVendedora", fields: [vendedoraId], references: [id])
+
+  // --- Vínculo con GoHighLevel — APLAZADO ------------------------------------
+  // R-A01, R-A02, R-A04, R-A07, R-A08 quedan en pausa. Los campos se dejan
+  // nulos y opcionales para que conectar más adelante no exija una migración
+  // que toque datos existentes. NO implementar webhooks en este sprint.
+  ghlOpportunityId  String?   @unique
+  ghlContactId      String?
+  ghlSincronizadoEn DateTime?
+
+  estado EstadoPedido @default(BORRADOR)
+
+  fechaPedido     DateTime  @default(now())
+  /// R-A09 · Debe ser posterior a fechaPedido. CHECK en 01_constraints.sql.
+  fechaCompromiso DateTime?
+
+  /// R-F06 · Texto libre NO vinculante. Producción no está obligada a leerlo.
+  /// Lo que deba llegar a producción es un atributo o una personalización.
+  observaciones String?
+
+  /// R-A10 · Inmutables. Ningún endpoint debe exponerlos como editables.
+  creadoPorId String
+  creadoPor   Usuario @relation("PedidoCreadoPor", fields: [creadoPorId], references: [id])
+  creadoEn    DateTime @default(now())
+
+  /// R-A01 · Exactamente un coordinador del cliente por pedido.
+  coordinadorId String
+  coordinador   Usuario @relation("PedidoCoordinador", fields: [coordinadorId], references: [id])
+
+  canceladoEn DateTime?
+
+  grupos  Grupo[]
+  bloques BloquePedido[]
+  disenos Diseno[]
+  cambios RegistroCambio[]
+
+  // --- bloque K -------------------------------------------------------------
+  colores        ColorPedido[]
+  confirmaciones Confirmacion[]
+  datosEnvio     DatosEnvio?
+  nestingPartes  NestingParte[]
+
+  @@index([estado])
+  @@index([ghlContactId])
+}
+
+/// R-A05, R-H01 · Los quince estados lineales del requerimiento §27 se modelan
+/// como tres bloques con estado propio más el estado global del pedido.
+/// "Diseño aprobado" y "Lista cerrada" no son momentos sucesivos de una misma
+/// línea: son candados independientes en cualquier combinación.
+model BloquePedido {
+  id       String @id @default(cuid())
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  tipo   TipoBloque
+  estado EstadoBloque @default(ABIERTO)
+
+  /// R-H11 · Al cerrar se congela una versión inmutable.
+  cerradoEn   DateTime?
+  cerradoPorId String?
+  cerradoPor   Usuario? @relation(fields: [cerradoPorId], references: [id])
+
+  versiones VersionBloque[]
+
+  @@unique([pedidoId, tipo])
+  @@index([estado])
+}
+
+/// R-H11, R-H13, R-H14 · Append-only. Los permisos de UPDATE y DELETE se
+/// revocan en 01_constraints.sql: ninguna versión se elimina jamás.
+model VersionBloque {
+  id       String       @id @default(cuid())
+  bloqueId String
+  bloque   BloquePedido @relation(fields: [bloqueId], references: [id], onDelete: Cascade)
+
+  numero Int
+
+  /// Snapshot completo del bloque al momento de cerrar. R-H11.
+  /// Diseño y producción leen de acá, nunca del dato actual (R-E11 de v0.1 →
+  /// ahora R-H11). La pantalla siempre dice qué versión se está viendo.
+  contenido Json
+
+  /// R-H13 · Motivo obligatorio al reabrir. La primera versión no lo lleva.
+  motivoReapertura String?
+
+  /// R-H13 · Diff calculado contra la versión anterior: qué cambió, de qué a
+  /// qué, y de qué prendas. Incluye altas y bajas (R-H10).
+  diff Json?
+
+  /// R-H14 · Si el pedido ya estaba en producción, alguien tiene que confirmar
+  /// que vio el cambio. El historial pasivo no habría evitado el reclamo del XXL.
+  acusadoDisenoEn     DateTime?
+  acusadoProduccionEn DateTime?
+
+  creadoPorId String
+  creadoPor   Usuario  @relation(fields: [creadoPorId], references: [id])
+  creadoEn    DateTime @default(now())
+
+  @@unique([bloqueId, numero])
+}
+
+// =============================================================================
+// CATÁLOGOS
+// R-B04 · Catálogo cerrado con valores cerrados. El texto libre nunca es un
+// atributo; va como personalización (con ubicación) o como observación (no
+// vinculante). Es la regla que impide que el sistema degenere en el mismo
+// WhatsApp con otra interfaz.
+// =============================================================================
+
+model TipoProducto {
+  id     String  @id @default(cuid())
+  codigo String  @unique // CAMISETA, CAMISETA_SHORT, KIT, ARQUERO, SHORT, MEDIAS, FALDA
+  nombre String
+  orden  Int     @default(0)
+  activo Boolean @default(true)
+
+  /// R-K03 · CUÁNTAS PIEZAS FÍSICAS CONTIENE ESTE PRODUCTO.
+  /// Un kit completo son 1 camiseta + 1 short + 1 par de medias. Todos los
+  /// resúmenes de producción se calculan multiplicando por estos números, no
+  /// contando pedidos ni "unidades".
+  /// Un pedido real se despachó sin las tres medias porque el resumen no tenía
+  /// la línea de medias: nadie las olvidó, el campo no existía.
+  camisetas Int @default(0)
+  shorts    Int @default(0)
+  medias    Int @default(0)
+
+  tallas  TallaCatalogo[]
+  grupos  Grupo[]
+  prendas Prenda[]
+}
+
+/// R-E04 · Los catálogos de talla difieren por producto: adulto usa letras,
+/// niño usa números. En el pedido PROMO 2002 convivían tallas 10 y 14 con S,
+/// M, L y XL. Y XXL, que el cliente pidió, no figuraba en ninguna lista.
+/// El catálogo de tallas se revisa con ventas, no con desarrollo.
+model TallaCatalogo {
+  id             String       @id @default(cuid())
+  tipoProductoId String
+  tipoProducto   TipoProducto @relation(fields: [tipoProductoId], references: [id])
+
+  codigo   String // S, M, L, XL, XXL, 10, 12, 14...
+  etiqueta String
+  orden    Int    @default(0)
+  activo   Boolean @default(true)
+
+  prendas Prenda[]
+
+  @@unique([tipoProductoId, codigo])
+  /// Clave compuesta: permite que Prenda referencie (tipoProducto, talla) a la
+  /// vez, de modo que asignar una talla de niño a un conjunto de adulto sea
+  /// estructuralmente imposible, no una validación que alguien puede olvidar.
+  @@unique([tipoProductoId, id])
+}
+
+/// R-B05 · Dos marcas independientes. Tela, color, cuello, manga y corte son
+/// obligatorios. Corte, talla y escudo son críticos. Sponsor de manga derecha
+/// no es ninguna de las dos.
+model Atributo {
+  id     String @id @default(cuid())
+  codigo String @unique // TELA, COLOR, CUELLO, MANGA, CORTE, ESCUDO, SHORT, MEDIAS
+  nombre String
+
+  /// R-B06 · Sin valor, el grupo no pasa a recolección.
+  obligatorio Boolean @default(false)
+
+  /// R-C08, R-H06 · Si es crítico, sus excepciones se muestran destacadas y
+  /// la confirmación lo imprime SIEMPRE, aunque tome el valor por defecto.
+  /// El reclamo del corte femenino vino de un dato que nunca se escribió.
+  criticoProduccion Boolean @default(false)
+
+  orden  Int     @default(0)
+  activo Boolean @default(true)
+
+  valores       ValorAtributo[]
+  configuracion ValorConfiguracion[]
+  excepciones   ExcepcionPrenda[]
+}
+
+model ValorAtributo {
+  id         String   @id @default(cuid())
+  atributoId String
+  atributo   Atributo @relation(fields: [atributoId], references: [id])
+
+  codigo   String
+  etiqueta String
+  orden    Int    @default(0)
+  activo   Boolean @default(true)
+
+  configuraciones ValorConfiguracion[]
+  excepciones     ExcepcionPrenda[]
+  nestings        Nesting[] @relation("NestingTela")
+
+  @@unique([atributoId, codigo])
+  /// Clave compuesta: hace estructuralmente imposible asignar el valor
+  /// "manga larga" al atributo "corte".
+  @@unique([atributoId, id])
+}
+
+/// R-F02 · Cerrado en cada momento, ampliable con el tiempo.
+model UbicacionPersonalizacion {
+  id     String @id @default(cuid())
+  codigo String @unique // PECHO, ESPALDA, CUELLO_DELANTERO, CUELLO_POSTERIOR,
+                        // MANGA_IZQUIERDA, MANGA_DERECHA, SHORT_DELANTERO, SHORT_POSTERIOR
+  etiqueta String
+  orden    Int     @default(0)
+  activo   Boolean @default(true)
+
+  personalizaciones Personalizacion[]
+}
+
+// =============================================================================
+// GRUPO Y CONFIGURACIÓN GENERAL
+// =============================================================================
+
+model Grupo {
+  id       String @id @default(cuid())
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  nombre String // "Conjuntos blancos", "Camisetas"
+
+  tipoProductoId String
+  tipoProducto   TipoProducto @relation(fields: [tipoProductoId], references: [id])
+
+  /// R-B02 · Lo acordado comercialmente. Es contra lo que se contrasta la
+  /// cantidad real de prendas (R-H03). Sin esto no hay contra qué comparar.
+  cantidadContratada Int
+
+  /// R-G01 · LIBRE por defecto. Ver 01_constraints.sql: el índice único parcial
+  /// que hace cumplir UNICA, y el trigger que propaga este valor a las prendas.
+  politicaNumeracion PoliticaNumeracion @default(LIBRE)
+
+  observaciones String? // R-F06 · no vinculante
+
+  configuracion ValorConfiguracion[]
+  participantes Participante[]
+  prendas       Prenda[]
+
+  @@unique([pedidoId, nombre])
+}
+
+/// R-B03, R-B07 · La configuración general del grupo: una fila por atributo.
+/// Cambiar una de estas filas NO toca las excepciones (R-B07). Eso sólo es
+/// posible porque las excepciones guardan el delta y no el valor resuelto.
+model ValorConfiguracion {
+  id      String @id @default(cuid())
+  grupoId String
+  grupo   Grupo  @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+
+  atributoId String
+  atributo   Atributo @relation(fields: [atributoId], references: [id])
+
+  valorAtributoId String
+  valor           ValorAtributo @relation(fields: [atributoId, valorAtributoId], references: [atributoId, id])
+
+  @@unique([grupoId, atributoId])
+}
+
+// =============================================================================
+// PARTICIPANTES Y PRENDAS
+// =============================================================================
+
+model Participante {
+  id      String @id @default(cuid())
+  grupoId String
+  grupo   Grupo  @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+
+  /// R-D02 · El nombre de la PERSONA. Distinto del nombre en prenda.
+  /// Si son el mismo campo, alguien va a "corregir" el apodo pensando que
+  /// corrige un error de tipeo. Así nació "Chapoñán → Capoñán".
+  nombrePersona String
+
+  estado EstadoParticipante @default(PENDIENTE)
+
+  /// R-D05, R-D06 · Enlace personal sin contraseña. NO crear un usuario de
+  /// Supabase por participante: son 28 personas por pedido que nunca vuelven.
+  enlaceToken     String    @unique
+  enlaceExpiraEn  DateTime?
+  enlaceRevocado  Boolean   @default(false)
+
+  registradoEn  DateTime?
+  confirmadoEn  DateTime?
+
+  /// R-D01 · Un participante puede tener UNA O MÁS prendas.
+  /// En el pedido real, CLINT tiene un conjunto blanco N°69 y una camiseta
+  /// azul N°69. Modelarlo con una sola prenda hace imposible ese pedido.
+  prendas Prenda[]
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  /// Clave compuesta: permite que Prenda referencie (grupo, participante) a la
+  /// vez. Necesario porque Prenda guarda grupoId denormalizado — ver abajo.
+  @@unique([grupoId, id])
+  @@index([grupoId, estado])
+}
+
+/// R-E01..R-E08 · LA UNIDAD CONTABLE DEL SISTEMA.
+/// Todos los resúmenes —por talla, producto, componente, color— se calculan
+/// sobre prendas, nunca sobre participantes (R-E07).
+model Prenda {
+  id String @id @default(cuid())
+
+  participanteId String
+  /// grupoId está DENORMALIZADO a propósito: el índice único parcial de
+  /// R-G03 necesita (grupoId, numero) en la misma tabla, y un índice no puede
+  /// mirar otra tabla. La clave compuesta de abajo garantiza que este grupoId
+  /// siempre coincida con el del participante.
+  grupoId String
+  participante Participante @relation(fields: [grupoId, participanteId], references: [grupoId, id], onDelete: Cascade)
+  grupo        Grupo        @relation(fields: [grupoId], references: [id])
+
+  /// R-E02 · El producto puede diferir del tipo base del grupo.
+  tipoProductoId String
+  tipoProducto   TipoProducto @relation(fields: [tipoProductoId], references: [id])
+
+  /// R-E04 · Referencia compuesta: una talla de otro tipo de producto no se
+  /// puede guardar. No es una validación: es imposible.
+  tallaId String?
+  talla   TallaCatalogo? @relation(fields: [tipoProductoId, tallaId], references: [tipoProductoId, id])
+
+  /// R-E03 · Nombre, número y talla son la ficha mínima. Nulos mientras el
+  /// participante no ha registrado; obligatorios para cerrar (R-H03).
+  nombreEnPrenda String?
+
+  /// R-K04 · El número es TEXTO, no entero. "S/N" (sin número) es un valor
+  /// válido y distinto de "número pendiente", y aparece en pedidos reales.
+  /// Un entero no puede representar esa diferencia.
+  numero String?
+
+  /// R-K01 · Género de la persona. Independiente del corte y del cuello.
+  genero Genero @default(SIN_ESPECIFICAR)
+
+  /// R-K02 · Venta, obsequio o muestra.
+  tipoPrenda TipoPrenda @default(VENTA)
+
+  /// R-K05 · El color apunta a un ColorPedido, que obliga a llevar código.
+  /// Tres de nueve pedidos reales fallaron porque el color se acordó con una
+  /// palabra: "azul oscuro" salió morado, "amarillo brasil" salió amarillo oro.
+  colorId String?
+  color   ColorPedido? @relation(fields: [colorId], references: [id])
+
+  /// R-E06 · Atributo de la prenda, no del grupo. Una prenda de arquero puede
+  /// tener producto, manga y precio distintos.
+  esArquero Boolean @default(false)
+
+  /// R-G01 · Copia denormalizada de Grupo.politicaNumeracion, mantenida por
+  /// trigger. Existe SOLO para que el índice único parcial pueda filtrar.
+  /// Nunca se escribe desde la aplicación.
+  politicaNumeracion PoliticaNumeracion @default(LIBRE)
+
+  /// R-E05 · El COLOR y el CORTE no son columnas: son atributos del catálogo.
+  /// Su valor por prenda sale de la configuración del grupo, y si difiere se
+  /// registra como excepción. Así "CLINT tiene una prenda blanca y una azul"
+  /// se representa con una sola fila de excepción, no con un campo aparte.
+
+  excepciones       ExcepcionPrenda[]
+  personalizaciones Personalizacion[]
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  @@index([grupoId])
+  @@index([participanteId])
+  // El índice único parcial WHERE politicaNumeracion = 'UNICA' se crea en
+  // 01_constraints.sql. Prisma no puede expresar índices parciales.
+}
+
+/// R-C01, R-C02, R-C03 · La decisión de arquitectura más importante del sistema.
+/// Se guarda SÓLO LA DIFERENCIA respecto de la configuración del grupo. El valor
+/// efectivo se resuelve al leer:
+///     valorEfectivo(prenda, atributo) = excepcion ?? configuracionDelGrupo
+/// Si se copiara el valor general a cada prenda, R-B07 sería imposible y
+/// aparecerían prendas con valores viejos que nadie sabe por qué son distintos.
+model ExcepcionPrenda {
+  id       String @id @default(cuid())
+  prendaId String
+  prenda   Prenda @relation(fields: [prendaId], references: [id], onDelete: Cascade)
+
+  atributoId String
+  atributo   Atributo @relation(fields: [atributoId], references: [id])
+
+  valorAtributoId String
+  valor           ValorAtributo @relation(fields: [atributoId, valorAtributoId], references: [atributoId, id])
+
+  /// R-C04
+  motivo      String?
+  creadoPorId String?
+  creadoPor   Usuario? @relation(fields: [creadoPorId], references: [id])
+  creadoEn    DateTime @default(now())
+
+  /// R-C02 · Como máximo una excepción por atributo.
+  @@unique([prendaId, atributoId])
+  @@index([atributoId])
+  // R-C05 (excepción idéntica al valor general = inválida) se hace cumplir con
+  // un trigger en 01_constraints.sql. Es una comparación entre tablas: ninguna
+  // restricción declarativa de Postgres puede expresarla.
+}
+
+/// R-F01, R-F04 · Texto libre VINCULANTE, con ubicación declarada.
+/// Es la forma de aceptar "Kalessi abajo del cuello" sin volver al texto plano:
+/// estructurado donde importa, libre donde tiene que serlo.
+model Personalizacion {
+  id       String @id @default(cuid())
+  prendaId String
+  prenda   Prenda @relation(fields: [prendaId], references: [id], onDelete: Cascade)
+
+  /// R-F03 · Sin ubicación es inválida. No se admite "los nombres de los hijos
+  /// en los brazos" sin decir cuál va en cuál. En el pedido real el cliente
+  /// mandó tres nombres para dos mangas y un cuello, y alguien resolvió el
+  /// reparto de memoria.
+  ubicacionId String
+  ubicacion   UbicacionPersonalizacion @relation(fields: [ubicacionId], references: [id])
+
+  /// R-F04 · Se muestra siempre con la ortografía exacta con que se registró.
+  /// R-F05 · Se registra una vez y ninguna vista permite re-teclearla.
+  contenido String
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  @@unique([prendaId, ubicacionId])
+}
+
+// =============================================================================
+// DISEÑO (stub — el bloque completo está fuera del núcleo)
+// Se incluye porque R-H02 lo necesita: no se cierra el bloque Diseño sin un
+// diseño en estado APROBADO.
+// =============================================================================
+
+model Diseno {
+  id       String @id @default(cuid())
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  version     Int
+  estado      EstadoDiseno @default(BORRADOR)
+  archivoUrl  String?
+  imagenUrl   String?
+
+  aprobadoEn   DateTime?
+  aprobadoPorId String?
+  aprobadoPor   Usuario? @relation(fields: [aprobadoPorId], references: [id])
+
+  creadoEn DateTime @default(now())
+
+  @@unique([pedidoId, version])
+}
+
+// =============================================================================
+// AUDITORÍA
+// R-I01..R-I05 · Append-only. Los permisos de UPDATE y DELETE se revocan en
+// 01_constraints.sql. No existe borrado para ningún rol, ni por API.
+// =============================================================================
+
+model RegistroCambio {
+  id       String @id @default(cuid())
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id])
+
+  /// Qué se tocó. entidad = "Prenda" | "Participante" | "ValorConfiguracion"...
+  entidad   String
+  entidadId String
+  campo     String
+
+  valorAnterior String?
+  valorNuevo    String?
+
+  /// R-I04 · Un cambio del participante se atribuye al participante.
+  origen OrigenCambio
+
+  autorUsuarioId String?
+  autorUsuario   Usuario? @relation(fields: [autorUsuarioId], references: [id])
+  /// Cuando origen = PARTICIPANTE. No es FK dura para que el registro
+  /// sobreviva si el participante se elimina (R-D08).
+  autorParticipanteId String?
+  autorRol            RolUsuario?
+
+  /// R-I05 · Los cambios de configuración general registran a cuántas prendas
+  /// afectaron EN ESE MOMENTO. El número de hoy no sirve para explicar ayer.
+  prendasAfectadas Int?
+
+  creadoEn DateTime @default(now())
+
+  @@index([pedidoId, creadoEn])
+  @@index([entidad, entidadId])
+  @@index([autorUsuarioId])
+}
+
+// =============================================================================
+// INTEGRACIÓN CON GOHIGHLEVEL — APLAZADA
+//
+// DECISIÓN 2026-09-06: fuera del alcance de los primeros sprints. GoHighLevel
+// sólo aporta cliente, teléfono y ciudad, y no está preparado para gestionar
+// las tablas y variables del pedido. El pedido nace en Sublitex.
+//
+// Este modelo se deja declarado para que conectar más adelante no obligue a
+// rediseñar. NO implementar webhooks ni sincronización en este sprint.
+// =============================================================================
+
+/// R-A04, R-A08 · Cola de eventos con idempotencia y reintentos.
+/// GoHighLevel nunca bloquea la operación: si falla, el evento queda acá y el
+/// pedido sigue funcionando en Sublitex.
+model EventoGhl {
+  id String @id @default(cuid())
+
+  /// R-A04 · La unicidad de este campo es la idempotencia. Si el webhook se
+  /// reenvía, el segundo intento choca acá y no crea nada.
+  eventoExternoId String @unique
+
+  tipo          String
+  opportunityId String?
+  contactId     String?
+  payload       Json
+
+  procesadoEn DateTime?
+  intentos    Int       @default(0)
+  ultimoError String?
+
+  recibidoEn DateTime @default(now())
+
+  @@index([procesadoEn])
+  @@index([opportunityId])
+}
+
+
+// =============================================================================
+// BLOQUE K — LO QUE APARECIÓ AL ANALIZAR NUEVE PEDIDOS REALES
+// Añadido el 2026-09-07. Ninguna de estas entidades estaba en la versión
+// anterior del modelo, y todas corresponden a un error concreto que ocurrió.
+// =============================================================================
+
+/// R-K05 · Un color NUNCA es solo un nombre. La palabra se acuerda con el
+/// cliente, el código se fabrica. El único pedido real que no tuvo problema de
+/// color fue el que especificó #f7f4f2 y #cc9933.
+model ColorPedido {
+  id       String @id @default(cuid())
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  nombre           String
+  /// Obligatorio para aprobar el diseño. Ver el CHECK en 01_constraints.sql.
+  codigoHex        String?
+  referenciaFisica String?
+
+  prendas Prenda[]
+
+  @@unique([pedidoId, nombre])
+}
+
+/// R-K10 · Catálogo de precios y recargos. Un pedido nunca guarda un precio
+/// escrito a mano: guarda la tarifa que aplicó y su valor congelado.
+/// En un pedido real se cobró recargo de talla XL a S/5 cuando la tarifa
+/// oficial es S/3, y nadie lo notó porque el precio se escribía a mano.
+model Tarifa {
+  id       String     @id @default(cuid())
+  tipo     TipoTarifa
+  concepto String     // "Kit completo", "XL", "Puma", "Camisero", "Termosellado"
+  valor    Decimal    @db.Decimal(10, 2)
+
+  vigenteDesde DateTime  @default(now())
+  vigenteHasta DateTime?
+  activo       Boolean   @default(true)
+
+  nota String?
+
+  @@index([tipo, activo])
+  @@unique([tipo, concepto, vigenteDesde])
+}
+
+/// R-K06 · La confirmación que se envía al cliente es un documento versionado,
+/// no un mensaje. Cada versión guarda sus propios totales, congelados.
+/// En un pedido real circularon cuatro confirmaciones sucesivas escritas a
+/// mano; entre la segunda y la tercera desapareció un participante.
+model Confirmacion {
+  id       String @id @default(cuid())
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  version Int
+
+  /// Totales calculados al momento de emitir. Nunca escritos a mano.
+  totalSinIgv      Decimal  @db.Decimal(10, 2)
+  recargoTallas    Decimal  @db.Decimal(10, 2) @default(0)
+  recargoTelas     Decimal  @db.Decimal(10, 2) @default(0)
+  recargoCuellos   Decimal  @db.Decimal(10, 2) @default(0)
+  recargoAcabados  Decimal  @db.Decimal(10, 2) @default(0)
+  adicionales      Decimal  @db.Decimal(10, 2) @default(0)
+
+  /// R-K07 · El adelanto sugerido se calcula (50% según la matriz comercial).
+  /// El adelanto recibido es un hecho que se registra. Son dos cosas distintas:
+  /// en los pedidos reales el recibido fue 57%, 46% y 37% del total.
+  adelantoSugerido Decimal @db.Decimal(10, 2)
+  adelantoRecibido Decimal @db.Decimal(10, 2) @default(0)
+  saldo            Decimal @db.Decimal(10, 2)
+
+  comprobante TipoComprobante @default(NINGUNO)
+  igvCalculado Decimal? @db.Decimal(10, 2)
+
+  pdfUrl      String?
+  emitidaEn   DateTime @default(now())
+  emitidaPorId String
+  emitidaPor   Usuario @relation(fields: [emitidaPorId], references: [id])
+
+  @@unique([pedidoId, version])
+}
+
+/// R-K08 · Los siete datos de rotulado que exige la matriz comercial para un
+/// envío a provincia. Sin los siete no se despacha.
+model DatosEnvio {
+  id       String @id @default(cuid())
+  pedidoId String @unique
+  pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  nombreCompleto String?
+  dni            String?
+  celular        String?
+  ciudad         String?
+  agencia        String?
+  referencia     String?
+  correo         String?
+}
+
+/// R-K11 · UN NESTING PUEDE MEZCLAR PIEZAS DE VARIOS PEDIDOS.
+/// Esta es la entidad que más sorprende del modelo y viene de un caso real:
+/// en un nesting de tela dry fit se imprimieron 1497 cm de un pedido y 116 cm
+/// de otro. El consumo de tela de un pedido NO se puede calcular solo: es una
+/// asignación, no un cálculo. Por eso el nesting es una entidad propia y las
+/// partes apuntan a su pedido.
+model Nesting {
+  id     String @id @default(cuid())
+  codigo String @unique
+
+  telaId String
+  tela   ValorAtributo @relation("NestingTela", fields: [telaId], references: [id])
+
+  /// R-K12 · El ancho de impresión es fijo: 1.80 m. Lo que varía es el largo.
+  anchoImpresionM Decimal @db.Decimal(4, 2) @default(1.80)
+
+  fecha        DateTime @default(now())
+  creadoPorId  String
+  creadoPor    Usuario  @relation("NestingCreador", fields: [creadoPorId], references: [id])
+
+  partes   NestingParte[]
+  archivos ArchivoTif[]
+}
+
+/// Cada parte del nesting con su medida real y el pedido al que pertenece.
+model NestingParte {
+  id        String  @id @default(cuid())
+  nestingId String
+  nesting   Nesting @relation(fields: [nestingId], references: [id], onDelete: Cascade)
+
+  /// A qué pedido se le carga esta parte. Es lo que permite repartir el consumo.
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id])
+
+  numeroParte Int
+  /// Ancho realmente ocupado, no el del rollo. La diferencia contra 180 cm es
+  /// el desperdicio lateral, y sirve para medir qué tan bien nestea el diseño.
+  anchoCm     Int
+  largoCm     Int
+
+  /// El rib se mide y se reporta aparte de la tela principal.
+  esRib Boolean @default(false)
+
+  @@unique([nestingId, numeroParte])
+  @@index([pedidoId])
+}
+
+/// R-K13 · Un archivo de más de cinco metros de largo es inmanejable por peso,
+/// así que un nesting largo se exporta partido. El nombre lleva el pedido, la
+/// tela y el largo, porque el ancho siempre es 1.80.
+/// Ejemplo: SUBLITEX_PROMO2002_DRYFIT_180x400_1de3.tif
+model ArchivoTif {
+  id        String  @id @default(cuid())
+  nestingId String
+  nesting   Nesting @relation(fields: [nestingId], references: [id], onDelete: Cascade)
+
+  nombre    String  @unique
+  largoM    Decimal @db.Decimal(6, 2)
+  ordenEnSerie Int
+  totalSerie   Int
+
+  entregadoEn DateTime?
+}
