@@ -158,7 +158,7 @@ export function TablaPrendas({
                 />
               ))}
             </tbody>
-            <TotalesPrendas totales={totales} />
+            <TotalesPrendas totales={totales} prendas={prendas} catalogo={catalogo} />
           </table>
         </div>
       </SeccionColapsable>

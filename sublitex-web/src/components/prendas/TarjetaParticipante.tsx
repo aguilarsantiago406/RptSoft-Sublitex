@@ -38,7 +38,7 @@ export function TarjetaParticipante({
     .join(" ");
 
   return (
-    <article className={cardClass}>
+    <article id={prenda.id} className={cardClass}>
       {/* Header: índice + nombre en prenda + excepciones */}
       <header className={styles.cardHeader}>
         <span className={styles.cardIndex}>{index + 1}</span>

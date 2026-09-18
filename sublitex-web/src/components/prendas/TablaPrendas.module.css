@@ -543,3 +543,8 @@
   border-right: 1px solid var(--border);
   text-align: center;
 }
+
+.tdTotalEstado {
+  font-size: 11.5px;
+  white-space: nowrap;
+}

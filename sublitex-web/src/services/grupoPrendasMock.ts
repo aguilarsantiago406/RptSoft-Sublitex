@@ -67,6 +67,8 @@ export const grupoPrendasMock: GrillaGrupo = {
       numero: "7",
       genero: "HOMBRE",
       color: "c1",
+      // R-F03: ubicación fuera del catálogo cerrado → personalización inválida
+      personalizaciones: [{ ubicacion: "HOMBRO", contenido: "Nombre del hijo" }],
     }),
     prenda({
       id: "p05",
@@ -148,6 +150,18 @@ export const grupoPrendasMock: GrillaGrupo = {
       genero: "HOMBRE",
       color: "c1",
       tipoPrenda: "MUESTRA",
+    }),
+    // R-E03: ficha mínima incompleta (sin talla ni dorsal) — visible en el panel
+    prenda({
+      id: "p30",
+      participanteId: "part_24",
+      nombreEnPrenda: "CONTADOR",
+      nombrePersona: "Contador del colegio",
+      producto: "CAMISETA",
+      talla: "",
+      numero: "",
+      genero: "HOMBRE",
+      color: "c1",
     }),
   ],
 };

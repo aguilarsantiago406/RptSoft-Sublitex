@@ -1,15 +1,21 @@
 "use client";
 
 import React from "react";
-import type { TotalesPedido } from "@/types/prendas";
+import type { CatalogoCompleto, PrendaItem, TotalesPedido } from "@/types/prendas";
+import { validarPrenda } from "@/domain/validacionPrenda";
 import styles from "./TablaPrendas.module.css";
 
 interface TotalesPrendasProps {
   totales: TotalesPedido;
+  prendas: PrendaItem[];
+  catalogo: CatalogoCompleto;
 }
 
-/** Totales de la tabla de precios y producción (colabel: tomamos mismas columnas que FilaPrecio) */
-export function TotalesPrendas({ totales }: TotalesPrendasProps) {
+/** Totales de la tabla de precios y producción. R-E03: la última columna
+ *  ("Qué falta") cuenta INCOMPLETAS reales contra la ficha mínima, no un ✓ fijo. */
+export function TotalesPrendas({ totales, prendas, catalogo }: TotalesPrendasProps) {
+  const incompletas = prendas.filter((p) => validarPrenda(p, catalogo).length > 0).length;
+
   return (
     <tfoot>
       <tr className={styles.tfootRow}>
@@ -28,7 +34,15 @@ export function TotalesPrendas({ totales }: TotalesPrendasProps) {
         <td className={styles.tdTotalCenter}>{totales.camisetas}</td>
         <td className={styles.tdTotalCenter}>{totales.shorts}</td>
         <td className={styles.tdTotalCenter}>{totales.medias}</td>
-        <td className={styles.tdTotalCenter}>✓</td>
+        <td className={`${styles.tdTotalCenter} ${styles.tdTotalEstado}`}>
+          {incompletas === 0 ? (
+            <span className={styles.faltantesOk}>OK</span>
+          ) : (
+            <span className={styles.faltantesError}>
+              {incompletas} incompleta{incompletas === 1 ? "" : "s"}
+            </span>
+          )}
+        </td>
       </tr>
     </tfoot>
   );

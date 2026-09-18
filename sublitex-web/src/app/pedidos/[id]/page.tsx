@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePedidoDetalle } from "@/hooks/usePedidoDetalle";
 import { useGrupoPrendas } from "@/hooks/useGrupoPrendas";
 import { TablaPrendas } from "@/components/prendas/TablaPrendas";
+import { PanelEstadoGrupo } from "@/components/prendas/PanelEstadoGrupo";
 import { calcularTotales, TOTALES_VACIOS } from "@/domain/calculoTotales";
 import type { GrupoDetalle } from "@/types/pedidos";
 import styles from "./page.module.css";
@@ -133,6 +134,12 @@ export default function PaginaDetallePedido({ params }: PageProps) {
       }
       children={
         <>
+          <PanelEstadoGrupo
+            prendas={prendas}
+            catalogo={catalogo}
+            cantidadContratada={grupo.cantidadContratada}
+            politicaNumeracion={grupoGrilla.grupo.politicaNumeracion}
+          />
           <TablaPrendas
             prendas={prendas}
             colores={pedido.colores}
@@ -288,6 +295,7 @@ function ResumenStrip({
     shorts: number;
     medias: number;
     importe: number;
+    excepciones: number;
   };
   totales: ReturnType<typeof calcularTotales>;
 }) {
@@ -296,6 +304,11 @@ function ResumenStrip({
     { label: "Camisetas", valor: totales.camisetas, sub: "piezas" },
     { label: "Shorts", valor: totales.shorts, sub: "piezas" },
     { label: "Medias", valor: totales.medias, sub: "piezas" },
+    {
+      label: "Excepciones",
+      valor: resumen.excepciones,
+      sub: "por atributo (R-C07)",
+    },
     {
       label: "Importe total",
       valor: `S/ ${resumen.importe.toFixed(2)}`,

@@ -32,7 +32,7 @@ export const pedidoDetalleMock: PedidoDetalle = {
         nombre: "Kit completo",
         componentes: { camisetas: 1, shorts: 1, medias: 1 },
       },
-      cantidadContratada: 10,
+      cantidadContratada: 12,
       politicaNumeracion: "LIBRE",
       configuracion: [
         { atributo: "CUELLO", valor: "REDONDO" },

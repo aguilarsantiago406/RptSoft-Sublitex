@@ -1,0 +1,224 @@
+/* =============================================================================
+   Panel de estado del grupo — indicadores derivados (R-I06)
+   Reglas cubiertas: R-C07, R-G05, R-B02/R-H03, R-E03, R-K03, R-F03
+   ============================================================================= */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.panelTitulo {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-strong);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.panelTitulo::before {
+  content: "";
+  width: 4px;
+  height: 15px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+.panelSubtitulo {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* --- Grilla de tarjetas de estado --- */
+.estadoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.tarjeta {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 11px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.tarjetaTitulo {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+/* Estados de la tarjeta */
+.tarjeta_ok {
+  border-left: 3px solid var(--success);
+}
+
+.tarjeta_aviso {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--excepcion-border);
+}
+
+.tarjeta_error {
+  border-left: 3px solid var(--danger);
+  background: var(--danger-soft);
+}
+
+.tarjeta_info {
+  border-left: 3px solid var(--info);
+  background: var(--info-soft);
+}
+
+/* --- Contenido común --- */
+.valor {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.detalle {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.mas {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-style: italic;
+}
+
+/* Botón que salta a la tarjeta de la prenda (R-I09) */
+.btnCorregir {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  border-radius: 4px;
+  transition: color 0.12s ease;
+}
+
+.btnCorregir:hover {
+  color: var(--primary);
+  text-decoration-style: solid;
+}
+
+.btnCorregir:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* --- Chips de excepciones (R-C07) con drill-down --- */
+.chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chipWrap {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.chipDetails {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  background: var(--excepcion-bg);
+  border: 1px solid var(--excepcion-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.chip {
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+  list-style: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.chip::-webkit-details-marker {
+  display: none;
+}
+
+.chip:hover {
+  background: color-mix(in srgb, var(--excepcion-bg) 80%, var(--accent-soft));
+}
+
+.chipBody {
+  list-style: none;
+  margin: 0;
+  padding: 4px 10px 7px;
+  border-top: 1px dashed var(--excepcion-border);
+  font-size: 11px;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* --- Producción por producto (R-K03) --- */
+.producto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.productoNombre {
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.productoPiezas {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
