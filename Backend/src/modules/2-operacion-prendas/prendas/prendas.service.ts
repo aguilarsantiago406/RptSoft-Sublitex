@@ -5,7 +5,7 @@ import { UpdateFichaMinimaDto } from './dto/update-ficha-minima.dto';
 
 @Injectable()
 export class PrendasService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async crear(dto: CreatePrendaDto) {
     const prenda = await this.prisma.prenda.create({

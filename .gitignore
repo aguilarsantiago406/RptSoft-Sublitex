@@ -22,3 +22,9 @@ Thumbs.db
 .cursor/
 .devin/
 .gemini/
+
+# Archivos y carpetas personales bk2 / notas internas
+mio/
+contexto_bk2.md
+informe_tests.md
+test_rojo.md
