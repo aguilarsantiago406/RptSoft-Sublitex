@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+sublitex-web/node_modules/
+
+# Next.js build
+.next/
+sublitex-web/.next/
+out/
+sublitex-web/out/
+build/
+sublitex-web/build/
+
+# Testing
+coverage/
+sublitex-web/coverage/
+
+# Environment
+.env*.local
+
+# System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# AI Tooling & Caches
+.agents/
+.gemini/
+.opencode/
+.claude/
+.cursor/
+

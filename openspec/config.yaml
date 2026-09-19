@@ -1,0 +1,37 @@
+schema: spec-driven
+
+context: |
+  Language: es
+  All artifacts must be written in es.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  Project conventions (folders, naming, layers, verification commands) live
+  in AGENTS.md at the repo root and apply to every change. No artfact may
+  contradict AGENTS.md.
+  The only technical source files are the 7 in docs/ (listed in AGENTS.md):
+  schema_1.prisma + SIPES - El modelo de datos.md (same model v0.2),
+  01_constraints_1.sql, 02___Catálogo_de_reglas.md (rule identifiers R-*),
+  SIPES  - Ruta del proyecto y Sprint 1.md (sprint roadmap),
+  contrato-api.md (BK2 v2.1 contract used by integracion-bk2),
+  Hoja_Pedido_Sublitex.xlsx (PROMO 2002 seed for the mocks simulator).
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
