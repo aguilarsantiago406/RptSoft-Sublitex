@@ -36,6 +36,7 @@ export class PedidoService {
           email: 'sistema@sublitex.com',
           nombre: 'Sistema',
           rol: 'ADMINISTRADOR' as any,
+          password: '$2b$10$defaultpasswordhash',
         },
       });
     }

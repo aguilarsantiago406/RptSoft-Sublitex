@@ -144,11 +144,12 @@ enum OrigenCambio {
 // =============================================================================
 
 model Usuario {
-  id     String     @id @default(cuid())
-  email  String     @unique
-  nombre String
-  rol    RolUsuario
-  activo Boolean    @default(true)
+  id       String     @id @default(cuid())
+  email    String     @unique
+  nombre   String
+  rol      RolUsuario
+  activo   Boolean    @default(true)
+  password String
 
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
