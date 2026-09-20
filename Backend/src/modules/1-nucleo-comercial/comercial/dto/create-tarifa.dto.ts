@@ -12,9 +12,9 @@ export class CreateTarifaDto {
   @IsNotEmpty()
   concepto: string;
 
-  @ApiProperty({ example: 150.00 })
+  @ApiProperty({ example: 150.00, description: 'Valor positivo mayor a cero' })
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
+  @Min(0.01)
   valor: number;
 
   @ApiProperty({ example: '2026-01-01T00:00:00Z' })

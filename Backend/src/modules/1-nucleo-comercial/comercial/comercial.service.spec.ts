@@ -145,6 +145,7 @@ describe('R-K08 - createDatosEnvio', () => {
 
   it('lanza ConflictException si el pedido ya tiene datos de envio', async () => {
     const prisma = buildPrismaMock();
+    prisma.pedido.findUnique.mockResolvedValue({ id: 'ped_1' });
     prisma.datosEnvio.findUnique.mockResolvedValue(envioBase);
     const service = await crearServicio(prisma);
 

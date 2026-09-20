@@ -1,11 +1,18 @@
-﻿import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, Request } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, Request, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { RolUsuario } from '@prisma/client';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+
+function requireAdmin(user: { rol: RolUsuario }) {
+  if (user.rol !== RolUsuario.ADMINISTRADOR) {
+    throw new ForbiddenException('Solo los administradores pueden realizar esta accion');
+  }
+}
 
 @ApiTags('Auth / Usuarios')
 @Controller('api/auth')
@@ -21,12 +28,14 @@ export class AuthController {
   }
 
   @Post('register')
-  @ApiOperation({ summary: 'Registrar nuevo usuario (requiere JWT)' })
+  @ApiOperation({ summary: 'Registrar nuevo usuario (solo ADMINISTRADOR)' })
   @ApiResponse({ status: 201, description: 'Usuario creado' })
+  @ApiResponse({ status: 403, description: 'Solo administradores pueden registrar usuarios' })
   @ApiResponse({ status: 409, description: 'Email ya registrado' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  register(@Body() dto: RegisterDto) {
+  register(@Body() dto: RegisterDto, @Request() req: { user: { rol: RolUsuario } }) {
+    requireAdmin(req.user);
     return this.authService.register(dto);
   }
 
@@ -36,16 +45,17 @@ export class AuthController {
   @ApiResponse({ status: 401 })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  me(@Request() req: any) {
+  me(@Request() req: { user: { id: string } }) {
     return this.authService.validateUser(req.user.id);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar usuarios' })
-  @ApiQuery({ name: 'rol', required: false, enum: ['ADMINISTRADOR', 'COORDINADOR_OPERATIVO', 'VENDEDORA', 'COORDINADOR_CLIENTE', 'DISENO', 'PRODUCCION'] })
+  @ApiOperation({ summary: 'Listar usuarios (solo ADMINISTRADOR)' })
+  @ApiQuery({ name: 'rol', required: false, enum: RolUsuario })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  findAll(@Query('rol') rol?: string) {
+  findAll(@Query('rol') rol: string | undefined, @Request() req: { user: { rol: RolUsuario } }) {
+    requireAdmin(req.user);
     return this.authService.findAll(rol);
   }
 
@@ -59,30 +69,39 @@ export class AuthController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Actualizar usuario (nombre, rol, activo)' })
+  @ApiOperation({ summary: 'Actualizar usuario (solo ADMINISTRADOR)' })
+  @ApiResponse({ status: 403, description: 'Solo administradores' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  update(@Param('id') id: string, @Body() dto: UpdateUsuarioDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateUsuarioDto, @Request() req: { user: { rol: RolUsuario } }) {
+    requireAdmin(req.user);
     return this.authService.update(id, dto);
   }
 
   @Patch(':id/password')
-  @ApiOperation({ summary: 'Cambiar contrasena' })
+  @ApiOperation({ summary: 'Cambiar contrasena (propio usuario o ADMINISTRADOR)' })
+  @ApiResponse({ status: 403, description: 'Solo puedes cambiar tu propia contrasena' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @ApiResponse({ status: 401, description: 'Contrasena actual incorrecta' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  changePassword(@Param('id') id: string, @Body() dto: ChangePasswordDto) {
-    return this.authService.changePassword(id, dto.currentPassword, dto.newPassword);
+  changePassword(
+    @Param('id') id: string,
+    @Body() dto: ChangePasswordDto,
+    @Request() req: { user: { id: string; rol: RolUsuario } },
+  ) {
+    return this.authService.changePassword(id, dto.currentPassword, dto.newPassword, req.user.id, req.user.rol);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Eliminar usuario' })
+  @ApiOperation({ summary: 'Eliminar usuario (solo ADMINISTRADOR)' })
+  @ApiResponse({ status: 403, description: 'Solo administradores' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string, @Request() req: { user: { rol: RolUsuario } }) {
+    requireAdmin(req.user);
     return this.authService.remove(id);
   }
 }

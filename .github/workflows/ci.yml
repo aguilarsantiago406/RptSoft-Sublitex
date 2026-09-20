@@ -6,13 +6,28 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: Backend
+
+    env:
+      DATABASE_URL: "postgresql://sipes_dev:sipes_password@localhost:5432/sipes_test_db?schema=public"
+      PSQL_URL: "postgresql://sipes_dev:sipes_password@localhost:5432/sipes_test_db"
+      PGCLIENTENCODING: UTF8
+      JWT_SECRET: "ci_jwt_secret_test_key_12345"
+      NODE_ENV: test
 
     services:
       postgres:
@@ -35,21 +50,57 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: Backend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Generate Prisma Client
         run: npx prisma generate
 
-      - name: Run Build
+      - name: Lint
+        if: ${{ hashFiles('Backend/eslint.config.*', 'Backend/.eslintrc*') != '' }}
+        run: npx eslint "src/**/*.ts"
+
+      - name: Build
         run: npm run build
 
-      - name: Run Tests
+      - name: Unit tests
+        run: npm test -- --runInBand
+
+      - name: Aplicar migraciones Prisma
+        run: npx prisma migrate deploy
+
+      - name: Aplicar restricciones SQL manuales
+        run: psql "$PSQL_URL" -v ON_ERROR_STOP=1 -f prisma/01_constraints.sql
+
+      - name: Verificar los 8 triggers del inventario
+        run: |
+          COUNT=$(psql "$PSQL_URL" -tA -c "SELECT count(*) FROM pg_trigger WHERE NOT tgisinternal;")
+          echo "Triggers encontrados: $COUNT"
+          test "$COUNT" -eq 8
+
+      - name: Pruebas de integracion con PostgreSQL
+        if: ${{ hashFiles('Backend/test/jest-integration.json') != '' }}
+        run: npx jest --config test/jest-integration.json --runInBand
+
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Auditoria de dependencias
+        working-directory: Backend
+        run: npm audit --audit-level=high --omit=dev
+        continue-on-error: true
+
+      - name: Escaneo de secretos
+        uses: gitleaks/gitleaks-action@v2
         env:
-          DATABASE_URL: "postgresql://sipes_dev:sipes_password@localhost:5432/sipes_test_db?schema=public"
-          JWT_SECRET: "ci_jwt_secret_test_key_12345"
-        run: npm test
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true

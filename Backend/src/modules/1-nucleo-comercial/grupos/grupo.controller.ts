@@ -1,11 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { GrupoService } from './grupo.service';
 import { CreateGrupoDto } from './dto/create-grupo.dto';
+import { UpdateGrupoDto } from './dto/update-grupo.dto';
 import { UpdatePoliticaDto } from './dto/update-politica.dto';
 
 @ApiTags('Grupos')
 @Controller('api')
+@UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
 export class GrupoController {
   constructor(private readonly grupoService: GrupoService) {}
 
@@ -31,23 +35,23 @@ export class GrupoController {
   }
 
   @Put('grupos/:id')
-  @ApiOperation({ summary: 'Actualizar configuración de un grupo (diseño, política, tela)' })
-  update(@Param('id') id: string, @Body() dto: Partial<CreateGrupoDto>) {
+  @ApiOperation({ summary: 'Actualizar configuracion de un grupo' })
+  update(@Param('id') id: string, @Body() dto: UpdateGrupoDto) {
     return this.grupoService.update(id, dto);
   }
 
   @Delete('grupos/:id')
   @ApiOperation({ summary: 'Eliminar un grupo sin prendas ni participantes' })
   @ApiResponse({ status: 404, description: 'Grupo no encontrado' })
-  @ApiResponse({ status: 409, description: 'El grupo tiene información dependiente' })
+  @ApiResponse({ status: 409, description: 'El grupo tiene informacion dependiente' })
   remove(@Param('id') id: string) {
     return this.grupoService.remove(id);
   }
 
   @Patch('grupos/:id/politica')
-  @ApiOperation({ summary: 'Cambiar política LIBRE o UNICA (R-G01). Con repetidos falla (R-G06)' })
+  @ApiOperation({ summary: 'Cambiar politica LIBRE o UNICA (R-G01). Con repetidos falla (R-G06)' })
   @ApiResponse({ status: 404, description: 'Grupo no encontrado' })
-  @ApiResponse({ status: 409, description: 'Existen números repetidos, no se aplica la política UNICA (R-G06)' })
+  @ApiResponse({ status: 409, description: 'Existen numeros repetidos, no se aplica la politica UNICA (R-G06)' })
   updatePolitica(@Param('id') id: string, @Body() dto: UpdatePoliticaDto) {
     return this.grupoService.updatePolitica(id, dto);
   }

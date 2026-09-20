@@ -24,6 +24,8 @@ function buildPrismaMock() {
       create: jest.fn(),
       update: jest.fn(),
       count: jest.fn(),
+      aggregate: jest.fn(),
+      updateMany: jest.fn(),
     },
     usuario: {
       findFirst: jest.fn(),
@@ -54,10 +56,7 @@ async function crearServicio(prisma: any): Promise<PedidoService> {
 describe('R-A03 · Código legible y único generado por el sistema', () => {
   it('genera SUB-XXXX con el siguiente correlativo', async () => {
     const prisma = buildPrismaMock();
-    prisma.pedido.findMany.mockResolvedValue([
-      { codigo: 'SUB-0003' },
-      { codigo: 'SUB-0001' },
-    ]);
+    prisma.pedido.aggregate.mockResolvedValue({ _max: { codigo: 'SUB-0003' } });
     prisma.usuario.findFirst.mockResolvedValue({ id: 'u1' });
     prisma.cliente.findUnique.mockResolvedValue({ id: 'c1' });
     prisma.pedido.create.mockImplementation(async ({ data }: any) => ({

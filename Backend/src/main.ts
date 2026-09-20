@@ -7,23 +7,32 @@ import { PrismaExceptionFilter } from './core/filters/prisma-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors({ origin: '*' });
+
+  const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000').split(',');
+  app.enableCors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }));
   app.useGlobalFilters(new PrismaExceptionFilter());
 
   const config = new DocumentBuilder()
-    .setTitle('SIPES API — Sublitex')
-    .setDescription('Sistema de Gestión de Pedidos y Producción Sublitex. Módulos Comerciales y de Operación de Prendas.')
+    .setTitle('SIPES API - Sublitex')
+    .setDescription('Sistema de Gestion de Pedidos y Produccion Sublitex.')
     .setVersion('1.0.0')
-    .addTag('Clientes', 'Gestión de clientes (BK1)')
-    .addTag('Pedidos', 'Gestión de pedidos, estados y colores (BK1)')
-    .addTag('Grupos', 'Gestión de grupos y políticas de numeración (BK1)')
-    .addTag('Catalogos', 'Catálogos de tipos de producto, tallas, atributos y ubicaciones (BK1)')
-    .addTag('Participantes', 'Gestión de participantes y enlaces WhatsApp (BK2)')
-    .addTag('Participantes - Enlace Público', 'Acceso móvil público por token (BK2)')
-    .addTag('Prendas', 'Gestión de prendas y cálculo de producción (BK2)')
-    .addTag('Excepciones de Prenda', 'Deltas de configuración sobre prendas (BK2)')
-    .addTag('Personalizaciones', 'Estampados con ubicación declarada (BK2)')
+    .addBearerAuth()
+    .addTag('Auth / Usuarios', 'Autenticacion y gestion de usuarios (BK1)')
+    .addTag('Clientes', 'Gestion de clientes (BK1)')
+    .addTag('Pedidos', 'Gestion de pedidos, estados y colores (BK1)')
+    .addTag('Grupos', 'Gestion de grupos y politicas de numeracion (BK1)')
+    .addTag('Catalogos', 'Catalogos de tipos de producto, tallas, atributos y ubicaciones (BK1)')
+    .addTag('Comercial / Tarifas y Envios', 'Tarifas y datos de envio (BK1)')
+    .addTag('Participantes', 'Gestion de participantes y enlaces WhatsApp (BK2)')
+    .addTag('Prendas', 'Gestion de prendas y calculo de produccion (BK2)')
+    .addTag('Excepciones de Prenda', 'Deltas de configuracion sobre prendas (BK2)')
+    .addTag('Personalizaciones', 'Estampados con ubicacion declarada (BK2)')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -31,7 +40,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  console.log('?? Servidor SIPES unificado: http://localhost:' + port);
-  console.log('?? Swagger disponible en: http://localhost:' + port + '/api/docs');
+  console.log('Servidor SIPES: http://localhost:' + port);
+  console.log('Swagger: http://localhost:' + port + '/api/docs');
 }
 bootstrap();

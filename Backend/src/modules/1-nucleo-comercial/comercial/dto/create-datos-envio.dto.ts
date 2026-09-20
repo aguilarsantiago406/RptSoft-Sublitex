@@ -1,8 +1,8 @@
-import { IsString, IsNotEmpty, IsOptional, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MinLength, MaxLength, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateDatosEnvioDto {
-  @ApiProperty({ example: 'Juan Pérez García' })
+  @ApiProperty({ example: 'Juan Perez Garcia' })
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
@@ -45,7 +45,7 @@ export class CreateDatosEnvioDto {
 
   @ApiPropertyOptional({ example: 'juan@empresa.com' })
   @IsOptional()
-  @IsString()
+  @IsEmail()
   @MaxLength(100)
   correo?: string;
 }

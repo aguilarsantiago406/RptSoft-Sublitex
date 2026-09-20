@@ -15,30 +15,21 @@ export class PedidoService {
   constructor(private readonly prisma: PrismaService) {}
 
   private async generarCodigo(): Promise<string> {
-    const pedidos = await this.prisma.pedido.findMany({
-      select: { codigo: true },
+    const agg = await this.prisma.pedido.aggregate({
+      _max: { codigo: true },
     });
-    const maximo = pedidos.reduce((mayor, actual) => {
-      const match = /^SUB-(\d{4,})$/.exec(actual.codigo);
-      if (!match) return mayor;
-      return Math.max(mayor, parseInt(match[1], 10));
-    }, 0);
+    const last = agg._max.codigo;
+    const match = last ? /^SUB-(\d{4,})$/.exec(last) : null;
+    const maximo = match ? parseInt(match[1], 10) : 0;
     return 'SUB-' + String(maximo + 1).padStart(4, '0');
   }
 
   private async getSystemUserId(): Promise<string> {
-    let user = await this.prisma.usuario.findFirst({
+    const user = await this.prisma.usuario.findFirst({
       where: { email: 'sistema@sublitex.com' },
     });
     if (!user) {
-      user = await this.prisma.usuario.create({
-        data: {
-          email: 'sistema@sublitex.com',
-          nombre: 'Sistema',
-          rol: 'ADMINISTRADOR' as any,
-          password: '$2b$10$defaultpasswordhash',
-        },
-      });
+      throw new Error('Usuario sistema no existe. Ejecuta el seed antes de iniciar el servidor.');
     }
     return user.id;
   }

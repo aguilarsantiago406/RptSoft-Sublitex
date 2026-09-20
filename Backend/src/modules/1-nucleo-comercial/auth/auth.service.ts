@@ -1,9 +1,11 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { RolUsuario } from '@prisma/client';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 
 @Injectable()
 export class AuthService {
@@ -17,13 +19,13 @@ export class AuthService {
       where: { email: dto.email },
     });
 
-    if (!user || !user.activo) {
-      throw new UnauthorizedException('Credenciales inválidas');
+    if (!user || !user.activo || !user.password) {
+      throw new UnauthorizedException('Credenciales invalidas');
     }
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Credenciales inválidas');
+      throw new UnauthorizedException('Credenciales invalidas');
     }
 
     const payload = { sub: user.id, email: user.email, rol: user.rol };
@@ -46,12 +48,12 @@ export class AuthService {
     });
 
     if (existing) {
-      throw new ConflictException('El email ya está registrado');
+      throw new ConflictException('El email ya esta registrado');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    const user = await this.prisma.usuario.create({
+    return this.prisma.usuario.create({
       data: {
         email: dto.email,
         password: hashedPassword,
@@ -68,13 +70,11 @@ export class AuthService {
         creadoEn: true,
       },
     });
-
-    return user;
   }
 
   async findAll(rol?: string) {
     return this.prisma.usuario.findMany({
-      where: rol ? { rol: rol as any } : undefined,
+      where: rol ? { rol: rol as RolUsuario } : undefined,
       orderBy: { nombre: 'asc' },
       select: {
         id: true,
@@ -108,15 +108,16 @@ export class AuthService {
     return user;
   }
 
-  async update(id: string, data: Partial<{ nombre: string; rol: any; activo: boolean }>) {
-    const user = await this.prisma.usuario.findUnique({ where: { id } });
-    if (!user) {
-      throw new NotFoundException('Usuario no encontrado: ' + id);
-    }
+  async update(id: string, dto: UpdateUsuarioDto) {
+    await this.findOne(id);
 
     return this.prisma.usuario.update({
       where: { id },
-      data: data as any,
+      data: {
+        ...(dto.nombre !== undefined ? { nombre: dto.nombre } : {}),
+        ...(dto.rol !== undefined ? { rol: dto.rol } : {}),
+        ...(dto.activo !== undefined ? { activo: dto.activo } : {}),
+      },
       select: {
         id: true,
         email: true,
@@ -129,7 +130,17 @@ export class AuthService {
     });
   }
 
-  async changePassword(id: string, currentPassword: string, newPassword: string) {
+  async changePassword(
+    id: string,
+    currentPassword: string,
+    newPassword: string,
+    callerId: string,
+    callerRol: RolUsuario,
+  ) {
+    if (id !== callerId && callerRol !== RolUsuario.ADMINISTRADOR) {
+      throw new ForbiddenException('Solo puedes cambiar tu propia contrasena');
+    }
+
     const user = await this.prisma.usuario.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException('Usuario no encontrado: ' + id);
@@ -137,7 +148,7 @@ export class AuthService {
 
     const isValid = await bcrypt.compare(currentPassword, user.password);
     if (!isValid) {
-      throw new UnauthorizedException('Contraseña actual incorrecta');
+      throw new UnauthorizedException('Contrasena actual incorrecta');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -146,15 +157,11 @@ export class AuthService {
       data: { password: hashedPassword },
     });
 
-    return { message: 'Contraseña actualizada correctamente' };
+    return { message: 'Contrasena actualizada correctamente' };
   }
 
   async remove(id: string) {
-    const user = await this.prisma.usuario.findUnique({ where: { id } });
-    if (!user) {
-      throw new NotFoundException('Usuario no encontrado: ' + id);
-    }
-
+    await this.findOne(id);
     await this.prisma.usuario.delete({ where: { id } });
     return { message: 'Usuario eliminado correctamente' };
   }
@@ -166,9 +173,19 @@ export class AuthService {
     });
 
     if (!user || !user.activo) {
-      throw new UnauthorizedException('Usuario no válido');
+      throw new UnauthorizedException('Usuario no valido');
     }
 
     return user;
+  }
+
+  async getSystemUserId(): Promise<string> {
+    const user = await this.prisma.usuario.findFirst({
+      where: { email: 'sistema@sublitex.com' },
+    });
+    if (!user) {
+      throw new Error('Usuario sistema no existe. Ejecuta el seed antes de iniciar el servidor.');
+    }
+    return user.id;
   }
 }

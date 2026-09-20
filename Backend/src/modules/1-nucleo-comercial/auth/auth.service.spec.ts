@@ -173,7 +173,7 @@ describe('changePassword', () => {
     prisma.usuario.findUnique.mockResolvedValue(null);
     const service = await crearServicio(prisma);
 
-    await expect(service.changePassword('id-x', 'actual', 'nueva')).rejects.toThrow(NotFoundException);
+    await expect(service.changePassword('id-x', 'actual', 'nueva', 'id-x', 'ADMINISTRADOR' as any)).rejects.toThrow(NotFoundException);
   });
 
   it('lanza UnauthorizedException si la contrasena actual es incorrecta', async () => {
@@ -181,7 +181,7 @@ describe('changePassword', () => {
     prisma.usuario.findUnique.mockResolvedValue(usuarioActivo);
     const service = await crearServicio(prisma);
 
-    await expect(service.changePassword('usr_1', 'incorrecta', 'nueva123')).rejects.toThrow(UnauthorizedException);
+    await expect(service.changePassword('usr_1', 'incorrecta', 'nueva123', 'usr_1', 'VENDEDORA' as any)).rejects.toThrow(UnauthorizedException);
   });
 
   it('actualiza la password hasheada cuando la actual es correcta', async () => {
@@ -190,7 +190,7 @@ describe('changePassword', () => {
     prisma.usuario.update.mockResolvedValue({});
     const service = await crearServicio(prisma);
 
-    await service.changePassword('usr_1', 'password123', 'nueva456');
+    await service.changePassword('usr_1', 'password123', 'nueva456', 'usr_1', 'VENDEDORA' as any);
 
     const dataUpdate = prisma.usuario.update.mock.calls[0][0].data;
     const esHash = await bcrypt.compare('nueva456', dataUpdate.password);
