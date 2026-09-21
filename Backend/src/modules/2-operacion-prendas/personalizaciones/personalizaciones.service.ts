@@ -17,7 +17,9 @@ export class PersonalizacionesService {
   }
 
   async eliminar(id: string) {
-    const existe = await this.prisma.personalizacion.findUnique({ where: { id } });
+    const existe = await this.prisma.personalizacion.findUnique({
+      where: { id },
+    });
     if (!existe) throw new NotFoundException('Personalización no encontrada.');
 
     await this.prisma.personalizacion.delete({ where: { id } });

@@ -68,7 +68,8 @@ export class ParticipantesService {
     });
 
     if (!p) throw new NotFoundException('Enlace no encontrado.');
-    if (p.enlaceRevocado) throw new GoneException('Este enlace ha sido revocado.');
+    if (p.enlaceRevocado)
+      throw new GoneException('Este enlace ha sido revocado.');
     if (p.enlaceExpiraEn && new Date() > p.enlaceExpiraEn) {
       throw new GoneException('Este enlace ha expirado.');
     }

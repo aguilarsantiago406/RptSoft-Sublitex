@@ -9,13 +9,18 @@ export class ExcepcionesController {
   constructor(private readonly service: ExcepcionesService) {}
 
   @Post('excepciones-prenda')
-  @ApiOperation({ summary: 'Registra una excepción delta sobre un atributo de la prenda (R-C01)' })
+  @ApiOperation({
+    summary:
+      'Registra una excepción delta sobre un atributo de la prenda (R-C01)',
+  })
   crear(@Body() dto: CreateExcepcionDto) {
     return this.service.crear(dto);
   }
 
   @Delete('excepciones-prenda/:id')
-  @ApiOperation({ summary: 'Elimina la excepción y devuelve la prenda al estándar del grupo' })
+  @ApiOperation({
+    summary: 'Elimina la excepción y devuelve la prenda al estándar del grupo',
+  })
   eliminar(@Param('id') id: string) {
     return this.service.eliminar(id);
   }

@@ -9,7 +9,10 @@ export class PersonalizacionesController {
   constructor(private readonly service: PersonalizacionesService) {}
 
   @Post('personalizaciones')
-  @ApiOperation({ summary: 'Registra un estampado con ubicación declarada en la prenda (R-F01)' })
+  @ApiOperation({
+    summary:
+      'Registra un estampado con ubicación declarada en la prenda (R-F01)',
+  })
   crear(@Body() dto: CreatePersonalizacionDto) {
     return this.service.crear(dto);
   }

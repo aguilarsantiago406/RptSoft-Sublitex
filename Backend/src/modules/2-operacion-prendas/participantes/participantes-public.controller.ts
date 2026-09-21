@@ -9,19 +9,29 @@ export class ParticipantesPublicController {
   constructor(private readonly service: ParticipantesService) {}
 
   @Get(':token')
-  @ApiOperation({ summary: 'Carga inicial de la ficha del participante y sus prendas vía WhatsApp token' })
+  @ApiOperation({
+    summary:
+      'Carga inicial de la ficha del participante y sus prendas vía WhatsApp token',
+  })
   obtenerFicha(@Param('token') token: string) {
     return this.service.obtenerPorEnlaceToken(token);
   }
 
   @Put(':token/ficha')
-  @ApiOperation({ summary: 'Guarda la ficha mínima del participante desde su enlace' })
-  guardarFicha(@Param('token') token: string, @Body() dto: GuardarFichaEnlaceDto) {
+  @ApiOperation({
+    summary: 'Guarda la ficha mínima del participante desde su enlace',
+  })
+  guardarFicha(
+    @Param('token') token: string,
+    @Body() dto: GuardarFichaEnlaceDto,
+  ) {
     return this.service.guardarFichaEnlace(token, dto);
   }
 
   @Post(':token/confirmar')
-  @ApiOperation({ summary: 'El participante confirma definitivamente sus datos' })
+  @ApiOperation({
+    summary: 'El participante confirma definitivamente sus datos',
+  })
   confirmar(@Param('token') token: string) {
     return this.service.confirmarPorEnlace(token);
   }

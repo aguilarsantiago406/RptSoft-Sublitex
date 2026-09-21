@@ -9,13 +9,18 @@ export class ParticipantesController {
   constructor(private readonly service: ParticipantesService) {}
 
   @Post('grupos/:grupoId/participantes')
-  @ApiOperation({ summary: 'Crea un nuevo participante en el grupo con su enlace token' })
+  @ApiOperation({
+    summary: 'Crea un nuevo participante en el grupo con su enlace token',
+  })
   crear(@Param('grupoId') grupoId: string, @Body() dto: CreateParticipanteDto) {
     return this.service.crearEnGrupo(grupoId, dto);
   }
 
   @Get('grupos/:grupoId/participantes')
-  @ApiOperation({ summary: 'Lista todos los participantes del grupo con prendas y personalizaciones' })
+  @ApiOperation({
+    summary:
+      'Lista todos los participantes del grupo con prendas y personalizaciones',
+  })
   listar(@Param('grupoId') grupoId: string) {
     return this.service.listarPorGrupo(grupoId);
   }
@@ -27,7 +32,9 @@ export class ParticipantesController {
   }
 
   @Post('participantes/:id/confirmar')
-  @ApiOperation({ summary: 'Confirmación manual del participante por parte del coordinador' })
+  @ApiOperation({
+    summary: 'Confirmación manual del participante por parte del coordinador',
+  })
   confirmarManual(@Param('id') id: string) {
     return this.service.confirmarManual(id);
   }
@@ -39,7 +46,9 @@ export class ParticipantesController {
   }
 
   @Post('participantes/:id/regenerar-enlace')
-  @ApiOperation({ summary: 'Genera un nuevo enlace y token para el participante' })
+  @ApiOperation({
+    summary: 'Genera un nuevo enlace y token para el participante',
+  })
   regenerar(@Param('id') id: string) {
     return this.service.regenerarEnlace(id);
   }

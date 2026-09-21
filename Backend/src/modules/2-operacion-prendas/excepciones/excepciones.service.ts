@@ -18,7 +18,9 @@ export class ExcepcionesService {
   }
 
   async eliminar(id: string) {
-    const existe = await this.prisma.excepcionPrenda.findUnique({ where: { id } });
+    const existe = await this.prisma.excepcionPrenda.findUnique({
+      where: { id },
+    });
     if (!existe) throw new NotFoundException('Excepción no encontrada.');
 
     await this.prisma.excepcionPrenda.delete({ where: { id } });

@@ -1,4 +1,12 @@
-import { Controller, Post, Patch, Delete, Get, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Patch,
+  Delete,
+  Get,
+  Body,
+  Param,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PrendasService } from './prendas.service';
 import { CreatePrendaDto } from './dto/create-prenda.dto';
@@ -16,7 +24,10 @@ export class PrendasController {
   }
 
   @Patch('prendas/:id')
-  @ApiOperation({ summary: 'Actualiza la ficha mínima de la prenda (talla, número, género, apodo)' })
+  @ApiOperation({
+    summary:
+      'Actualiza la ficha mínima de la prenda (talla, número, género, apodo)',
+  })
   actualizar(@Param('id') id: string, @Body() dto: UpdateFichaMinimaDto) {
     return this.service.actualizarFichaMinima(id, dto);
   }
@@ -28,7 +39,10 @@ export class PrendasController {
   }
 
   @Get('pedidos/:pedidoId/resumen-produccion')
-  @ApiOperation({ summary: 'Obtiene el resumen consolidado de producción por piezas físicas reales (R-K03)' })
+  @ApiOperation({
+    summary:
+      'Obtiene el resumen consolidado de producción por piezas físicas reales (R-K03)',
+  })
   resumen(@Param('pedidoId') pedidoId: string) {
     return this.service.obtenerResumenProduccion(pedidoId);
   }
