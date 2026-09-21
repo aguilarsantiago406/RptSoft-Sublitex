@@ -51,3 +51,7 @@ message*.txt
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+# Carpetas de bk2
+mio/
+docs_bk2/

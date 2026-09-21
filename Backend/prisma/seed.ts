@@ -7,7 +7,12 @@ async function seedSistema(): Promise<string> {
   const usuario = await prisma.usuario.upsert({
     where: { email: 'sistema@sublitex.com' },
     update: {},
-    create: { email: 'sistema@sublitex.com', nombre: 'Sistema', rol: 'ADMINISTRADOR' as any },
+    create: {
+      email: 'sistema@sublitex.com',
+      nombre: 'Sistema',
+      rol: 'ADMINISTRADOR' as any,
+      password: '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiXe/QLSUG6x8ecJ58kZyvYh64g12u',
+    },
   });
   return usuario.id;
 }
