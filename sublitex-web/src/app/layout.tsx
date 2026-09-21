@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AparienciaProvider } from "@/contexts/apariencia";
-import { PanelApariencia } from "@/components/apariencia/PanelApariencia";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,15 +20,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <AparienciaProvider>
-          {children}
-          <PanelApariencia />
-        </AparienciaProvider>
-      </body>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }

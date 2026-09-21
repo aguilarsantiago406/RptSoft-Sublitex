@@ -1,111 +1,89 @@
 @import "tailwindcss";
 
 :root {
-  /* Base */
-  --base-font-size: 14px;
-  --app-font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-    Roboto, Arial, sans-serif;
-
-  /* Paleta — tema claro */
-  --background: #f4f6f5;
-  --foreground: #1a231d;
-  --surface: #ffffff;
-  --surface-muted: #eef2ef;
-  --surface-raised: #ffffff;
-  --border: #dde5df;
-  --border-strong: #c2cdc6;
+  /* Paleta única: tema claro cálido (papel), sin blanco puro dominante */
+  --background: #f3f1ec;
+  --foreground: #35322b;
+  --surface: #fdfcf9;
+  --surface-muted: #efece3;
+  --surface-raised: #fffdf9;
+  --border: #e4e1d8;
+  --border-strong: #cdc8ba;
 
   --primary: #1c5a3e;
   --primary-strong: #12452f;
-  --primary-soft: #e6f0ea;
+  --primary-soft: #e4efe8;
   --accent: #a97e08;
-  --accent-soft: #f9efd4;
+  --accent-soft: #f7edd6;
 
   --success: #2e7d32;
-  --success-soft: #e9f5ea;
+  --success-strong: #1e5c2b;
+  --success-soft: #e7f2e6;
   --danger: #c0342c;
-  --danger-soft: #fbeceb;
+  --danger-soft: #f9e9e7;
   --info: #2b4a8f;
-  --info-soft: #e9edf8;
+  --info-soft: #e8ecf7;
 
-  --text-strong: #1a231d;
-  --text: #3c4a41;
-  --text-muted: #6b7a6f;
+  /* Semánticos extra (estados de pedido) */
+  --violet: #6d4aa8;
+  --violet-soft: #efe9f8;
+  --sky: #1f6f8b;
+  --sky-soft: #e2f1f6;
+  --sand: #8a6d2f;
+  --sand-soft: #f2ecda;
 
-  --radius-sm: 6px;
+  --text-strong: #35322b;
+  --text: #514c42;
+  --text-muted: #8a8578;
+
+  --radius-xs: 8px;
+  --radius-sm: 8px;
   --radius-md: 10px;
   --radius-lg: 14px;
+  --radius-xl: 16px;
 
-  --shadow-sm: 0 1px 2px rgba(16, 42, 25, 0.05);
-  --shadow-md: 0 4px 14px rgba(16, 42, 25, 0.06);
-  --shadow-lg: 0 12px 32px rgba(16, 42, 25, 0.14);
+  --shadow-sm: 0 1px 2px rgba(60, 50, 30, 0.04),
+    0 1px 1px rgba(60, 50, 30, 0.03);
+  --shadow-md: 0 1px 2px rgba(60, 50, 30, 0.04),
+    0 8px 24px rgba(60, 50, 30, 0.06);
+  --shadow-lg: 0 2px 6px rgba(60, 50, 30, 0.06),
+    0 18px 40px rgba(60, 50, 30, 0.1);
+
+  /* Foco */
+  --focus-ring: 2px solid var(--primary);
 
   /* Tablas */
-  --thead-bg: #1c5a3e;
-  --thead-text: #ffffff;
-  --thead-border: #12452f;
-  --row-even: #ffffff;
-  --row-odd: #f8fbf9;
-  --row-hover: #edf5f0;
-  --obsequio-bg: #e7f0fb;
-  --obsequio-hover: #d9e7f8;
-  --excepcion-bg: #fff1cd;
-  --excepcion-border: #e4c46d;
-  --tfoot-bg: #e9f5ea;
+  --thead-bg: #efece3;
+  --thead-text: #8a8578;
+  --thead-border: #e4e1d8;
+  --thead-border-strong: #cdc8ba;
+  --row-even: #fdfcf9;
+  --row-odd: #faf8f2;
+  --row-hover: #f1eee5;
+  --obsequio-bg: #e8eef7;
+  --obsequio-hover: #dbe6f2;
+  --excepcion-bg: #fbf0d3;
+  --excepcion-border: #ddb95f;
+  --tfoot-bg: #f0ede5;
   --tfoot-border: #2e7d32;
-  --scrollbar: #b9c8bd;
-}
+  --scrollbar: #cdc8ba;
 
-[data-tema="oscuro"] {
-  --background: #10141b;
-  --foreground: #e6e9ee;
-  --surface: #171c25;
-  --surface-muted: #1f2632;
-  --surface-raised: #202835;
-  --border: #2a3342;
-  --border-strong: #3a4557;
-
-  --primary: #2f8f63;
-  --primary-strong: #3aa874;
-  --primary-soft: #142b21;
-  --accent: #d3a928;
-  --accent-soft: #2e2610;
-
-  --success: #4caf6f;
-  --success-soft: #0f2a19;
-  --danger: #e2675f;
-  --danger-soft: #33181a;
-  --info: #7d9ce8;
-  --info-soft: #1a2136;
-
-  --text-strong: #eef1f6;
-  --text: #c3cad6;
-  --text-muted: #8b94a5;
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
-
-  /* Tablas */
-  --thead-bg: #132518;
-  --thead-text: #dfeae3;
-  --thead-border: #0d1d13;
-  --row-even: #181e28;
-  --row-odd: #1a212c;
-  --row-hover: #222c3b;
-  --obsequio-bg: #16263a;
-  --obsequio-hover: #1b3049;
-  --excepcion-bg: #332b13;
-  --excepcion-border: #6b5a24;
-  --tfoot-bg: #12291c;
-  --tfoot-border: #2f8f63;
-  --scrollbar: #44505f;
+  /* Sidebar corporativa (siempre oscura, alto contraste) */
+  --sidebar-width: 232px;
+  --sidebar-width-collapsed: 64px;
+  --sidebar-bg: #123f2c;
+  --sidebar-bg-deep: #0f3525;
+  --sidebar-fg: #e8f2ec;
+  --sidebar-muted: #9db8a9;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-active: rgba(255, 255, 255, 0.12);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--app-font-family);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
@@ -116,10 +94,9 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--app-font-family);
-  font-size: var(--base-font-size);
+  font-family: var(--font-sans);
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
-  transition: background 0.2s ease, color 0.2s ease;
 }
 
 h1, h2, h3 {
@@ -130,6 +107,18 @@ h1, h2, h3 {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Números tabulares en tablas y campos numéricos */
+table, tfoot {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* Foco visible y consistente */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
 }
 
 /* Scrollbar sutil para tablas anchas */
