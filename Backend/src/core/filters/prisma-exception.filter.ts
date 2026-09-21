@@ -37,10 +37,15 @@ export class PrismaExceptionFilter implements ExceptionFilter {
         // Manejo de excepciones disparadas por Triggers SQL en 01_constraints.sql
         if (exception.message?.includes('R-C05')) {
           status = HttpStatus.UNPROCESSABLE_ENTITY;
-          message = 'R-C05: La excepción coincide con la configuración general del grupo.';
+          message =
+            'R-C05: La excepción coincide con la configuración general del grupo.';
         } else if (exception.message?.includes('R-H12')) {
           status = HttpStatus.CONFLICT;
           message = 'R-H12: El bloque Lista está cerrado. Requiere reapertura.';
+        } else if (exception.message?.includes('R-K05')) {
+          status = HttpStatus.UNPROCESSABLE_ENTITY;
+          message =
+            'R-K05: No se puede aprobar el diseño con colores sin código hex.';
         } else {
           message = exception.message;
         }

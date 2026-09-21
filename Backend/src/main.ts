@@ -21,13 +21,25 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('SIPES API — Sublitex')
-    .setDescription('Contrato de API oficial para el Sistema de Gestión de Pedidos')
+    .setDescription(
+      'Contrato de API oficial para el Sistema de Gestión de Pedidos',
+    )
     .setVersion('1.0')
-    .addTag('Participantes', 'Gestión de participantes y enlaces WhatsApp (BK2)')
-    .addTag('Participantes - Enlace Público (Sin JWT)', 'Acceso móvil público por token (BK2)')
+    .addTag(
+      'Participantes',
+      'Gestión de participantes y enlaces WhatsApp (BK2)',
+    )
+    .addTag(
+      'Participantes - Enlace Público (Sin JWT)',
+      'Acceso móvil público por token (BK2)',
+    )
     .addTag('Prendas', 'Gestión de prendas y cálculo de producción (BK2)')
-    .addTag('Excepciones de Prenda', 'Deltas de configuración sobre prendas (BK2)')
+    .addTag(
+      'Excepciones de Prenda',
+      'Deltas de configuración sobre prendas (BK2)',
+    )
     .addTag('Personalizaciones', 'Estampados con ubicación declarada (BK2)')
+    .addTag('Diseños', 'Versionado y aprobación gráfica (FRENTE DISEÑO)')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
