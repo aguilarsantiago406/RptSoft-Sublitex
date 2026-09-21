@@ -134,6 +134,24 @@ export interface PrendaItem {
 }
 
 // =============================================================================
+// GRILLA DE UN GRUPO (GET /api/grupos/:grupoId/participantes — contrato §5.1)
+// =============================================================================
+
+/** Grupo mínimo que acompaña a la grilla — contrato §5.1 */
+export interface GrupoGrilla {
+  id: string;
+  nombre: string;
+  tipoProducto: { codigo: string; nombre: string };
+  politicaNumeracion?: string;
+}
+
+/** Respuesta de la grilla de prendas de un grupo — contrato §5.1 */
+export interface GrillaGrupo {
+  grupo: GrupoGrilla;
+  prendas: PrendaItem[];
+}
+
+// =============================================================================
 // UPDATE DE UNA CELDA DE LA GRILLA (edición en línea — contrato §5.2)
 // Tipado discriminado: cada caso solo admite su valor coherente
 // =============================================================================

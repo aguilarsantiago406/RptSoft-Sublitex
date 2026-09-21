@@ -1,0 +1,14 @@
+/* Shell global: sidebar fija a la izquierda + contenido desplazado */
+
+.contenido {
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 900px) {
+  .contenido {
+    margin-left: var(--sidebar-width-collapsed);
+  }
+}

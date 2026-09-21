@@ -1,0 +1,210 @@
+/* =============================================================================
+   Sidebar corporativa — fija a la izquierda, siempre oscura
+   ============================================================================= */
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar-width);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 18px 14px 16px;
+  background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-deep) 100%);
+  border-right: 1px solid var(--sidebar-border);
+  color: var(--sidebar-fg);
+  overflow-y: auto;
+}
+
+/* --- Marca --- */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 2px 6px 0;
+}
+
+.brandMark {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #2f8f63 0%, #1c5a3e 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+}
+
+.brandMarkInner {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wordmark {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #ffffff;
+}
+
+.tagline {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--sidebar-muted);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* --- Navegación --- */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.navSection {
+  padding: 0 10px;
+  margin: 10px 0 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--sidebar-muted);
+}
+
+.navSection:first-child {
+  margin-top: 0;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 40px;
+  padding: 0 11px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: rgba(232, 242, 236, 0.8);
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.navItemActivo {
+  background: var(--sidebar-active);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.navItemActivo:hover {
+  background: rgba(255, 255, 255, 0.17);
+}
+
+.navIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: currentColor;
+}
+
+.navLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.navItemDisabled {
+  opacity: 0.42;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* --- Pie de la sidebar fijado al fondo --- */
+.footer {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--sidebar-border);
+}
+
+/* --- Cerrar sesión --- */
+.logout {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  height: 38px;
+  margin-top: 12px;
+  padding: 0 11px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 8px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sidebar-muted);
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.logout:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.logout .navIcon {
+  width: 17px;
+  height: 17px;
+}
+
+.logoutLabel {
+  white-space: nowrap;
+}
+
+/* --- Responsive: colapsa a íconos --- */
+@media (max-width: 900px) {
+  .sidebar {
+    width: var(--sidebar-width-collapsed);
+    padding: 16px 10px;
+    align-items: center;
+  }
+
+  .brand {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .brandText,
+  .navSection,
+  .navLabel,
+  .footer {
+    display: none;
+  }
+
+  .navItem {
+    justify-content: center;
+    padding: 0;
+    width: 40px;
+  }
+}

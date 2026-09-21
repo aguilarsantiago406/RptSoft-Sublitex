@@ -6,8 +6,10 @@ import { usePedidoDetalle } from "@/hooks/usePedidoDetalle";
 import { useGrupoPrendas } from "@/hooks/useGrupoPrendas";
 import { TablaPrendas } from "@/components/prendas/TablaPrendas";
 import { PanelEstadoGrupo } from "@/components/prendas/PanelEstadoGrupo";
+import { EstadoBadge } from "@/components/pedidos/EstadoBadge";
 import { calcularTotales, TOTALES_VACIOS } from "@/domain/calculoTotales";
 import type { GrupoDetalle } from "@/types/pedidos";
+import type { GrupoGrilla } from "@/types/prendas";
 import styles from "./page.module.css";
 
 interface PageProps {
@@ -20,6 +22,95 @@ const NOMBRE_ATRIBUTO: Record<string, string> = {
   CORTE: "Corte",
   ACABADO: "Acabado",
 };
+
+// ---------------------------------------------------------------------------
+// Íconos inline
+// ---------------------------------------------------------------------------
+
+function IconLayers() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 3 3.5 6 10 9l6.5-3L10 3Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M3.5 10 10 13l6.5-3M3.5 13.6 10 16.6l6.5-3" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconShirt() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M7.2 3.2 4 5l1.3 3.1 1.2-.5v8.2h7V7.6l1.2.5L16 5l-3.2-1.8a2.8 2.8 0 0 1-5.6 0Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconShorts() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M4.5 4.5h11v4.2c0 4-1.6 6.3-5.5 6.8-3.9-.5-5.5-2.8-5.5-6.8V4.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M10 4.5v11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconSock() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M7 3.5h6v5.2c0 2.1 1.4 3.6 3.2 4.7 1.1.7 1 2.1-.2 2.6-2.6 1-5.4.6-7.4-1.2-1.3-1.2-1.6-2.6-1.6-4.4V3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconAlert() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 3 18 17H2L10 3Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M10 8.4v3.4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="10" cy="14.3" r="0.9" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconMoney() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="2.8" y="5" width="14.4" height="10" rx="2" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="10" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M5.6 8v4M14.4 8v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconGroup() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="3" y="3.5" width="6" height="6" rx="1.6" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="11" y="3.5" width="6" height="6" rx="1.6" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="3" y="11" width="6" height="6" rx="1.6" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="11" y="11" width="6" height="6" rx="1.6" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+function IconAlertBig() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 4 21 19.5H3L12 4Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M12 10v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="12" cy="16.6" r="1" fill="currentColor" />
+    </svg>
+  );
+}
 
 export default function PaginaDetallePedido({ params }: PageProps) {
   const resolvedParams = use(params);
@@ -36,9 +127,32 @@ export default function PaginaDetallePedido({ params }: PageProps) {
 
   const grupo: GrupoDetalle | undefined = gruposDisponibles[grupoActivoIndexValido];
 
+  // Encabezado mínimo del grupo para la grilla (§5.1)
+  const grupoGrillaInput = useMemo<GrupoGrilla | undefined>(
+    () =>
+      grupo
+        ? {
+            id: grupo.id,
+            nombre: grupo.nombre,
+            tipoProducto: {
+              codigo: grupo.tipoProducto.codigo,
+              nombre: grupo.tipoProducto.nombre,
+            },
+            politicaNumeracion: grupo.politicaNumeracion,
+          }
+        : undefined,
+    [grupo]
+  );
+
   // La grilla SIEMPRE sale del grupo (§5.1); el encabezado nunca trae prendas (§3.3)
   const { prendas, grupo: grupoGrilla, cargando: cargandoGrilla, error: errorGrilla, actualizarPrenda } =
-    useGrupoPrendas(grupo?.id, grupo?.configuracion);
+    useGrupoPrendas(
+      grupo?.id,
+      grupo?.configuracion,
+      pedido?.colores,
+      catalogo,
+      grupoGrillaInput
+    );
 
   const totales = useMemo(
     () => (catalogo ? calcularTotales(prendas, tarifas, catalogo) : TOTALES_VACIOS),
@@ -63,17 +177,16 @@ export default function PaginaDetallePedido({ params }: PageProps) {
         grupoActivoIndex={grupoActivoIndexValido}
         onCambiarGrupo={setGrupoActivoIndex}
         onVolverAtras={
-          <span className={styles.breadcrumb}>← Volver a lista de pedidos</span>
-        }
-        children={
-          <TablaPrendasSkeleton columnas={9} filas={6} />
+          <span className={styles.breadcrumb}>← Pedidos</span>
         }
         pies={
           <p className={styles.avisoOffline}>
             Cargando grilla del grupo desde la API...
           </p>
         }
-      />
+      >
+        <TablaPrendasSkeleton columnas={9} filas={6} />
+      </PaginaConGrupo>
     );
   }
 
@@ -81,10 +194,15 @@ export default function PaginaDetallePedido({ params }: PageProps) {
     return (
       <main className={styles.centered}>
         <div className={styles.errorCard}>
+          <span className={styles.errorIcono}>
+            <IconAlertBig />
+          </span>
           <div className={styles.errorTitle}>No se pudo cargar el pedido</div>
-          <p style={{ margin: 0 }}>{error || "No se pudo cargar la información del pedido."}</p>
+          <p className={styles.errorTexto}>
+            {error || "No se pudo cargar la información del pedido."}
+          </p>
           <p className={styles.errorHint}>Verificá que el backend esté corriendo y reintentá.</p>
-          <Link href="/pedidos" style={{ fontWeight: 600 }}>
+          <Link href="/pedidos" className={styles.errorLink}>
             ← Volver a la lista
           </Link>
         </div>
@@ -96,10 +214,15 @@ export default function PaginaDetallePedido({ params }: PageProps) {
     return (
       <main className={styles.centered}>
         <div className={styles.errorCard}>
+          <span className={styles.errorIcono}>
+            <IconAlertBig />
+          </span>
           <div className={styles.errorTitle}>No se pudo cargar la grilla del grupo</div>
-          <p style={{ margin: 0 }}>{errorGrilla || "No se pudo cargar la grilla del grupo."}</p>
+          <p className={styles.errorTexto}>
+            {errorGrilla || "No se pudo cargar la grilla del grupo."}
+          </p>
           <p className={styles.errorHint}>El grupo puede no existir o el backend no responde.</p>
-          <Link href="/pedidos" style={{ fontWeight: 600 }}>
+          <Link href="/pedidos" className={styles.errorLink}>
             ← Volver a la lista
           </Link>
         </div>
@@ -129,12 +252,15 @@ export default function PaginaDetallePedido({ params }: PageProps) {
       onCambiarGrupo={setGrupoActivoIndex}
       onVolverAtras={
         <Link href="/pedidos" className={styles.breadcrumb}>
-          ← Volver a lista de pedidos
+          ← Pedidos
         </Link>
       }
-      children={
-        <>
-          <PanelEstadoGrupo
+      pies={
+        <ResumenStrip resumen={resumen} totales={totales} />
+      }
+    >
+      <>
+        <PanelEstadoGrupo
             prendas={prendas}
             catalogo={catalogo}
             cantidadContratada={grupo.cantidadContratada}
@@ -152,33 +278,26 @@ export default function PaginaDetallePedido({ params }: PageProps) {
             <div className={styles.leyenda}>
               <span className={styles.leyendaItem}>
                 <span
-                  className={styles.leyendaSwatch}
-                  style={{ background: "#fff" }}
+                  className={`${styles.leyendaSwatch} ${styles.leyendaSwatchBase}`}
                 />{" "}
                 Heredado del grupo
               </span>
               <span className={styles.leyendaItem}>
                 <span
-                  className={styles.leyendaSwatch}
-                  style={{ background: "#fff3cd" }}
+                  className={`${styles.leyendaSwatch} ${styles.leyendaSwatchExcepcion}`}
                 />{" "}
                 Excepción
               </span>
               <span className={styles.leyendaItem}>
                 <span
-                  className={styles.leyendaSwatch}
-                  style={{ background: "#e3f2fd" }}
+                  className={`${styles.leyendaSwatch} ${styles.leyendaSwatchObsequio}`}
                 />{" "}
                 Obsequio / Muestra
               </span>
             </div>
           </div>
-        </>
-      }
-      pies={
-        <ResumenStrip resumen={resumen} totales={totales} />
-      }
-    />
+      </>
+    </PaginaConGrupo>
   );
 }
 
@@ -207,26 +326,32 @@ function PaginaConGrupo({
   children,
   pies,
 }: PaginaConGrupoProps) {
+  const fechaCompromiso = pedido.fechaCompromiso
+    ? new Date(pedido.fechaCompromiso).toLocaleDateString("es-PE", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+
   return (
     <main className={styles.main}>
-      {onVolverAtras}
+      <div className={styles.topRow}>{onVolverAtras}</div>
 
       <header className={styles.header}>
-        <div>
+        <div className={styles.headerMain}>
+          <span className={styles.eyebrow}>Pedido</span>
           <h1 className={styles.headerTitle}>
             {pedido.codigo} — {pedido.cliente.nombre}
           </h1>
-          <p className={styles.headerSubtitle}>
-            Pedido {pedido.id} · Compromiso: {pedido.fechaCompromiso ?? "—"}
-          </p>
+          <p className={styles.headerSubtitle}>Compromiso: {fechaCompromiso}</p>
         </div>
-        <span className={styles.estadoBadge}>
-          <span className={styles.estadoDot} />
-          {pedido.estado.replace(/_/g, " ")}
-        </span>
+        <div className={styles.headerBadge}>
+          <EstadoBadge estado={pedido.estado} />
+        </div>
       </header>
 
-      {/* Colores oficiales del pedido (R-K05) */}
+      {/* Colores oficiales del pedido (R-K05) + configuración base del grupo */}
       <div className={styles.metaRow}>
         <div className={styles.metaGroup}>
           <span className={styles.metaGroupLabel}>Colores</span>
@@ -236,7 +361,8 @@ function PaginaConGrupo({
                 className={styles.colorSwatch}
                 style={{ backgroundColor: c.codigoHex }}
               />
-              {c.nombre} <span style={{ opacity: 0.6 }}>{c.codigoHex}</span>
+              <span className={styles.colorChipNombre}>{c.nombre}</span>
+              <span className={styles.colorChipHex}>{c.codigoHex}</span>
             </span>
           ))}
         </div>
@@ -246,8 +372,10 @@ function PaginaConGrupo({
             <span className={styles.metaGroupLabel}>Config. base</span>
             {grupo.configuracion.map((c) => (
               <span key={c.atributo} className={styles.configChip}>
-                <strong>{NOMBRE_ATRIBUTO[c.atributo] ?? c.atributo}</strong>
-                <span>{c.valor}</span>
+                <span className={styles.configChipLabel}>
+                  {NOMBRE_ATRIBUTO[c.atributo] ?? c.atributo}
+                </span>
+                <span className={styles.configChipValor}>{c.valor}</span>
               </span>
             ))}
           </div>
@@ -265,6 +393,9 @@ function PaginaConGrupo({
                 i === grupoActivoIndex ? styles.tabActivo : ""
               }`}
             >
+              <span className={styles.tabIcon} aria-hidden="true">
+                <IconGroup />
+              </span>
               {g.nombre}
               <span className={styles.tabCount}>{g.cantidadContratada}</span>
             </button>
@@ -300,19 +431,21 @@ function ResumenStrip({
   totales: ReturnType<typeof calcularTotales>;
 }) {
   const kpis = [
-    { label: "Prendas", valor: resumen.prendas, sub: "físicas en grilla" },
-    { label: "Camisetas", valor: totales.camisetas, sub: "piezas" },
-    { label: "Shorts", valor: totales.shorts, sub: "piezas" },
-    { label: "Medias", valor: totales.medias, sub: "piezas" },
+    { label: "Prendas", valor: resumen.prendas, sub: "físicas en grilla", icon: <IconLayers /> },
+    { label: "Camisetas", valor: totales.camisetas, sub: "piezas", icon: <IconShirt /> },
+    { label: "Shorts", valor: totales.shorts, sub: "piezas", icon: <IconShorts /> },
+    { label: "Medias", valor: totales.medias, sub: "piezas", icon: <IconSock /> },
     {
       label: "Excepciones",
       valor: resumen.excepciones,
       sub: "por atributo (R-C07)",
+      icon: <IconAlert />,
     },
     {
       label: "Importe total",
       valor: `S/ ${resumen.importe.toFixed(2)}`,
       sub: "solo VENTA (R-K02)",
+      icon: <IconMoney />,
       highlight: true,
     },
   ];
@@ -320,16 +453,18 @@ function ResumenStrip({
   return (
     <div className={styles.resumen}>
       {kpis.map((kpi) => (
-        <div key={kpi.label} className={styles.kpi}>
-          <div className={styles.kpiLabel}>{kpi.label}</div>
-          <div
-            className={`${styles.kpiValue} ${
-              kpi.highlight ? styles.kpiValueHighlight : ""
-            }`}
-          >
-            {kpi.valor}
+        <div
+          key={kpi.label}
+          className={`${styles.kpi} ${kpi.highlight ? styles.kpiHighlight : ""}`}
+        >
+          <span className={styles.kpiIcon} aria-hidden="true">
+            {kpi.icon}
+          </span>
+          <div className={styles.kpiBody}>
+            <div className={styles.kpiLabel}>{kpi.label}</div>
+            <div className={styles.kpiValue}>{kpi.valor}</div>
+            <div className={styles.kpiSub}>{kpi.sub}</div>
           </div>
-          <div className={styles.kpiSub}>{kpi.sub}</div>
         </div>
       ))}
     </div>
@@ -340,25 +475,24 @@ function ResumenStrip({
 
 function SkeletonDetalle() {
   return (
-    <div>
-      <div className={styles.skeleton}>
-        <span
-          className={styles.breadcrumb}
-          style={{ color: "transparent", background: "#e6ece7" }}
-        >
-          ← Volver
-        </span>
-        <div className={styles.header}>
-          <div className={styles.skeletonBar} style={{ width: 320, height: 28 }} />
-        </div>
-        <div className={styles.resumen}>
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className={styles.kpi}>
+    <div className={styles.skeleton}>
+      <div className={styles.skeletonTopRow}>
+        <div className={styles.skeletonBar} style={{ width: 90, height: 14 }} />
+      </div>
+      <div className={styles.skeletonHeader}>
+        <div className={styles.skeletonBar} style={{ width: 340, height: 30 }} />
+        <div className={styles.skeletonBar} style={{ width: 120, height: 20 }} />
+      </div>
+      <div className={styles.resumen}>
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className={styles.kpi}>
+            <span className={`${styles.skeletonBar} ${styles.skeletonIcono}`} />
+            <div className={styles.kpiBody}>
               <div className={styles.skeletonBar} style={{ width: 60, height: 10 }} />
-              <div className={styles.skeletonBar} style={{ width: 60, height: 24, marginTop: 8 }} />
+              <div className={styles.skeletonBar} style={{ width: 72, height: 22, marginTop: 8 }} />
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
       <TablaPrendasSkeleton columnas={9} filas={6} />
     </div>
@@ -372,16 +506,19 @@ interface TablaPrendasSkeletonProps {
 
 function TablaPrendasSkeleton({ columnas, filas }: TablaPrendasSkeletonProps) {
   return (
-    <div className={styles.skeleton} style={{ background: "#fff" }}>
+    <div className={styles.skeletonTabla}>
       <table
         className={styles.skeletonTable}
         style={{ width: "100%", borderCollapse: "collapse" }}
       >
         <thead>
-          <tr style={{ background: "#1c5a3e", textAlign: "left" }}>
+          <tr style={{ background: "var(--thead-bg)", textAlign: "left" }}>
             {Array.from({ length: columnas }).map((_, i) => (
               <th key={i} style={{ padding: "10px 10px" }}>
-                <div className={styles.skeletonBar} style={{ width: 70, background: "#3e7a5c" }} />
+                <div
+                  className={styles.skeletonBar}
+                  style={{ width: 70, background: "var(--thead-text)", opacity: 0.35 }}
+                />
               </th>
             ))}
           </tr>

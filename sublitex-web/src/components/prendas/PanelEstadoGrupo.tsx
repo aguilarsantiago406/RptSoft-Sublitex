@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import type { CatalogoCompleto, PrendaItem } from "@/types/prendas";
-import { RESUMEN_GRUPO_VACIO, resumirGrupo } from "@/domain/resumenGrupo";
+import { resumirGrupo } from "@/domain/resumenGrupo";
 import type { EstadoDiscrepancia } from "@/domain/resumenGrupo";
 import styles from "./PanelEstadoGrupo.module.css";
 
@@ -215,12 +215,69 @@ interface TarjetaEstadoProps {
   children: React.ReactNode;
 }
 
+function IconoEstado({ estado }: { estado: EstadoTarjeta }) {
+  switch (estado) {
+    case "aviso":
+      return (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path
+            d="M8 2.6 14 13.4H2L8 2.6Z"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinejoin="round"
+          />
+          <path d="M8 6.8v2.8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          <circle cx="8" cy="11.4" r="0.9" fill="currentColor" />
+        </svg>
+      );
+    case "error":
+      return (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.3" stroke="currentColor" strokeWidth="1.4" />
+          <path d="M8 5v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          <circle cx="8" cy="11.4" r="0.9" fill="currentColor" />
+        </svg>
+      );
+    case "info":
+      return (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.3" stroke="currentColor" strokeWidth="1.4" />
+          <path
+            d="M8.2 7H8a.6.6 0 0 0-.6.6v3.2"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
+          <circle cx="8" cy="4.6" r="0.9" fill="currentColor" />
+        </svg>
+      );
+    default:
+      return (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.3" stroke="currentColor" strokeWidth="1.4" />
+          <path
+            d="M5.2 8.2l2 2 3.6-4.2"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+  }
+}
+
 function TarjetaEstado({ titulo, estado = "ok", children }: TarjetaEstadoProps) {
   return (
     <div
       className={`${styles.tarjeta} ${styles[`tarjeta_${estado}`]}`}
     >
-      <div className={styles.tarjetaTitulo}>{titulo}</div>
+      <div className={styles.tarjetaTituloRow}>
+        <span className={`${styles.tarjetaIcono} ${styles[`icono_${estado}`]}`}>
+          <IconoEstado estado={estado} />
+        </span>
+        <span className={styles.tarjetaTitulo}>{titulo}</span>
+      </div>
       {children}
     </div>
   );

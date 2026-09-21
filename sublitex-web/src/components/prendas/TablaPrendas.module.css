@@ -13,7 +13,7 @@
 .seccion {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
@@ -258,11 +258,12 @@
 
 .th {
   padding: 10px 12px;
+  border-bottom: 1px solid var(--thead-border);
   border-right: 1px solid var(--thead-border);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 10.5px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .th:last-child {
@@ -272,6 +273,10 @@
 /* Filas */
 .filaObsequio {
   background-color: var(--obsequio-bg);
+}
+
+.filaObsequio td:first-child {
+  border-left: 3px solid var(--info);
 }
 
 .filaPar {
@@ -377,26 +382,44 @@
 /* Controles de Formulario */
 .input {
   width: 100%;
-  border: 1px solid transparent;
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
   outline: none;
-  background: transparent;
+  background: var(--surface-raised);
   font-size: 12.5px;
   font-family: inherit;
   color: var(--text-strong);
-  padding: 4px 6px;
-  transition: all 0.12s ease;
+  padding: 5px 7px;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
 }
 
 .input:hover {
-  border-color: var(--border);
-  background: var(--surface-raised);
+  border-color: var(--border-strong);
 }
 
 .input:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+  outline: none;
+}
+
+.select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
   background: var(--surface-raised);
-  box-shadow: 0 0 0 2px rgba(28, 90, 62, 0.15);
+  color: var(--text);
+  font-size: 12px;
+  padding: 4px 6px;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+  outline: none;
 }
 
 .inputBold {
@@ -410,7 +433,7 @@
 
 .select {
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   background: var(--surface-raised);
   color: var(--text);
   font-size: 12px;
@@ -418,12 +441,13 @@
   cursor: pointer;
   outline: none;
   font-family: inherit;
-  transition: border-color 0.12s ease;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
 }
 
 .select:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(28, 90, 62, 0.15);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+  outline: none;
 }
 
 .selectTalla {
@@ -444,6 +468,7 @@
 /* Celda de atributo con origen (R-C06) */
 .celdaExcepcion {
   background: var(--excepcion-bg) !important;
+  border-left: 3px solid var(--excepcion-border);
 }
 
 .celdaInactiva {
@@ -453,6 +478,15 @@
 .selectExcepcion {
   font-weight: bold;
   border-color: var(--excepcion-border);
+}
+
+/* Checkbox */
+.checkbox {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  margin: 0;
 }
 
 /* Elementos Específicos */

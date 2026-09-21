@@ -1,16 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { GrillaGrupo } from "@/services/grupoPrendasMock";
+import type { ValorConfiguracion } from "@/types/pedidos";
 import type {
+  CatalogoCompleto,
+  ColorPedido,
   Genero,
+  GrillaGrupo,
+  GrupoGrilla,
   PrendaItem,
   TextoPrenda,
   TipoPrenda,
   UpdatePrenda,
   ValorEfectivo,
 } from "@/types/prendas";
-import type { ValorConfiguracion } from "@/types/pedidos";
+import { obtenerGrillaGrupo } from "@/services/prendasApi";
+import { mapColoresPorId } from "@/services/pedidosApi";
+import { logger } from "@/utils/logger";
 
 interface UseGrupoPrendasResultado {
   grupo: GrillaGrupo | null;
@@ -22,51 +28,78 @@ interface UseGrupoPrendasResultado {
 
 /**
  * Carga la grilla COMPLETA del grupo — contrato §5.1.
+ * La grilla se arma desde GET /api/grupos/:grupoId/participantes resolviendo
+ * ids crudos (talla, atributos, ubicaciones) contra el catálogo real.
+ *
  * Editar una celda genera una EXCEPCION (R-C08): al devolver el valor al que
- * el grupo hereda, la celda vuelve a HEREDADO.
+ * el grupo hereda, la celda vuelve a HEREDADO. La edición es estado local.
  *
  * configuracion: valores base del grupo (desde /api/pedidos/:id, §3.3)
- * para saber cuándo una excepción deja de ser tal.
+ * colores: colores oficiales del pedido (para resolver colorId de la prenda)
+ * catalogo: catálogo real cargado por usePedidoDetalle (índices incluidos)
  */
 export function useGrupoPrendas(
   grupoId: string | undefined,
-  configuracion?: ValorConfiguracion[]
+  configuracion?: ValorConfiguracion[],
+  colores?: ColorPedido[],
+  catalogo?: CatalogoCompleto | null,
+  grupo?: GrupoGrilla
 ): UseGrupoPrendasResultado {
-  const [grupo, setGrupo] = useState<GrillaGrupo | null>(null);
+  const [grilla, setGrilla] = useState<GrillaGrupo | null>(null);
   const [prendas, setPrendas] = useState<PrendaItem[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!grupoId) return;
-
     let montado = true;
 
-    fetch(`/api/grupos/${grupoId}/prendas`)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`Error ${res.status}: no se pudo cargar la grilla`);
-        }
-        return res.json() as Promise<GrillaGrupo>;
-      })
-      .then((data) => {
-        if (montado) {
-          setGrupo(data);
-          setPrendas(data.prendas);
-          setCargando(false);
-        }
-      })
-      .catch((err: Error) => {
-        if (montado) {
-          setError(err.message);
-          setCargando(false);
-        }
-      });
+    async function cargar() {
+      if (!grupoId || !catalogo) {
+        setCargando(false);
+        return;
+      }
+
+      setCargando(true);
+      setError(null);
+
+      const coloresMap = mapColoresPorId(colores ?? []);
+      const grupoGrilla: GrupoGrilla = grupo ?? {
+        id: grupoId,
+        nombre: "",
+        tipoProducto: { codigo: "", nombre: "" },
+      };
+
+      try {
+        const data = await obtenerGrillaGrupo(
+          grupoId,
+          configuracion ?? [],
+          coloresMap,
+          catalogo,
+          grupoGrilla
+        );
+        if (!montado) return;
+        setGrilla(data);
+        setPrendas(data.prendas);
+      } catch (err) {
+        if (!montado) return;
+        const mensaje =
+          err instanceof Error && err.message
+            ? err.message
+            : "No se pudo cargar la grilla del grupo.";
+        logger.warn("useGrupoPrendas", `No se pudo cargar la grilla ${grupoId}`, { mensaje });
+        setError(mensaje);
+        setPrendas([]);
+      } finally {
+        if (montado) setCargando(false);
+      }
+    }
+
+    cargar();
 
     return () => {
       montado = false;
     };
-  }, [grupoId]);
+  }, [grupoId, catalogo, configuracion, colores, grupo]);
 
   const configBase = useMemo(
     () => new Map((configuracion ?? []).map((c) => [c.atributo, c.valor])),
@@ -84,7 +117,7 @@ export function useGrupoPrendas(
     [configBase]
   );
 
-  return { grupo, prendas, cargando, error, actualizarPrenda };
+  return { grupo: grilla, prendas, cargando, error, actualizarPrenda };
 }
 
 function aplicarUpdate(

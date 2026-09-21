@@ -19,7 +19,7 @@ export function TotalesPrendas({ totales, prendas, catalogo }: TotalesPrendasPro
   return (
     <tfoot>
       <tr className={styles.tfootRow}>
-        {/* # + referencia + base (3) */}
+        {/* # + Prenda (colSpan 2); "Base" es la tercera td */}
         <td className={styles.tdTotal} colSpan={2}>
           TOTALES
         </td>

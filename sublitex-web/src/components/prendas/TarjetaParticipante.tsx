@@ -232,11 +232,17 @@ export function TarjetaParticipante({
       {/* Personalización */}
       {prenda.personalizaciones.length > 0 ? (
         <div className={styles.cardPersonalizacion}>
-          {prenda.personalizaciones.map((p) => (
-            <span key={p.ubicacion}>
-              {p.ubicacion}: {p.contenido}
-            </span>
-          ))}
+          {prenda.personalizaciones.map((p) => {
+            // R-F03: el contrato guarda el codigo; la UI muestra la etiqueta.
+            const etiqueta =
+              catalogo.ubicaciones.find((u) => u.codigo === p.ubicacion)
+                ?.etiqueta ?? p.ubicacion;
+            return (
+              <span key={p.ubicacion}>
+                {etiqueta}: {p.contenido}
+              </span>
+            );
+          })}
         </div>
       ) : null}
     </article>

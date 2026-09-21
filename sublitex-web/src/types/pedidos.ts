@@ -16,7 +16,7 @@ export interface PedidoResumen {
   codigo: string;
   cliente: { id: string; nombre: string };
   estado: EstadoPedido;
-  totalPrendas: number;
+  totalPrendas?: number;
   fechaCompromiso: string | null;
   fechaPedido: string;
 }
