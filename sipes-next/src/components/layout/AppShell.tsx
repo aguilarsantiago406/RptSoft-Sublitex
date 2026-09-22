@@ -20,13 +20,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         {isPedidoContext ? <PedidoSidebar pedidoId={pedidoId} /> : <MainSidebar />}
       </Suspense>
       <div className={styles.workspace}>
-        <header className={styles.topbar}>
-          <div>
-            <span>Sistema de pedidos</span>
-            <strong>Operación Sublitex</strong>
-          </div>
-          <span className={styles.sprint}>Sprint 1</span>
-        </header>
         <div className={styles.content}>{children}</div>
       </div>
     </div>

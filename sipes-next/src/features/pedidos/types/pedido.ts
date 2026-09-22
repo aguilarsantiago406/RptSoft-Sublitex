@@ -54,3 +54,56 @@ export interface PedidoDetalle {
   }>;
   grupos: GrupoPedido[];
 }
+
+export interface PrendaDetalle {
+  id: string;
+  participanteId: string;
+  grupoId: string;
+  tipoProductoId: string;
+  tallaId: string | null;
+  numero: string | null;
+  genero: "HOMBRE" | "MUJER" | "NINO" | "NINA" | "SIN_ESPECIFICAR";
+  tipoPrenda: "VENTA" | "OBSEQUIO" | "MUESTRA";
+  nombreEnPrenda: string | null;
+  esArquero: boolean;
+  colorId: string | null;
+  participante?: {
+    id: string;
+    nombrePersona: string;
+    estado: string;
+  } | null;
+  grupo?: {
+    id: string;
+    nombre: string;
+    politicaNumeracion: string;
+  } | null;
+  tipoProducto?: {
+    id: string;
+    codigo: string;
+    nombre: string;
+    camisetas: number;
+    shorts: number;
+    medias: number;
+  } | null;
+  talla?: {
+    id: string;
+    codigo: string;
+    etiqueta: string;
+  } | null;
+  color?: {
+    id: string;
+    nombre: string;
+    codigoHex: string;
+  } | null;
+  excepciones?: Array<{
+    id: string;
+    motivo?: string | null;
+    atributo?: { id: string; nombre: string; codigo: string };
+    valor?: { id: string; etiqueta: string; codigo: string };
+  }>;
+  personalizaciones?: Array<{
+    id: string;
+    contenido?: string | null;
+    ubicacion?: { id: string; etiqueta: string; codigo: string };
+  }>;
+}

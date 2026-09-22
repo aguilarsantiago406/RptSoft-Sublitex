@@ -17,7 +17,7 @@ export default async function PedidosPage({
       <header className="pageHeader">
         <div>
           <h1>Pedidos</h1>
-          <p>{pedidos.length} pedidos obtenidos del backend SIPES.</p>
+          <p>{pedidos.length} pedidos registrados en el sistema.</p>
         </div>
         <button className="primaryButton" type="button" disabled title="Se habilitará al implementar el formulario">
           + Nuevo pedido
