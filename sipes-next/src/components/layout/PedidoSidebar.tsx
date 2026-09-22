@@ -93,6 +93,17 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
             <small>Operación interna</small>
           </div>
         </div>
+        <button
+          className={styles.logoutButton}
+          type="button"
+          onClick={() => {
+            void fetch("/api/auth/logout", { method: "POST" }).finally(() => {
+              window.location.assign("/login");
+            });
+          }}
+        >
+          Cerrar sesión
+        </button>
       </aside>
     </>
   );

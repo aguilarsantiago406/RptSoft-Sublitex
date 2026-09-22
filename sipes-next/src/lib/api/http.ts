@@ -1,3 +1,5 @@
+import { getSessionToken } from "@/lib/auth/session";
+
 const DEFAULT_API_URL = "http://localhost:3001";
 
 export class SipesApiError extends Error {
@@ -15,9 +17,13 @@ function getApiUrl() {
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
+  const token = await getSessionToken();
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
   const response = await fetch(`${getApiUrl()}${path}`, {
     cache: "no-store",
-    headers: { Accept: "application/json" },
+    headers,
   });
 
   if (!response.ok) {
