@@ -1,4 +1,4 @@
-import { Controller, Post, Patch, Delete, Get, Body, Param } from '@nestjs/common';
+import { Controller, Post, Patch, Delete, Get, Body, Param, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PrendasService } from './prendas.service';
 import { CreatePrendaDto } from './dto/create-prenda.dto';
@@ -16,9 +16,9 @@ export class PrendasController {
   }
 
   @Patch('prendas/:id')
-  @ApiOperation({ summary: 'Actualiza la ficha mínima de la prenda (talla, número, género, apodo)' })
-  actualizar(@Param('id') id: string, @Body() dto: UpdateFichaMinimaDto) {
-    return this.service.actualizarFichaMinima(id, dto);
+  @ApiOperation({ summary: 'Actualiza la ficha mínima de la prenda (talla, número, género, apodo, color)' })
+  actualizar(@Param('id') id: string, @Body() dto: UpdateFichaMinimaDto, @Request() req?: any) {
+    return this.service.actualizarFichaMinima(id, dto, req?.user);
   }
 
   @Delete('prendas/:id')

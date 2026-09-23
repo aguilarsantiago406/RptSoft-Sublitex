@@ -1,17 +1,22 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+import process from 'process';
 import { PRODUCTOS, ATRIBUTOS, UBICACIONES, COLORES, PEDIDO_PROMO_2002 } from './promo2002.data';
 
 const prisma = new PrismaClient();
 
 async function seedSistema(): Promise<string> {
+  const hashedPassword = await bcrypt.hash('Admin123*', 10);
   const usuario = await prisma.usuario.upsert({
     where: { email: 'sistema@sublitex.com' },
-    update: {},
+    update: {
+      password: hashedPassword,
+    },
     create: {
       email: 'sistema@sublitex.com',
       nombre: 'Sistema',
       rol: 'ADMINISTRADOR' as any,
-      password: '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiXe/QLSUG6x8ecJ58kZyvYh64g12u',
+      password: hashedPassword,
     },
   });
   return usuario.id;

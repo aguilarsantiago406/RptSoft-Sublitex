@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { ParticipantesService } from './participantes.service';
 import { CreateParticipanteDto } from './dto/create-participante.dto';
@@ -42,5 +42,11 @@ export class ParticipantesController {
   @ApiOperation({ summary: 'Genera un nuevo enlace y token para el participante' })
   regenerar(@Param('id') id: string) {
     return this.service.regenerarEnlace(id);
+  }
+
+  @Delete('participantes/:id')
+  @ApiOperation({ summary: 'Elimina un participante si el bloque LISTA está abierto (R-D07 / R-H03)' })
+  eliminar(@Param('id') id: string) {
+    return this.service.eliminar(id);
   }
 }

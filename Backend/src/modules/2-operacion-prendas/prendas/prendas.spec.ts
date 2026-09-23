@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
 import { PrendasService } from './prendas.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 
@@ -13,6 +14,18 @@ describe('🔴 TDD BK2: PrendasService (Bloque E y K)', () => {
       update: jest.fn(),
       delete: jest.fn(),
       findMany: jest.fn(),
+    },
+    grupo: {
+      findUnique: jest.fn(),
+    },
+    bloquePedido: {
+      findFirst: jest.fn(),
+    },
+    colorPedido: {
+      findFirst: jest.fn(),
+    },
+    registroCambio: {
+      create: jest.fn(),
     },
   };
 
@@ -165,6 +178,101 @@ describe('🔴 TDD BK2: PrendasService (Bloque E y K)', () => {
       expect(resumen.piezasFisicas.totalMedias).toBe(2);    // 1 + 1 + 0
       expect(resumen.desgloseTiposPrenda.venta).toBe(2);
       expect(resumen.desgloseTiposPrenda.obsequio).toBe(1);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // R-H03: CANDADO DE LISTA CERRADA
+  // ---------------------------------------------------------------------------
+  describe('R-H03: Bloqueo de Modificación si Lista está Cerrada', () => {
+    it('debe rechazar actualizar prenda si el bloque LISTA está CERRADO', async () => {
+      mockPrisma.prenda.findUnique.mockResolvedValue({
+        id: 'pre_1',
+        grupo: { pedidoId: 'ped_1' },
+      });
+      mockPrisma.bloquePedido.findFirst.mockResolvedValue({
+        id: 'blk_1',
+        tipo: 'LISTA',
+        estado: 'CERRADO',
+      });
+
+      await expect(
+        service.actualizarFichaMinima('pre_1', { numero: '10' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // R-K05: COLOR VÁLIDO DENTRO DE LA PALETA DEL PEDIDO
+  // ---------------------------------------------------------------------------
+  describe('R-K05: Validación de ColorPedido', () => {
+    it('debe rechazar colorId si no pertenece a la paleta del pedido al actualizar', async () => {
+      mockPrisma.prenda.findUnique.mockResolvedValue({
+        id: 'pre_1',
+        grupo: { pedidoId: 'ped_1' },
+      });
+      mockPrisma.bloquePedido.findFirst.mockResolvedValue(null);
+      mockPrisma.colorPedido.findFirst.mockResolvedValue(null); // color inexistente
+
+      await expect(
+        service.actualizarFichaMinima('pre_1', { colorId: 'col_falso' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('debe rechazar crear prenda si colorId no pertenece a la paleta del pedido', async () => {
+      mockPrisma.grupo.findUnique.mockResolvedValue({
+        id: 'grp_1',
+        pedidoId: 'ped_1',
+      });
+      mockPrisma.bloquePedido.findFirst.mockResolvedValue(null);
+      mockPrisma.colorPedido.findFirst.mockResolvedValue(null); // color inexistente
+
+      await expect(
+        service.crear({
+          participanteId: 'part_1',
+          grupoId: 'grp_1',
+          tipoProductoId: 'prod_1',
+          colorId: 'col_invalido',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // R-I01 / R-I04: AUDITORÍA EN REGISTROCAMBIO TRAS CONFIRMACIÓN
+  // ---------------------------------------------------------------------------
+  describe('R-I01 / R-I04: Trazabilidad en RegistroCambio', () => {
+    it('debe registrar en RegistroCambio cuando se altera una prenda de un participante CONFIRMADO', async () => {
+      mockPrisma.prenda.findUnique.mockResolvedValue({
+        id: 'pre_1',
+        numero: '7',
+        tallaId: 'talla_M',
+        grupo: { pedidoId: 'ped_1' },
+        participante: { estado: 'CONFIRMADO' },
+      });
+      mockPrisma.bloquePedido.findFirst.mockResolvedValue(null);
+      mockPrisma.prenda.update.mockResolvedValue({ id: 'pre_1', tipoPrenda: 'VENTA', numero: '10' });
+
+      await service.actualizarFichaMinima(
+        'pre_1',
+        { numero: '10' },
+        { id: 'usr_coord_1', rol: 'COORDINADOR_OPERATIVO' },
+      );
+
+      expect(mockPrisma.registroCambio.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            pedidoId: 'ped_1',
+            entidad: 'Prenda',
+            entidadId: 'pre_1',
+            campo: 'numero',
+            valorAnterior: '7',
+            valorNuevo: '10',
+            origen: 'USUARIO',
+            autorUsuarioId: 'usr_coord_1',
+          }),
+        }),
+      );
     });
   });
 });
