@@ -1,5 +1,6 @@
 // =============================================================================
-// SIPES — Sistema de Gestión Operativa de Pedidos Sublitex
+// SIPES — SIstema de PEdidos Sublitex
+// (el acronimo se define una sola vez, en el catalogo de reglas; aqui se repite igual)
 // Modelo de datos del NÚCLEO · v0.2 · catálogo de reglas v0.2 + bloque K
 // Actualizado 2026-09-07 tras analizar nueve pedidos reales y la matriz comercial.
 //
@@ -143,11 +144,12 @@ enum OrigenCambio {
 // =============================================================================
 
 model Usuario {
-  id     String     @id @default(cuid())
-  email  String     @unique
-  nombre String
-  rol    RolUsuario
-  activo Boolean    @default(true)
+  id       String     @id @default(cuid())
+  email    String     @unique
+  nombre   String
+  rol      RolUsuario
+  activo   Boolean    @default(true)
+  password String
 
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
