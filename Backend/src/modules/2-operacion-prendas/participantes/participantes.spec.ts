@@ -13,12 +13,19 @@ describe('🔴 TDD BK2: ParticipantesService (Bloque D)', () => {
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
     prenda: {
       update: jest.fn(),
     },
     personalizacion: {
       upsert: jest.fn(),
+    },
+    bloquePedido: {
+      findFirst: jest.fn(),
+    },
+    colorPedido: {
+      findFirst: jest.fn(),
     },
   };
 
@@ -164,6 +171,60 @@ describe('🔴 TDD BK2: ParticipantesService (Bloque D)', () => {
       const res = await service.confirmarPorEnlace('tok_valido');
       expect(res.estado).toBe('CONFIRMADO');
       expect(res.confirmadoEn).toBeDefined();
+    });
+
+    it('Seguridad BOLA: debe rechazar guardar la ficha si la prenda no pertenece al participante', async () => {
+      const mockPart = {
+        id: 'part_1002',
+        enlaceToken: 'tok_valido',
+        enlaceRevocado: false,
+        enlaceExpiraEn: new Date(Date.now() + 86400000),
+        prendas: [{ id: 'pre_1' }], // Solo le pertenece pre_1
+      };
+      mockPrisma.participante.findUnique.mockResolvedValue(mockPart);
+
+      await expect(
+        service.guardarFichaEnlace('tok_valido', {
+          prendas: [
+            {
+              prendaId: 'pre_ajena_999', // Prenda de otro participante
+              tallaId: 'talla_L',
+            },
+          ],
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // R-D07 / R-H03: ELIMINACIÓN DE PARTICIPANTE
+  // ---------------------------------------------------------------------------
+  describe('R-D07 / R-H03: Eliminación de Participante', () => {
+    it('debe eliminar el participante si la lista está abierta', async () => {
+      mockPrisma.participante.findUnique.mockResolvedValue({
+        id: 'part_1',
+        grupo: { pedidoId: 'ped_1' },
+      });
+      mockPrisma.bloquePedido.findFirst.mockResolvedValue(null);
+      mockPrisma.participante.delete.mockResolvedValue({});
+
+      const res = await service.eliminar('part_1');
+      expect(res.mensaje).toBeDefined();
+      expect(mockPrisma.participante.delete).toHaveBeenCalledWith({ where: { id: 'part_1' } });
+    });
+
+    it('R-H03: debe rechazar eliminar participante si la lista está CERRADA', async () => {
+      mockPrisma.participante.findUnique.mockResolvedValue({
+        id: 'part_1',
+        grupo: { pedidoId: 'ped_1' },
+      });
+      mockPrisma.bloquePedido.findFirst.mockResolvedValue({
+        id: 'bloq_1',
+        tipo: 'LISTA',
+        estado: 'CERRADO',
+      });
+
+      await expect(service.eliminar('part_1')).rejects.toThrow(BadRequestException);
     });
   });
 });

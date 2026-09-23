@@ -40,6 +40,15 @@ export class GrupoController {
     return this.grupoService.update(id, dto);
   }
 
+  @Patch('grupos/:id')
+  @ApiOperation({ summary: 'Actualizar campos de un grupo incluyendo configuracion (R-B03, R-B07)' })
+  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 404, description: 'Grupo, atributo o valor no encontrado' })
+  @ApiResponse({ status: 409, description: 'Nombre de grupo duplicado en el pedido (R-B01)' })
+  patch(@Param('id') id: string, @Body() dto: UpdateGrupoDto) {
+    return this.grupoService.update(id, dto);
+  }
+
   @Delete('grupos/:id')
   @ApiOperation({ summary: 'Eliminar un grupo sin prendas ni participantes' })
   @ApiResponse({ status: 404, description: 'Grupo no encontrado' })

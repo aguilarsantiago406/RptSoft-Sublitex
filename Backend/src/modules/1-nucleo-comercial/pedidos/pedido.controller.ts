@@ -34,16 +34,10 @@ export class PedidoController {
     return this.pedidoService.findOne(id);
   }
 
-  @Get(':id/resumen-produccion')
-  @ApiOperation({ summary: 'Consultar resumen de producción por grupos y piezas físicas' })
+  @Get(':id/conciliacion-comercial')
+  @ApiOperation({ summary: 'Conciliacion comercial: cantidad contratada vs prendas registradas por grupo (R-B02, R-H03)' })
   @ApiResponse({ status: 404, description: 'Pedido no encontrado' })
-  resumenProduccion(@Param('id') id: string) {
-    return this.pedidoService.resumenProduccion(id);
-  }
-
-  @Post(':id/resumen-produccion')
-  @ApiOperation({ summary: 'Calcular resumen de producción bajo demanda' })
-  calcularResumenProduccion(@Param('id') id: string) {
+  conciliacionComercial(@Param('id') id: string) {
     return this.pedidoService.resumenProduccion(id);
   }
 

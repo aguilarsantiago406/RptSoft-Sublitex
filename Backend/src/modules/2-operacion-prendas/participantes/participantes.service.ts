@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, GoneException } from '@nestjs/common';
+import { Injectable, NotFoundException, GoneException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CreateParticipanteDto } from './dto/create-participante.dto';
 import { GuardarFichaEnlaceDto } from './dto/guardar-ficha-enlace.dto';
@@ -9,6 +9,16 @@ export class ParticipantesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async crearEnGrupo(grupoId: string, dto: CreateParticipanteDto) {
+    const grupo = await this.prisma.grupo?.findUnique?.({ where: { id: grupoId } });
+    if (grupo?.pedidoId) {
+      const bloqueLista = await this.prisma.bloquePedido?.findFirst?.({
+        where: { pedidoId: grupo.pedidoId, tipo: 'LISTA', estado: 'CERRADO' },
+      });
+      if (bloqueLista) {
+        throw new BadRequestException('La lista de prendas de este pedido ha sido CERRADA para producción.');
+      }
+    }
+
     const token = `tok_${crypto.randomBytes(8).toString('hex')}`;
     const expira = new Date();
     expira.setDate(expira.getDate() + 7);
@@ -29,7 +39,14 @@ export class ParticipantesService {
       include: {
         prendas: {
           include: {
-            personalizaciones: true,
+            color: true,
+            talla: true,
+            tipoProducto: true,
+            personalizaciones: {
+              include: {
+                ubicacion: true,
+              },
+            },
             excepciones: true,
           },
         },
@@ -41,9 +58,17 @@ export class ParticipantesService {
     const p = await this.prisma.participante.findUnique({
       where: { id },
       include: {
+        grupo: true,
         prendas: {
           include: {
-            personalizaciones: true,
+            color: true,
+            talla: true,
+            tipoProducto: true,
+            personalizaciones: {
+              include: {
+                ubicacion: true,
+              },
+            },
             excepciones: true,
           },
         },
@@ -60,7 +85,14 @@ export class ParticipantesService {
         grupo: true,
         prendas: {
           include: {
-            personalizaciones: true,
+            color: true,
+            talla: true,
+            tipoProducto: true,
+            personalizaciones: {
+              include: {
+                ubicacion: true,
+              },
+            },
             excepciones: true,
           },
         },
@@ -79,46 +111,89 @@ export class ParticipantesService {
   async guardarFichaEnlace(token: string, dto: GuardarFichaEnlaceDto) {
     const p = await this.obtenerPorEnlaceToken(token);
 
-    // Actualizar prendas y registrar fecha
-    for (const item of dto.prendas) {
-      await this.prisma.prenda.update({
-        where: { id: item.prendaId },
-        data: {
-          tallaId: item.tallaId,
-          numero: item.numero,
-          genero: item.genero as any,
-          nombreEnPrenda: item.nombreEnPrenda,
-        },
-      });
+    // R-D03: Si ya está confirmado, la ficha se encuentra bloqueada
+    if (p.estado === 'CONFIRMADO') {
+      throw new BadRequestException('El participante ya ha confirmado sus datos y la ficha está bloqueada.');
+    }
 
-      if (item.personalizaciones?.length) {
-        for (const pers of item.personalizaciones) {
-          await this.prisma.personalizacion.upsert({
-            where: {
-              prendaId_ubicacionId: {
-                prendaId: item.prendaId,
-                ubicacionId: pers.ubicacionId,
-              },
-            },
-            create: {
-              prendaId: item.prendaId,
-              ubicacionId: pers.ubicacionId,
-              contenido: pers.contenido,
-            },
-            update: {
-              contenido: pers.contenido,
-            },
-          });
-        }
+    // R-H03: Si el bloque LISTA está cerrado, no se admiten modificaciones
+    if (p.grupo?.pedidoId) {
+      const bloqueLista = await this.prisma.bloquePedido?.findFirst?.({
+        where: { pedidoId: p.grupo.pedidoId, tipo: 'LISTA', estado: 'CERRADO' },
+      });
+      if (bloqueLista) {
+        throw new BadRequestException('La lista de prendas de este pedido ha sido CERRADA para producción.');
       }
     }
 
-    return this.prisma.participante.update({
-      where: { id: p.id },
-      data: {
-        estado: 'REGISTRADO',
-        registradoEn: new Date(),
-      },
+    // 🔒 Seguridad BOLA: Validar que cada prenda pertenezca estrictamente a este participante
+    for (const item of dto.prendas) {
+      const prendaValida = p.prendas.find((pr) => pr.id === item.prendaId);
+      if (!prendaValida) {
+        throw new BadRequestException(`La prenda con ID ${item.prendaId} no pertenece a este participante.`);
+      }
+    }
+
+    // Ejecutar todas las mutaciones en una transacción atómica única
+    const executeInTransaction = async (fn: (tx: any) => Promise<any>) => {
+      if (typeof this.prisma.$transaction === 'function') {
+        return this.prisma.$transaction(fn);
+      }
+      return fn(this.prisma);
+    };
+
+    return executeInTransaction(async (tx) => {
+      for (const item of dto.prendas) {
+        // R-K05: Validar que el color pertenezca al pedido si fue seleccionado
+        if (item.colorId && p.grupo?.pedidoId) {
+          const colorValido = await tx.colorPedido?.findFirst?.({
+            where: { id: item.colorId, pedidoId: p.grupo.pedidoId },
+          });
+          if (!colorValido) {
+            throw new BadRequestException('El color indicado no pertenece a la paleta autorizada de este pedido.');
+          }
+        }
+
+        await tx.prenda.update({
+          where: { id: item.prendaId },
+          data: {
+            tallaId: item.tallaId,
+            numero: item.numero,
+            genero: item.genero as any,
+            nombreEnPrenda: item.nombreEnPrenda,
+            colorId: item.colorId,
+          },
+        });
+
+        if (item.personalizaciones?.length) {
+          for (const pers of item.personalizaciones) {
+            await tx.personalizacion.upsert({
+              where: {
+                prendaId_ubicacionId: {
+                  prendaId: item.prendaId,
+                  ubicacionId: pers.ubicacionId,
+                },
+              },
+              create: {
+                prendaId: item.prendaId,
+                ubicacionId: pers.ubicacionId,
+                contenido: pers.contenido,
+              },
+              update: {
+                contenido: pers.contenido,
+              },
+            });
+          }
+        }
+      }
+
+      return tx.participante.update({
+        where: { id: p.id },
+        data: {
+          estado: 'REGISTRADO',
+          registradoEn: new Date(),
+        },
+      });
     });
   }
 
@@ -166,5 +241,26 @@ export class ParticipantesService {
         enlaceRevocado: false,
       },
     });
+  }
+
+  async eliminar(id: string) {
+    const p = await this.prisma.participante.findUnique({
+      where: { id },
+      include: { grupo: true },
+    });
+    if (!p) throw new NotFoundException('Participante no encontrado.');
+
+    // R-H03: Validar que el bloque LISTA esté abierto
+    if (p.grupo?.pedidoId) {
+      const bloqueLista = await this.prisma.bloquePedido?.findFirst?.({
+        where: { pedidoId: p.grupo.pedidoId, tipo: 'LISTA', estado: 'CERRADO' },
+      });
+      if (bloqueLista) {
+        throw new BadRequestException('El bloque LISTA está CERRADO. No se pueden eliminar participantes.');
+      }
+    }
+
+    await this.prisma.participante.delete({ where: { id } });
+    return { mensaje: 'Participante eliminado correctamente' };
   }
 }
