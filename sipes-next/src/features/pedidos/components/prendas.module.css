@@ -23,7 +23,7 @@
   background: #ffffff;
   color: #475569;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 500;
   padding: 6px 12px;
   border-radius: 999px;
   cursor: pointer;
@@ -75,7 +75,7 @@
 }
 
 .searchInput:focus {
-  border-color: var(--green-dark);
+  border-color: var(--sky);
 }
 
 .searchIcon {
@@ -102,10 +102,11 @@
 
 .prendasTable {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.84rem;
   text-align: left;
-  min-width: 860px;
+  min-width: 960px;
 }
 
 .prendasTable th {
@@ -114,7 +115,6 @@
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  font-weight: 750;
   padding: 12px 14px;
   border-bottom: 1px solid #e2e8f0;
   white-space: nowrap;
@@ -138,7 +138,7 @@
 .colIndex {
   font-size: 0.78rem;
   color: #94a3b8;
-  font-weight: 600;
+  font-weight: 500;
   width: 38px;
   text-align: center;
 }
@@ -147,7 +147,7 @@
   display: inline-flex;
   align-items: center;
   font-size: 0.72rem;
-  font-weight: 750;
+  font-weight: 500;
   padding: 3px 8px;
   border-radius: 6px;
   background: #eef2ff;
@@ -160,7 +160,7 @@
   display: inline-flex;
   align-items: center;
   font-size: 0.72rem;
-  font-weight: 750;
+  font-weight: 500;
   padding: 3px 8px;
   border-radius: 6px;
   background: #ecfdf5;
@@ -173,7 +173,7 @@
   display: inline-flex;
   align-items: center;
   font-size: 0.72rem;
-  font-weight: 750;
+  font-weight: 500;
   padding: 3px 8px;
   border-radius: 6px;
   background: #f1f5f9;
@@ -184,7 +184,7 @@
 
 .tallaBadge {
   display: inline-block;
-  font-weight: 800;
+  font-weight: 500;
   font-size: 0.78rem;
   color: var(--navy);
   background: #f1f5f9;
@@ -197,7 +197,7 @@
 
 .numeroBadge {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-weight: 850;
+  font-weight: 600;
   color: var(--navy);
   font-size: 0.88rem;
 }
@@ -211,7 +211,7 @@
 .generoTag {
   font-size: 0.74rem;
   color: #475569;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .colorCell {
@@ -232,7 +232,7 @@
   display: inline-flex;
   align-items: center;
   font-size: 0.7rem;
-  font-weight: 750;
+  font-weight: 500;
   background: #fff8e8;
   color: #9a6410;
   border: 1px solid #fed7aa;
@@ -250,5 +250,5 @@
 .countSummary {
   font-size: 0.8rem;
   color: #64748b;
-  font-weight: 600;
+  font-weight: 500;
 }

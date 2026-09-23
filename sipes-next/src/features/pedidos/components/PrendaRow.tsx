@@ -41,7 +41,7 @@ export function PrendaRow({ index, prenda }: PrendaRowProps) {
         <span className={badgeClass}>{nombreGrupo}</span>
       </td>
       <td>
-        <strong>{prenda.participante?.nombrePersona || prenda.nombreEnPrenda || "Sin registrar"}</strong>
+        <span style={{ fontWeight: 500, color: "var(--navy)" }}>{prenda.participante?.nombrePersona || prenda.nombreEnPrenda || "Sin registrar"}</span>
       </td>
       <td>{prenda.nombreEnPrenda || "—"}</td>
       <td>
@@ -70,7 +70,7 @@ export function PrendaRow({ index, prenda }: PrendaRowProps) {
         )}
       </td>
       <td>
-        <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "#64748b" }}>
+        <span style={{ fontSize: "0.74rem", fontWeight: 500, color: "#64748b" }}>
           {prenda.tipoPrenda}
         </span>
       </td>

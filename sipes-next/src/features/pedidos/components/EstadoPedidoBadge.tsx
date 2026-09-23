@@ -12,10 +12,20 @@ const LABELS: Record<EstadoPedido, string> = {
   CANCELADO: "Cancelado",
 };
 
-export function EstadoPedidoBadge({ estado }: { estado: EstadoPedido }) {
+interface EstadoPedidoBadgeProps {
+  estado: EstadoPedido;
+  size?: "md" | "lg";
+}
+
+export function EstadoPedidoBadge({ estado, size = "md" }: EstadoPedidoBadgeProps) {
+  const isLarge = size === "lg";
   return (
-    <span className={`${styles.badge} ${styles[`estado_${estado}`]}`}>
-      {LABELS[estado]}
+    <span
+      className={`${styles.badge} ${isLarge ? styles.badgeLg : ""} ${styles[`estado_${estado}`]}`}
+      role="status"
+    >
+      <span className={styles.statusDot} aria-hidden="true" />
+      <span>{LABELS[estado]}</span>
     </span>
   );
 }

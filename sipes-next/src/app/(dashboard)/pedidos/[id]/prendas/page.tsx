@@ -100,7 +100,7 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
             <span className={styles.detailClientTag}>{pedido.cliente.nombre}</span>
           </p>
         </div>
-        <EstadoPedidoBadge estado={pedido.estado} />
+        <EstadoPedidoBadge estado={pedido.estado} size="lg" />
       </header>
 
       <PrendasView prendas={prendas} grupos={pedido.grupos} />
