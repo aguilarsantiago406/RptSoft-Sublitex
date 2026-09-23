@@ -62,10 +62,7 @@ export default async function ParticipantesPage({ params }: ParticipantesPagePro
             PARTICIPANTES <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
           </h1>
           <p className={styles.detailHeaderSubtitle}>
-            <span>Gestión de alumnos, enlaces de WhatsApp y confirmación</span>
-            <span>·</span>
-            <span>Cliente:</span>
-            <span className={styles.detailClientTag}>{pedido.cliente.nombre}</span>
+            <span>Gestión de Participantes</span>
           </p>
         </div>
         <EstadoPedidoBadge estado={pedido.estado} size="lg" />

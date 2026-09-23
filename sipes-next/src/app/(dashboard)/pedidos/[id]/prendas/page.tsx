@@ -121,10 +121,7 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
             PRENDAS <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
           </h1>
           <p className={styles.detailHeaderSubtitle}>
-            <span>Nómina de corte y confección</span>
-            <span>·</span>
-            <span>Cliente:</span>
-            <span className={styles.detailClientTag}>{pedido.cliente.nombre}</span>
+            <span>Detalle de Prendas</span>
           </p>
         </div>
         <EstadoPedidoBadge estado={pedido.estado} size="lg" />

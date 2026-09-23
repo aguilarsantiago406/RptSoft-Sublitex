@@ -55,7 +55,7 @@ export function NuevoParticipanteModal({
 
   function handleCopy() {
     if (!createdToken) return;
-    const url = `${window.location.origin}/enlace/${createdToken}`;
+    const url = `${window.location.origin}/participante/${createdToken}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -63,7 +63,7 @@ export function NuevoParticipanteModal({
 
   function handleOpenWhatsApp() {
     if (!createdToken) return;
-    const url = `${window.location.origin}/enlace/${createdToken}`;
+    const url = `${window.location.origin}/participante/${createdToken}`;
     const wa = `https://wa.me/?text=${encodeURIComponent(
       `Hola ${nombrePersona}, completa tus datos para tu prenda de Sublitex en este enlace: ${url}`
     )}`;
@@ -105,7 +105,7 @@ export function NuevoParticipanteModal({
             <div className={styles.successBox}>
               <p className={styles.successTitle}>Enlace generado para {nombrePersona}</p>
               <div className={styles.linkUrlRow}>
-                <span>/enlace/{createdToken}</span>
+                <span>/participante/{createdToken}</span>
               </div>
             </div>
 

@@ -10,13 +10,12 @@ interface ParticipantesTableProps {
     nombreGrupo: string;
   }>;
   pedidoId: string;
-  mapaTallas: Map<string, string>;
+  mapaTallas?: Map<string, string>;
 }
 
 export function ParticipantesTable({
   participantes,
   pedidoId,
-  mapaTallas,
 }: ParticipantesTableProps) {
   if (participantes.length === 0) {
     return (
@@ -33,13 +32,11 @@ export function ParticipantesTable({
       <div className={styles.tableScroll}>
         <table className={styles.table}>
           <colgroup>
-            <col style={{ width: "46px" }} />
-            <col style={{ width: "140px" }} />
-            <col style={{ width: "220px" }} />
+            <col style={{ width: "48px" }} />
+            <col style={{ width: "150px" }} />
+            <col style={{ width: "240px" }} />
             <col style={{ width: "130px" }} />
-            <col style={{ width: "180px" }} />
-            <col style={{ width: "230px" }} />
-            <col style={{ width: "94px" }} />
+            <col style={{ width: "auto" }} />
           </colgroup>
           <thead>
             <tr>
@@ -47,9 +44,7 @@ export function ParticipantesTable({
               <th>Grupo</th>
               <th>Participante</th>
               <th>Estado</th>
-              <th>Ficha de datos</th>
               <th>Enlace WhatsApp</th>
-              <th>Acción</th>
             </tr>
           </thead>
           <tbody>
@@ -60,7 +55,6 @@ export function ParticipantesTable({
                 participante={item.participante}
                 nombreGrupo={item.nombreGrupo}
                 pedidoId={pedidoId}
-                mapaTallas={mapaTallas}
               />
             ))}
           </tbody>

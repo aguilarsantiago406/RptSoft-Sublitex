@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { ParticipanteConPrendas, TallaCatalogoItem } from "@/features/pedidos/api/pedidos.api";
-import { actionRegenerarEnlace, actionConfirmarManual } from "../actions/participantes.actions";
+import type { ParticipanteConPrendas } from "@/features/pedidos/api/pedidos.api";
+import { actionRegenerarEnlace } from "../actions/participantes.actions";
 import styles from "./participantes.module.css";
 
 interface ParticipantesRowProps {
@@ -10,7 +10,6 @@ interface ParticipantesRowProps {
   participante: ParticipanteConPrendas;
   nombreGrupo: string;
   pedidoId: string;
-  mapaTallas: Map<string, string>;
 }
 
 function getGroupBadgeClass(nombreGrupo: string): string {
@@ -25,17 +24,15 @@ export function ParticipantesRow({
   participante,
   nombreGrupo,
   pedidoId,
-  mapaTallas,
 }: ParticipantesRowProps) {
   const [token, setToken] = useState(participante.enlaceToken);
-  const [estado, setEstado] = useState(participante.estado);
+  const estado = participante.estado;
   const [copied, setCopied] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
-  const [confirming, setConfirming] = useState(false);
 
   function handleCopy() {
     if (!token) return;
-    const url = `${window.location.origin}/enlace/${token}`;
+    const url = `${window.location.origin}/participante/${token}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -43,7 +40,7 @@ export function ParticipantesRow({
 
   function handleOpenWhatsApp() {
     if (!token) return;
-    const url = `${window.location.origin}/enlace/${token}`;
+    const url = `${window.location.origin}/participante/${token}`;
     const wa = `https://wa.me/?text=${encodeURIComponent(
       `Hola ${participante.nombrePersona}, completa tus datos para tu prenda de Sublitex: ${url}`
     )}`;
@@ -61,16 +58,6 @@ export function ParticipantesRow({
     }
   }
 
-  async function handleConfirmarManual() {
-    if (confirming || estado === "CONFIRMADO") return;
-    setConfirming(true);
-    const res = await actionConfirmarManual(participante.id, pedidoId);
-    setConfirming(false);
-    if (res.ok) {
-      setEstado("CONFIRMADO");
-    }
-  }
-
   const badgeClass = getGroupBadgeClass(nombreGrupo);
 
   let statusBadgeClass = styles.statusBadgePendiente;
@@ -82,8 +69,6 @@ export function ParticipantesRow({
     statusBadgeClass = styles.statusBadgeConfirmado;
     statusText = "Confirmado";
   }
-
-  const prendas = participante.prendas ?? [];
 
   return (
     <tr>
@@ -98,26 +83,6 @@ export function ParticipantesRow({
         <span className={statusBadgeClass}>
           {statusText}
         </span>
-      </td>
-      <td>
-        {(() => {
-          if (prendas.length === 0) {
-            return <span style={{ color: "#94a3b8", fontSize: "0.78rem" }}>Sin prendas</span>;
-          }
-          const faltanTallas = prendas.some((p) => !p.tallaId);
-          if (estado === "PENDIENTE" || faltanTallas) {
-            return (
-              <span className={styles.statusBadgePendiente}>
-                Pendiente de carga
-              </span>
-            );
-          }
-          return (
-            <span className={styles.statusBadgeConfirmado}>
-              Datos completos
-            </span>
-          );
-        })()}
       </td>
       <td>
         {token ? (
@@ -156,20 +121,6 @@ export function ParticipantesRow({
             disabled={regenerating}
           >
             {regenerating ? "Generando…" : "+ Generar link"}
-          </button>
-        )}
-      </td>
-      <td>
-        {estado !== "CONFIRMADO" && (
-          <button
-            type="button"
-            className={styles.copyButton}
-            onClick={handleConfirmarManual}
-            disabled={confirming}
-            style={{ fontSize: "0.72rem", padding: "4px 8px" }}
-            title="Confirmar manualmente como coordinador"
-          >
-            {confirming ? "…" : "Validar"}
           </button>
         )}
       </td>

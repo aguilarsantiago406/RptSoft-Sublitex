@@ -43,7 +43,7 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos }: PrendasTa
               <th className={styles.colIndex}>#</th>
               <th>Grupo</th>
               <th>Participante</th>
-              <th>Estampado Espalda</th>
+              <th>Apodo</th>
               <th>N°</th>
               <th>Talla</th>
               <th>Corte</th>
