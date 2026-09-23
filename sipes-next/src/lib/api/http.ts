@@ -104,3 +104,35 @@ export async function apiPatch<T>(path: string, body?: unknown): Promise<T> {
 
   return response.json() as Promise<T>;
 }
+
+export async function apiDelete<T>(path: string): Promise<T> {
+  const token = await getSessionToken();
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(`${getApiUrl()}${path}`, {
+    method: "DELETE",
+    headers,
+  });
+
+  if (!response.ok) {
+    let message = `El backend respondió con estado ${response.status}`;
+
+    try {
+      const resBody = (await response.json()) as { message?: string | string[] };
+      if (Array.isArray(resBody.message)) message = resBody.message.join(". ");
+      else if (resBody.message) message = resBody.message;
+    } catch {
+      // Ignorar error si no es JSON
+    }
+
+    throw new SipesApiError(message, response.status);
+  }
+
+  // Si no hay cuerpo en la respuesta de DELETE (204 o vacío), retornamos null
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return null as unknown as T;
+  }
+}

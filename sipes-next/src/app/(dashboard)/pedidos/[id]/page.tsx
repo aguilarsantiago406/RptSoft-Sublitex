@@ -34,7 +34,7 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
         <PedidoIdentificacion pedido={pedido} />
         <PedidoGrupos grupos={pedido.grupos} pedidoId={pedido.id} totalPrendas={totalPrendas} />
         <div className={styles.twoColsLayout}>
-          <PedidoColores colores={pedido.colores} />
+          <PedidoColores colores={pedido.colores} pedidoId={pedido.id} />
           <PedidoRevision pedido={pedido} totalPrendas={totalPrendas} />
         </div>
       </div>
