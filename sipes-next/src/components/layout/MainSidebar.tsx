@@ -4,22 +4,35 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { ShoppingBag, Users, Layers, BookOpen, UserCheck, type LucideIcon } from "lucide-react";
+import { actionLogout } from "@/features/auth/actions/auth.actions";
 import styles from "./layout.module.css";
 
-const sections = [
+interface NavItemData {
+  label: string;
+  href?: string;
+  icon: LucideIcon;
+}
+
+interface NavSectionData {
+  label: string;
+  items: NavItemData[];
+}
+
+const sections: NavSectionData[] = [
   {
     label: "Operación",
     items: [
-      { label: "Pedidos", href: "/pedidos", icon: "PD" },
-      { label: "Clientes", icon: "CL" },
-      { label: "Producción", icon: "PR" },
+      { label: "Pedidos", href: "/pedidos", icon: ShoppingBag },
+      { label: "Clientes", href: "/clientes", icon: Users },
+      { label: "Producción", icon: Layers },
     ],
   },
   {
     label: "Configuración",
     items: [
-      { label: "Catálogos", icon: "CA" },
-      { label: "Usuarios", icon: "US" },
+      { label: "Catálogos", icon: BookOpen },
+      { label: "Usuarios", icon: UserCheck },
     ],
   },
 ];
@@ -38,12 +51,13 @@ export function MainSidebar() {
         <div className={styles.brand}>
           <Link href="/pedidos" style={{ display: "inline-flex", alignItems: "center" }}>
             <Image
-              src="/logo-sublitex.png"
+              src="/logo.png"
               alt="Sublitex"
               width={170}
               height={32}
               priority
               className={styles.brandLogo}
+              style={{ width: "auto", height: "auto" }}
             />
           </Link>
         </div>
@@ -53,6 +67,7 @@ export function MainSidebar() {
             <div className={styles.navSection} key={section.label}>
               <p>{section.label}</p>
               {section.items.map((item) => {
+                const Icon = item.icon;
                 const active = item.href ? pathname === item.href || (item.href !== "/pedidos" && pathname.startsWith(item.href)) : false;
                 return item.href ? (
                   <Link
@@ -61,12 +76,12 @@ export function MainSidebar() {
                     key={item.label}
                     onClick={() => setOpen(false)}
                   >
-                    <span className={styles.navIcon}>{item.icon}</span>
+                    <Icon size={18} />
                     <span>{item.label}</span>
                   </Link>
                 ) : (
                   <span className={`${styles.navItem} ${styles.disabled}`} key={item.label} aria-disabled="true">
-                    <span className={styles.navIcon}>{item.icon}</span>
+                    <Icon size={18} />
                     <span>{item.label}</span>
                     <small>Próximo</small>
                   </span>
@@ -87,7 +102,7 @@ export function MainSidebar() {
           className={styles.logoutButton}
           type="button"
           onClick={() => {
-            void fetch("/api/auth/logout", { method: "POST" }).finally(() => {
+            void actionLogout().finally(() => {
               window.location.assign("/login");
             });
           }}

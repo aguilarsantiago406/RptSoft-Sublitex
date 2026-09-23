@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, type FormEvent } from "react";
+import { actionLogin } from "../actions/auth.actions";
 import styles from "./login.module.css";
 
 export function LoginForm() {
@@ -16,15 +17,9 @@ export function LoginForm() {
     setPending(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        const body = (await response.json()) as { message?: string };
-        setError(body.message ?? "Correo o contraseña incorrectos.");
+      const res = await actionLogin({ email, password });
+      if (!res.ok) {
+        setError(res.error ?? "Correo o contraseña incorrectos.");
         return;
       }
 
@@ -41,12 +36,12 @@ export function LoginForm() {
       <form className={styles.card} onSubmit={handleSubmit}>
         <div className={styles.brand}>
           <Image
-            src="/logo-sublitex.png"
+            src="/logo.png"
             alt="Sublitex"
             width={210}
             height={40}
             priority
-            style={{ width: "auto", height: "40px", objectFit: "contain" }}
+            style={{ width: "auto", height: "auto" }}
           />
         </div>
         <p className={styles.subtitle} style={{ marginTop: "12px", marginBottom: "24px" }}>

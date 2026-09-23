@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { ClipboardList, Users, Shirt, FileText } from "lucide-react";
+import { actionLogout } from "@/features/auth/actions/auth.actions";
 import styles from "./layout.module.css";
 
 interface PedidoSidebarProps {
@@ -20,25 +22,25 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
     {
       label: "Datos del pedido",
       href: basePath,
-      icon: "DP",
+      icon: ClipboardList,
       isActive: pathname === basePath,
     },
     {
       label: "Participantes",
       href: `${basePath}/participantes`,
-      icon: "PA",
+      icon: Users,
       isActive: pathname.startsWith(`${basePath}/participantes`),
     },
     {
       label: "Prendas",
       href: `${basePath}/prendas`,
-      icon: "PR",
+      icon: Shirt,
       isActive: pathname.startsWith(`${basePath}/prendas`),
     },
     {
       label: "Proforma",
       href: `${basePath}/proforma`,
-      icon: "PF",
+      icon: FileText,
       isActive: pathname.startsWith(`${basePath}/proforma`),
     },
   ];
@@ -53,12 +55,13 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
         <div className={styles.brand}>
           <Link href="/pedidos" style={{ display: "inline-flex", alignItems: "center" }}>
             <Image
-              src="/logo-sublitex.png"
+              src="/logo.png"
               alt="Sublitex"
               width={170}
               height={32}
               priority
               className={styles.brandLogo}
+              style={{ width: "auto", height: "auto" }}
             />
           </Link>
         </div>
@@ -84,17 +87,20 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
         <nav className={styles.nav} aria-label="Navegación del pedido">
           <div className={styles.navSection}>
             <p>Secciones del pedido</p>
-            {navItems.map((item) => (
-              <Link
-                className={`${styles.navItem} ${item.isActive ? styles.active : ""}`}
-                href={item.href}
-                key={item.href}
-                onClick={() => setOpen(false)}
-              >
-                <span className={styles.navIcon}>{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  className={`${styles.navItem} ${item.isActive ? styles.active : ""}`}
+                  href={item.href}
+                  key={item.href}
+                  onClick={() => setOpen(false)}
+                >
+                  <Icon size={18} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
           </div>
         </nav>
 
@@ -109,7 +115,7 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
           className={styles.logoutButton}
           type="button"
           onClick={() => {
-            void fetch("/api/auth/logout", { method: "POST" }).finally(() => {
+            void actionLogout().finally(() => {
               window.location.assign("/login");
             });
           }}
