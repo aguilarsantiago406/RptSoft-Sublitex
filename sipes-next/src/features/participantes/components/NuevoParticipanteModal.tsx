@@ -103,7 +103,7 @@ export function NuevoParticipanteModal({
         {createdToken ? (
           <div>
             <div className={styles.successBox}>
-              <p className={styles.successTitle}>✅ Enlace generado para {nombrePersona}</p>
+              <p className={styles.successTitle}>Enlace generado para {nombrePersona}</p>
               <div className={styles.linkUrlRow}>
                 <span>/enlace/{createdToken}</span>
               </div>
@@ -116,7 +116,7 @@ export function NuevoParticipanteModal({
                 onClick={handleCopy}
                 style={{ flex: 1, padding: "9px 12px", justifyContent: "center" }}
               >
-                {copied ? "✓ ¡Copiado!" : "📋 Copiar Enlace"}
+                {copied ? "¡Copiado!" : "Copiar enlace"}
               </button>
               <button
                 type="button"
@@ -124,7 +124,7 @@ export function NuevoParticipanteModal({
                 className={styles.whatsappButton}
                 style={{ flex: 1, padding: "9px 12px", justifyContent: "center" }}
               >
-                💬 Enviar WhatsApp
+                Enviar WhatsApp
               </button>
             </div>
 

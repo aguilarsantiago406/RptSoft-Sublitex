@@ -14,9 +14,9 @@ const SIGUIENTE_ESTADO: Partial<Record<EstadoPedido, { destino: EstadoPedido; la
   BORRADOR: { destino: "EN_CONFIGURACION", label: "Avanzar a En Configuración →" },
   EN_CONFIGURACION: { destino: "EN_RECOLECCION", label: "Avanzar a En Recolección →" },
   EN_RECOLECCION: { destino: "EN_REVISION", label: "Avanzar a En Revisión →" },
-  EN_REVISION: { destino: "EN_PRODUCCION", label: "Enviar a Producción 🏭" },
-  EN_PRODUCCION: { destino: "ENTREGADO", label: "Marcar como Entregado 📦" },
-  ENTREGADO: { destino: "CERRADO", label: "Cerrar Pedido ✓" },
+  EN_REVISION: { destino: "EN_PRODUCCION", label: "Enviar a Producción →" },
+  EN_PRODUCCION: { destino: "ENTREGADO", label: "Marcar como Entregado →" },
+  ENTREGADO: { destino: "CERRADO", label: "Cerrar Pedido" },
 };
 
 export function PedidoEstadoActions({ pedidoId, estadoActual }: PedidoEstadoActionsProps) {
@@ -61,7 +61,7 @@ export function PedidoEstadoActions({ pedidoId, estadoActual }: PedidoEstadoActi
     <div className={styles.stateActionsContainer}>
       {errorMsg && (
         <div className={styles.stateActionError} role="alert">
-          <span>⚠️ {errorMsg}</span>
+          <span>{errorMsg}</span>
           <button
             type="button"
             className={styles.stateActionErrorClose}

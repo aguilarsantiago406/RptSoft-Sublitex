@@ -96,7 +96,6 @@ export function ParticipantesRow({
       </td>
       <td>
         <span className={statusBadgeClass}>
-          {estado === "CONFIRMADO" ? "✓ " : ""}
           {statusText}
         </span>
       </td>
@@ -109,13 +108,13 @@ export function ParticipantesRow({
           if (estado === "PENDIENTE" || faltanTallas) {
             return (
               <span className={styles.statusBadgePendiente}>
-                ⚠️ Pendiente de carga
+                Pendiente de carga
               </span>
             );
           }
           return (
             <span className={styles.statusBadgeConfirmado}>
-              ✓ Datos completos
+              Datos completos
             </span>
           );
         })()}
@@ -129,7 +128,7 @@ export function ParticipantesRow({
               onClick={handleCopy}
               title="Copiar enlace público para WhatsApp"
             >
-              {copied ? "✓ Copiado" : "🔗 Copiar link"}
+              {copied ? "Copiado" : "Copiar enlace"}
             </button>
             <button
               type="button"
@@ -137,7 +136,7 @@ export function ParticipantesRow({
               className={styles.whatsappButton}
               title="Abrir chat de WhatsApp con el mensaje"
             >
-              💬 WhatsApp
+              WhatsApp
             </button>
             <button
               type="button"
@@ -146,7 +145,7 @@ export function ParticipantesRow({
               disabled={regenerating}
               title="Regenerar nuevo token de 7 días"
             >
-              {regenerating ? "…" : "🔄"}
+              {regenerating ? "…" : "Renovar"}
             </button>
           </div>
         ) : (
@@ -170,7 +169,7 @@ export function ParticipantesRow({
             style={{ fontSize: "0.72rem", padding: "4px 8px" }}
             title="Confirmar manualmente como coordinador"
           >
-            {confirming ? "…" : "Validar ✓"}
+            {confirming ? "…" : "Validar"}
           </button>
         )}
       </td>

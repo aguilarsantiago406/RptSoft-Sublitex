@@ -66,7 +66,7 @@ export function PedidoGrupos({
 
       {errorMsg && (
         <div className={styles.groupActionError} role="alert">
-          <span>⚠️ {errorMsg}</span>
+          <span>{errorMsg}</span>
           <button
             type="button"
             className={styles.groupActionErrorClose}

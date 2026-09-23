@@ -96,7 +96,7 @@ export function ModalGrupoForm({
 
         {error && (
           <div className={styles.modalErrorBanner} role="alert">
-            ⚠️ {error}
+            {error}
           </div>
         )}
 

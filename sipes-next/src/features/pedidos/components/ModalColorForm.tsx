@@ -85,7 +85,7 @@ export function ModalColorForm({ isOpen, onClose, pedidoId }: ModalColorFormProp
 
         {error && (
           <div className={styles.modalErrorBanner} role="alert">
-            ⚠️ {error}
+            {error}
           </div>
         )}
 

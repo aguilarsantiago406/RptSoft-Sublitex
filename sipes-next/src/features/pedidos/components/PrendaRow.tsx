@@ -77,7 +77,7 @@ export function PrendaRow({ index, prenda }: PrendaRowProps) {
       <td>
         {prenda.excepciones && prenda.excepciones.length > 0 ? (
           <span className={styles.excepcionBadge} title={prenda.excepciones.map((e) => e.motivo).join(" · ")}>
-            ⚠️ {prenda.excepciones.length} excepción(es)
+            {prenda.excepciones.length} excepción(es)
           </span>
         ) : (
           <span style={{ color: "#cbd5e1" }}>—</span>

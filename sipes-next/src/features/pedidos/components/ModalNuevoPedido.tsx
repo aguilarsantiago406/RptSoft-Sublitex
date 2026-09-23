@@ -146,7 +146,7 @@ export function ModalNuevoPedido({
 
         {error && (
           <div className={styles.modalErrorBanner} role="alert">
-            ⚠️ {error}
+            {error}
           </div>
         )}
 
