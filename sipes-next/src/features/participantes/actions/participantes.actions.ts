@@ -17,9 +17,11 @@ export interface CrearParticipanteResult {
 export async function actionCrearParticipante(
   grupoId: string,
   nombrePersona: string,
-  pedidoId: string
+  pedidoId: string,
+  tipoProductoId?: string
 ): Promise<CrearParticipanteResult> {
-  if (!grupoId || !nombrePersona.trim()) {
+  const nombreTrimmed = nombrePersona.trim();
+  if (!grupoId || !nombreTrimmed) {
     return { ok: false, error: "El nombre y el grupo son obligatorios." };
   }
 
@@ -30,8 +32,22 @@ export async function actionCrearParticipante(
       enlaceToken: string;
       estado: string;
     }>(`/api/grupos/${encodeURIComponent(grupoId)}/participantes`, {
-      nombrePersona: nombrePersona.trim(),
+      nombrePersona: nombreTrimmed,
     });
+
+    // Crear la prenda física base para este participante
+    if (tipoProductoId) {
+      try {
+        await apiPost("/api/prendas", {
+          participanteId: res.id,
+          grupoId,
+          tipoProductoId,
+          nombreEnPrenda: nombreTrimmed,
+        });
+      } catch (err) {
+        console.warn("No se pudo crear la prenda base para el participante:", err);
+      }
+    }
 
     revalidatePath(`/pedidos/${pedidoId}/participantes`);
     revalidatePath(`/pedidos/${pedidoId}/prendas`);

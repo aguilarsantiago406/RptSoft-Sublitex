@@ -34,7 +34,15 @@ export function NuevoParticipanteModal({
     setLoading(true);
     setError(null);
 
-    const res = await actionCrearParticipante(grupoId, nombrePersona, pedidoId);
+    const selectedGrupo = grupos.find((g) => g.id === grupoId);
+    const tipoProductoId = selectedGrupo?.tipoProducto?.id;
+
+    const res = await actionCrearParticipante(
+      grupoId,
+      nombrePersona,
+      pedidoId,
+      tipoProductoId
+    );
     setLoading(false);
 
     if (!res.ok || !res.participante) {
