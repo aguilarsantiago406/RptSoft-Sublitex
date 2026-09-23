@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CreateGrupoDto, PoliticaNumeracion } from './dto/create-grupo.dto';
+import { UpdateGrupoDto } from './dto/update-grupo.dto';
 import { UpdatePoliticaDto } from './dto/update-politica.dto';
 
 @Injectable()
@@ -119,35 +120,76 @@ export class GrupoService {
     return { id: grupo.id, eliminado: true };
   }
 
-  async update(id: string, dto: Partial<CreateGrupoDto>) {
+  async update(id: string, dto: UpdateGrupoDto) {
     await this.findOne(id);
+
+    // R-G01: Si cambia politicaNumeracion a UNICA, validar que no haya numeros repetidos
+    // (el trigger del DB lo bloquea, pero damos mejor error desde el servicio)
     try {
-      return await this.prisma.grupo.update({
+      const grupo = await this.prisma.grupo.update({
         where: { id },
         data: {
           ...(dto.nombre !== undefined ? { nombre: dto.nombre } : {}),
-          ...(dto.politicaNumeracion !== undefined
-            ? { politicaNumeracion: dto.politicaNumeracion }
-            : {}),
-          ...(dto.cantidadContratada !== undefined
-            ? { cantidadContratada: dto.cantidadContratada }
-            : {}),
+          ...(dto.politicaNumeracion !== undefined ? { politicaNumeracion: dto.politicaNumeracion } : {}),
+          ...(dto.cantidadContratada !== undefined ? { cantidadContratada: dto.cantidadContratada } : {}),
           ...(dto.observaciones !== undefined ? { observaciones: dto.observaciones } : {}),
           ...(dto.tipoProductoId !== undefined
             ? { tipoProducto: { connect: { id: dto.tipoProductoId } } }
             : {}),
         },
-        include: { tipoProducto: true },
+        include: {
+          tipoProducto: true,
+          configuracion: {
+            include: { atributo: true, valor: true },
+            orderBy: { atributo: { orden: 'asc' } },
+          },
+        },
       });
-} catch (error: any) {
-        if (error?.code === 'P2002') {
-          throw new ConflictException('Ya existe un grupo con ese nombre en el pedido (R-B01)');
+
+      // R-B03: Upsert de la configuracion del grupo (atributo/valor)
+      if (dto.configuracion?.length) {
+        for (const item of dto.configuracion) {
+          // Validar que atributoId y valorAtributoId existen y son coherentes
+          const valorAtributo = await this.prisma.valorAtributo.findFirst({
+            where: { id: item.valorAtributoId, atributoId: item.atributoId },
+          });
+          if (!valorAtributo) {
+            throw new NotFoundException(
+              `El valor '${item.valorAtributoId}' no pertenece al atributo '${item.atributoId}'`,
+            );
+          }
+
+          await this.prisma.valorConfiguracion.upsert({
+            where: { grupoId_atributoId: { grupoId: id, atributoId: item.atributoId } },
+            create: {
+              grupoId: id,
+              atributoId: item.atributoId,
+              valorAtributoId: item.valorAtributoId,
+            },
+            update: {
+              valorAtributoId: item.valorAtributoId,
+            },
+          });
         }
-        if (error?.code === 'P2025') {
-          throw new NotFoundException('Tipo de producto no encontrado: ' + dto.tipoProductoId);
-        }
-        throw error;
       }
+
+      return this.toResponse({
+        ...grupo,
+        configuracion: await this.prisma.valorConfiguracion.findMany({
+          where: { grupoId: id },
+          include: { atributo: true, valor: true },
+          orderBy: { atributo: { orden: 'asc' } },
+        }),
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2002') {
+        throw new ConflictException('Ya existe un grupo con ese nombre en el pedido (R-B01)');
+      }
+      if (error?.code === 'P2025') {
+        throw new NotFoundException('Tipo de producto no encontrado: ' + dto.tipoProductoId);
+      }
+      throw error;
+    }
   }
 
   async updatePolitica(id: string, dto: UpdatePoliticaDto) {
