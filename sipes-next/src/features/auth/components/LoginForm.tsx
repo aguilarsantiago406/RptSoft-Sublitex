@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, type FormEvent } from "react";
 import styles from "./login.module.css";
 
@@ -39,10 +40,18 @@ export function LoginForm() {
     <div className={styles.wrapper}>
       <form className={styles.card} onSubmit={handleSubmit}>
         <div className={styles.brand}>
-          <span className={styles.brandMark}>S</span>
+          <Image
+            src="/logo-sublitex.png"
+            alt="Sublitex"
+            width={210}
+            height={40}
+            priority
+            style={{ width: "auto", height: "40px", objectFit: "contain" }}
+          />
         </div>
-        <h1 className={styles.title}>SIPES</h1>
-        <p className={styles.subtitle}>Sistema de pedidos · Sublitex</p>
+        <p className={styles.subtitle} style={{ marginTop: "12px", marginBottom: "24px" }}>
+          Sistema de pedidos
+        </p>
 
         <div className={styles.field}>
           <label className={styles.label} htmlFor="email">Correo electrónico</label>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -35,11 +36,16 @@ export function MainSidebar() {
       {open && <button className={styles.backdrop} onClick={() => setOpen(false)} aria-label="Cerrar menú" />}
       <aside className={`${styles.sidebar} ${open ? styles.sidebarOpen : ""}`}>
         <div className={styles.brand}>
-          <span className={styles.brandMark}>S</span>
-          <div>
-            <strong>SIPES</strong>
-            <small>Sublitex</small>
-          </div>
+          <Link href="/pedidos" style={{ display: "inline-flex", alignItems: "center" }}>
+            <Image
+              src="/logo-sublitex.png"
+              alt="Sublitex"
+              width={170}
+              height={32}
+              priority
+              className={styles.brandLogo}
+            />
+          </Link>
         </div>
 
         <nav className={styles.nav} aria-label="Navegación principal">

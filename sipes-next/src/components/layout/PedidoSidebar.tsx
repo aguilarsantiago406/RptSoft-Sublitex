@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -23,6 +24,12 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
       isActive: pathname === basePath,
     },
     {
+      label: "Participantes",
+      href: `${basePath}/participantes`,
+      icon: "PA",
+      isActive: pathname.startsWith(`${basePath}/participantes`),
+    },
+    {
       label: "Prendas",
       href: `${basePath}/prendas`,
       icon: "PR",
@@ -44,11 +51,16 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
       {open && <button className={styles.backdrop} onClick={() => setOpen(false)} aria-label="Cerrar menú" />}
       <aside className={`${styles.sidebar} ${open ? styles.sidebarOpen : ""}`}>
         <div className={styles.brand}>
-          <span className={styles.brandMark}>S</span>
-          <div>
-            <strong>SIPES</strong>
-            <small>Contexto Pedido</small>
-          </div>
+          <Link href="/pedidos" style={{ display: "inline-flex", alignItems: "center" }}>
+            <Image
+              src="/logo-sublitex.png"
+              alt="Sublitex"
+              width={170}
+              height={32}
+              priority
+              className={styles.brandLogo}
+            />
+          </Link>
         </div>
 
         <div style={{ marginBottom: "18px", padding: "0 10px" }}>
@@ -59,7 +71,7 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
               display: "inline-flex",
               alignItems: "center",
               gap: "6px",
-              color: "#9eb1bd",
+              color: "var(--sky-dark)",
               fontSize: "0.82rem",
               fontWeight: 700,
               textDecoration: "none",
