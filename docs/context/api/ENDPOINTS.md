@@ -1,5 +1,4 @@
 # ENDPOINTS OPERATIVOS BK1 — SUBLITEX SIPES
-# Versión alineada: 2026-09-17
 # Base URL: http://localhost:3001
 
 ---

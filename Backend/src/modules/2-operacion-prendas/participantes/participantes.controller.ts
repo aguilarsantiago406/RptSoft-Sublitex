@@ -27,7 +27,7 @@ export class ParticipantesController {
   }
 
   @Post('participantes/:id/confirmar')
-  @ApiOperation({ summary: 'Confirmación manual del participante por parte del coordinador' })
+  @ApiOperation({ summary: 'Confirmacion manual del participante por parte del coordinador' })
   confirmarManual(@Param('id') id: string) {
     return this.service.confirmarManual(id);
   }
