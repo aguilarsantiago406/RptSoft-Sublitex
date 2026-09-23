@@ -55,3 +55,18 @@ export function getParticipantesGrupo(grupoId: string) {
 export function getTallasCatalogo() {
   return apiGet<TallaCatalogoItem[]>("/api/catalogos/tallas");
 }
+
+export interface TipoProductoCatalogoItem {
+  id: string;
+  codigo: string;
+  nombre: string;
+  componentes: {
+    camisetas: number;
+    shorts: number;
+    medias: number;
+  };
+}
+
+export function getTiposProducto() {
+  return apiGet<TipoProductoCatalogoItem[]>("/api/tipos-producto");
+}

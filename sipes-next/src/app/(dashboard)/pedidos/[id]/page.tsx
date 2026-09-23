@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getPedido } from "@/features/pedidos/api/pedidos.api";
+import { getPedido, getTiposProducto } from "@/features/pedidos/api/pedidos.api";
 import { PedidoHeader } from "@/features/pedidos/components/PedidoHeader";
 import { PedidoIdentificacion } from "@/features/pedidos/components/PedidoIdentificacion";
 import { PedidoGrupos } from "@/features/pedidos/components/PedidoGrupos";
@@ -17,9 +17,15 @@ interface PedidoPageProps {
 export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   const { id } = await params;
   let pedido;
+  let tiposProducto = [];
 
   try {
-    pedido = await getPedido(id);
+    const [pedidoRes, tiposRes] = await Promise.all([
+      getPedido(id),
+      getTiposProducto().catch(() => []),
+    ]);
+    pedido = pedidoRes;
+    tiposProducto = tiposRes;
   } catch (error) {
     if (error instanceof SipesApiError && error.status === 404) notFound();
     throw error;
@@ -32,7 +38,12 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
       <PedidoHeader pedido={pedido} />
       <div className={styles.sheetContainer}>
         <PedidoIdentificacion pedido={pedido} />
-        <PedidoGrupos grupos={pedido.grupos} pedidoId={pedido.id} totalPrendas={totalPrendas} />
+        <PedidoGrupos
+          grupos={pedido.grupos}
+          pedidoId={pedido.id}
+          totalPrendas={totalPrendas}
+          tiposProducto={tiposProducto}
+        />
         <div className={styles.twoColsLayout}>
           <PedidoColores colores={pedido.colores} pedidoId={pedido.id} />
           <PedidoRevision pedido={pedido} totalPrendas={totalPrendas} />

@@ -1,14 +1,48 @@
+"use client";
+
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import type { GrupoPedido } from "../types/pedido";
+import type { TipoProductoCatalogoItem } from "../api/pedidos.api";
+import { actionEliminarGrupo } from "../actions/pedidos.actions";
+import { ModalGrupoForm } from "./ModalGrupoForm";
 import styles from "./pedidos.module.css";
 
 interface PedidoGruposProps {
   grupos: GrupoPedido[];
   pedidoId: string;
   totalPrendas: number;
+  tiposProducto: TipoProductoCatalogoItem[];
 }
 
-export function PedidoGrupos({ grupos, pedidoId, totalPrendas }: PedidoGruposProps) {
+export function PedidoGrupos({
+  grupos,
+  pedidoId,
+  totalPrendas,
+  tiposProducto,
+}: PedidoGruposProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+
+  const handleEliminar = (grupoId: string, nombreGrupo: string) => {
+    const confirmar = window.confirm(
+      `¿Deseas eliminar el grupo "${nombreGrupo}"?\n\nSolo se podrá eliminar si no tiene participantes ni prendas asociadas.`
+    );
+    if (!confirmar) return;
+
+    setErrorMsg(null);
+    setIsDeletingId(grupoId);
+    startTransition(async () => {
+      const res = await actionEliminarGrupo(grupoId, pedidoId);
+      setIsDeletingId(null);
+      if (!res.ok) {
+        setErrorMsg(res.error || "No se pudo eliminar el grupo.");
+      }
+    });
+  };
+
   return (
     <section className={styles.sectionBlock}>
       <div className={styles.sectionHeaderRow}>
@@ -18,11 +52,36 @@ export function PedidoGrupos({ grupos, pedidoId, totalPrendas }: PedidoGruposPro
             {grupos.length} grupos contratados · La configuración técnica vive en cada grupo
           </p>
         </div>
-        <span className={styles.quantity}>{totalPrendas} prendas contratadas</span>
+        <div className={styles.groupsHeaderActions}>
+          <span className={styles.quantity}>{totalPrendas} prendas contratadas</span>
+          <button
+            type="button"
+            className={styles.addGrupoButton}
+            onClick={() => setIsModalOpen(true)}
+          >
+            + Agregar Grupo
+          </button>
+        </div>
       </div>
 
+      {errorMsg && (
+        <div className={styles.groupActionError} role="alert">
+          <span>⚠️ {errorMsg}</span>
+          <button
+            type="button"
+            className={styles.groupActionErrorClose}
+            onClick={() => setErrorMsg(null)}
+            aria-label="Cerrar error"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <div className={styles.groupList}>
-        {grupos.length === 0 && <p className="notice">Este pedido todavía no tiene grupos.</p>}
+        {grupos.length === 0 && (
+          <p className={styles.configEmpty}>Este pedido todavía no tiene grupos contratados.</p>
+        )}
         {grupos.map((grupo) => (
           <article className={styles.groupCardMinimal} key={grupo.id}>
             <div className={styles.groupCardHeader}>
@@ -40,9 +99,21 @@ export function PedidoGrupos({ grupos, pedidoId, totalPrendas }: PedidoGruposPro
                 </div>
               </div>
 
-              <div className={styles.groupCountBlock}>
-                <span className={styles.countNumber}>{grupo.cantidadContratada}</span>
-                <span className={styles.countLabel}>prendas</span>
+              <div className={styles.groupHeaderRightBlock}>
+                <div className={styles.groupCountBlock}>
+                  <span className={styles.countNumber}>{grupo.cantidadContratada}</span>
+                  <span className={styles.countLabel}>prendas</span>
+                </div>
+                <button
+                  type="button"
+                  className={styles.deleteGrupoButton}
+                  onClick={() => handleEliminar(grupo.id, grupo.nombre)}
+                  disabled={isDeletingId === grupo.id}
+                  title={`Eliminar grupo ${grupo.nombre}`}
+                  aria-label={`Eliminar grupo ${grupo.nombre}`}
+                >
+                  {isDeletingId === grupo.id ? "..." : "✕"}
+                </button>
               </div>
             </div>
 
@@ -66,6 +137,12 @@ export function PedidoGrupos({ grupos, pedidoId, totalPrendas }: PedidoGruposPro
                     </span>
                   )}
                 </div>
+              </div>
+            )}
+
+            {grupo.observaciones && (
+              <div className={styles.groupObservations}>
+                <strong>Nota:</strong> {grupo.observaciones}
               </div>
             )}
 
@@ -93,6 +170,13 @@ export function PedidoGrupos({ grupos, pedidoId, totalPrendas }: PedidoGruposPro
           </article>
         ))}
       </div>
+
+      <ModalGrupoForm
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        pedidoId={pedidoId}
+        tiposProducto={tiposProducto}
+      />
     </section>
   );
 }
