@@ -70,3 +70,16 @@ export interface TipoProductoCatalogoItem {
 export function getTiposProducto() {
   return apiGet<TipoProductoCatalogoItem[]>("/api/tipos-producto");
 }
+
+export interface ClienteListItem {
+  id: string;
+  nombre: string;
+  tipo: string;
+  ciudad?: string | null;
+  telefono?: string | null;
+}
+
+export function getClientes(q?: string) {
+  const query = q ? `?q=${encodeURIComponent(q)}` : "";
+  return apiGet<ClienteListItem[]>(`/api/clientes${query}`);
+}

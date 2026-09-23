@@ -150,3 +150,73 @@ export async function actionEliminarGrupo(
     return { ok: false, error: "No se pudo eliminar el grupo." };
   }
 }
+
+export interface CreatePedidoParams {
+  clienteId: string;
+  fechaCompromiso: string;
+  observaciones?: string;
+}
+
+export async function actionCrearPedido(
+  data: CreatePedidoParams
+): Promise<{ ok: boolean; error?: string; pedido?: { id: string; codigo: string } }> {
+  if (!data.clienteId) {
+    return { ok: false, error: "Debes seleccionar un cliente." };
+  }
+  if (!data.fechaCompromiso) {
+    return { ok: false, error: "La fecha de entrega / compromiso es obligatoria (Regla R-A09)." };
+  }
+
+  const compromisoDate = new Date(data.fechaCompromiso);
+  if (isNaN(compromisoDate.getTime())) {
+    return { ok: false, error: "Fecha de compromiso inválida." };
+  }
+
+  try {
+    const res = await apiPost<{ id: string; codigo: string }>("/api/pedidos", {
+      clienteId: data.clienteId,
+      fechaCompromiso: compromisoDate.toISOString(),
+      observaciones: data.observaciones?.trim() || undefined,
+    });
+
+    revalidatePath("/pedidos");
+    return { ok: true, pedido: res };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo crear el pedido en el backend." };
+  }
+}
+
+export interface CreateClienteParams {
+  nombre: string;
+  tipo: "COLEGIO" | "PROMOCION" | "CLUB" | "EMPRESA" | "PARTICULAR";
+  ciudad?: string;
+  telefono?: string;
+}
+
+export async function actionCrearCliente(
+  data: CreateClienteParams
+): Promise<{ ok: boolean; error?: string; cliente?: { id: string; nombre: string } }> {
+  if (!data.nombre.trim()) {
+    return { ok: false, error: "El nombre del cliente es obligatorio." };
+  }
+
+  try {
+    const res = await apiPost<{ id: string; nombre: string }>("/api/clientes", {
+      nombre: data.nombre.trim(),
+      tipo: data.tipo,
+      ciudad: data.ciudad?.trim() || undefined,
+      telefono: data.telefono?.trim() || undefined,
+    });
+
+    revalidatePath("/pedidos");
+    return { ok: true, cliente: res };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo registrar el cliente en el backend." };
+  }
+}
