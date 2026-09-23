@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import type { AtributoCatalogoItem } from "../api/pedidos.api";
 import type { PrendaDetalle } from "../types/pedido";
 import { actionActualizarPrenda } from "../actions/pedidos.actions";
+import { SeccionExcepcionesPrenda } from "./SeccionExcepcionesPrenda";
 import styles from "./pedidos.module.css";
 
 interface ModalEditarPrendaProps {
@@ -12,6 +14,7 @@ interface ModalEditarPrendaProps {
   prenda: PrendaDetalle;
   pedidoId: string;
   tallasDisponibles: Array<{ id: string; codigo: string; etiqueta: string }>;
+  atributosCatalogo: AtributoCatalogoItem[];
 }
 
 export function ModalEditarPrenda({
@@ -20,6 +23,7 @@ export function ModalEditarPrenda({
   prenda,
   pedidoId,
   tallasDisponibles,
+  atributosCatalogo,
 }: ModalEditarPrendaProps) {
   const router = useRouter();
   const [nombreEnPrenda, setNombreEnPrenda] = useState(prenda.nombreEnPrenda ?? "");
@@ -61,7 +65,7 @@ export function ModalEditarPrenda({
 
   return (
     <div className={styles.modalBackdrop} onClick={onClose}>
-      <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.modalCardWide} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <div>
             <h3 className={styles.modalTitle}>Editar Prenda</h3>
@@ -85,7 +89,7 @@ export function ModalEditarPrenda({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className={styles.modalForm}>
+        <form onSubmit={handleSubmit} className={styles.modalFormCompact}>
           <div className={styles.formField}>
             <label htmlFor="prenda-apodo">Estampado en Espalda / Nombre</label>
             <input
@@ -99,7 +103,7 @@ export function ModalEditarPrenda({
             />
           </div>
 
-          <div className={styles.twoColsLayout} style={{ gap: "12px" }}>
+          <div className={styles.twoColsLayout} style={{ gap: "10px" }}>
             <div className={styles.formField}>
               <label htmlFor="prenda-numero">Número (Dorsal)</label>
               <input
@@ -164,10 +168,19 @@ export function ModalEditarPrenda({
               className={styles.modalSubmitButton}
               disabled={isPending}
             >
-              {isPending ? "Guardando..." : "Guardar Cambios"}
+              {isPending ? "Guardando..." : "Guardar Ficha"}
             </button>
           </div>
         </form>
+
+        <div style={{ padding: "0 20px 14px" }}>
+          <SeccionExcepcionesPrenda
+            prendaId={prenda.id}
+            pedidoId={pedidoId}
+            excepciones={prenda.excepciones}
+            atributosCatalogo={atributosCatalogo}
+          />
+        </div>
       </div>
     </div>
   );

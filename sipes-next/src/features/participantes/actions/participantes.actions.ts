@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { apiPost, SipesApiError } from "@/lib/api/http";
+import { apiGet, apiPost, SipesApiError } from "@/lib/api/http";
 
 export interface CrearParticipanteResult {
   ok: boolean;
@@ -38,10 +38,23 @@ export async function actionCrearParticipante(
     // Crear la prenda física base para este participante
     if (tipoProductoId) {
       try {
+        let colorId: string | undefined;
+        try {
+          const ped = await apiGet<{ colores?: Array<{ id: string }> }>(
+            `/api/pedidos/${encodeURIComponent(pedidoId)}`
+          );
+          if (ped.colores && ped.colores.length > 0) {
+            colorId = ped.colores[0].id;
+          }
+        } catch {
+          // Si no se pudo obtener el color, se crea la prenda sin color
+        }
+
         await apiPost("/api/prendas", {
           participanteId: res.id,
           grupoId,
           tipoProductoId,
+          colorId,
           nombreEnPrenda: nombreTrimmed,
         });
       } catch (err) {

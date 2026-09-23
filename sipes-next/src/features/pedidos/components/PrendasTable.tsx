@@ -1,4 +1,4 @@
-import type { TallaCatalogoItem } from "../api/pedidos.api";
+import type { AtributoCatalogoItem, TallaCatalogoItem } from "../api/pedidos.api";
 import type { PrendaDetalle } from "../types/pedido";
 import { PrendaRow } from "./PrendaRow";
 import styles from "./prendas.module.css";
@@ -7,9 +7,10 @@ interface PrendasTableProps {
   prendas: PrendaDetalle[];
   pedidoId: string;
   tallas: TallaCatalogoItem[];
+  atributos: AtributoCatalogoItem[];
 }
 
-export function PrendasTable({ prendas, pedidoId, tallas }: PrendasTableProps) {
+export function PrendasTable({ prendas, pedidoId, tallas, atributos }: PrendasTableProps) {
   if (prendas.length === 0) {
     return (
       <div className={styles.tableCard}>
@@ -64,6 +65,7 @@ export function PrendasTable({ prendas, pedidoId, tallas }: PrendasTableProps) {
                   prenda={prenda}
                   pedidoId={pedidoId}
                   tallasDisponibles={tallasPrenda.length > 0 ? tallasPrenda : tallas}
+                  atributosCatalogo={atributos}
                 />
               );
             })}

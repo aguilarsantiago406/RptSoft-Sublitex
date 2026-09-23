@@ -83,3 +83,24 @@ export function getClientes(q?: string) {
   const query = q ? `?q=${encodeURIComponent(q)}` : "";
   return apiGet<ClienteListItem[]>(`/api/clientes${query}`);
 }
+
+export interface AtributoCatalogoItem {
+  id: string;
+  codigo: string;
+  nombre: string;
+  obligatorio: boolean;
+  criticoProduccion: boolean;
+  orden: number;
+  valores: Array<{
+    id: string;
+    atributoId: string;
+    codigo: string;
+    etiqueta: string;
+    orden: number;
+  }>;
+}
+
+export function getAtributosCatalogo() {
+  return apiGet<AtributoCatalogoItem[]>("/api/catalogos/atributos");
+}
+

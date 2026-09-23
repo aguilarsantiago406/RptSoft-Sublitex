@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { AtributoCatalogoItem } from "../api/pedidos.api";
 import type { PrendaDetalle } from "../types/pedido";
 import { ModalEditarPrenda } from "./ModalEditarPrenda";
 import styles from "./prendas.module.css";
@@ -8,6 +9,7 @@ interface PrendaRowProps {
   prenda: PrendaDetalle;
   pedidoId: string;
   tallasDisponibles: Array<{ id: string; codigo: string; etiqueta: string }>;
+  atributosCatalogo: AtributoCatalogoItem[];
 }
 
 function formatGenero(genero: string): string {
@@ -38,6 +40,7 @@ export function PrendaRow({
   prenda,
   pedidoId,
   tallasDisponibles,
+  atributosCatalogo,
 }: PrendaRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const nombreGrupo = prenda.grupo?.nombre ?? "Sin grupo";
@@ -110,6 +113,7 @@ export function PrendaRow({
             prenda={prenda}
             pedidoId={pedidoId}
             tallasDisponibles={tallasDisponibles}
+            atributosCatalogo={atributosCatalogo}
           />
         )}
       </td>

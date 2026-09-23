@@ -796,9 +796,12 @@
   border-radius: 18px;
   width: 100%;
   max-width: 440px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   border: 1px solid #e2e8f0;
-  overflow: hidden;
+  overflow-y: auto;
   animation: modalFadeIn 0.18s ease-out;
 }
 
@@ -807,9 +810,12 @@
   border-radius: 18px;
   width: 100%;
   max-width: 500px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   border: 1px solid #e2e8f0;
-  overflow: hidden;
+  overflow-y: auto;
   animation: modalFadeIn 0.18s ease-out;
 }
 
@@ -822,20 +828,21 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 18px 22px;
+  padding: 14px 20px;
   border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
 }
 
 .modalTitle {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 650;
   color: var(--navy);
 }
 
 .modalSubtitle {
-  margin: 3px 0 0;
-  font-size: 0.78rem;
+  margin: 2px 0 0;
+  font-size: 0.76rem;
   color: #64748b;
 }
 
@@ -856,13 +863,13 @@
 }
 
 .modalErrorBanner {
-  margin: 14px 22px 0;
-  padding: 8px 12px;
+  margin: 12px 20px 0;
+  padding: 7px 10px;
   background: #fff1f2;
   border: 1px solid #fecdd3;
   border-radius: 8px;
   color: #be123c;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 500;
 }
 
@@ -870,6 +877,26 @@
   padding: 20px 22px;
   display: grid;
   gap: 16px;
+}
+
+.modalFormCompact {
+  padding: 12px 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.modalFormCompact .formField {
+  gap: 4px;
+}
+
+.modalFormCompact .formField label {
+  font-size: 0.72rem;
+}
+
+.modalFormCompact .formInput {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 0.83rem;
 }
 
 .formField {
