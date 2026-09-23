@@ -16,7 +16,7 @@ export class PrendasController {
   }
 
   @Patch('prendas/:id')
-  @ApiOperation({ summary: 'Actualiza la ficha mínima de la prenda (talla, número, género, apodo)' })
+  @ApiOperation({ summary: 'Actualiza la ficha minima de la prenda (talla, numero, genero, apodo)' })
   actualizar(@Param('id') id: string, @Body() dto: UpdateFichaMinimaDto) {
     return this.service.actualizarFichaMinima(id, dto);
   }
@@ -28,7 +28,7 @@ export class PrendasController {
   }
 
   @Get('pedidos/:pedidoId/resumen-produccion')
-  @ApiOperation({ summary: 'Obtiene el resumen consolidado de producción por piezas físicas reales (R-K03)' })
+  @ApiOperation({ summary: 'Obtiene el resumen consolidado de produccion por piezas fisicas reales (R-K03)' })
   resumen(@Param('pedidoId') pedidoId: string) {
     return this.service.obtenerResumenProduccion(pedidoId);
   }

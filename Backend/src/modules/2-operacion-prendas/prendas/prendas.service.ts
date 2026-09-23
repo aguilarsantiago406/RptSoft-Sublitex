@@ -55,7 +55,7 @@ export class PrendasService {
   }
 
   /**
-   * R-K03: Multiplicación por piezas físicas reales (camisetas, shorts, medias).
+   * R-K03: Multiplicacion por piezas fisicas reales (camisetas, shorts, medias).
    * La prenda es la unidad contable que se multiplica por los componentes de TipoProducto.
    */
   async obtenerResumenProduccion(pedidoId: string) {
@@ -82,7 +82,7 @@ export class PrendasService {
       totalShorts += p.tipoProducto?.shorts ?? 0;
       totalMedias += p.tipoProducto?.medias ?? 0;
 
-      // R-K02: Importes según tipo
+      // R-K02: Importes segun tipo
       if (p.tipoPrenda === 'VENTA') {
         venta++;
         importeTotalEstimado += 55.0; // Precio base tarifado

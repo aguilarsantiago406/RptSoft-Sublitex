@@ -139,4 +139,18 @@ export class ComercialService {
     await this.findDatosEnvio(pedidoId);
     return this.prisma.datosEnvio.delete({ where: { pedidoId } });
   }
+  async getTarifaVigentePorConcepto(tipo: string, concepto: string): Promise<number> {
+    const ahora = new Date();
+    const tarifa = await this.prisma.tarifa.findFirst({
+      where: {
+        tipo: tipo as any,
+        concepto,
+        activo: true,
+        vigenteDesde: { lte: ahora },
+        OR: [{ vigenteHasta: null }, { vigenteHasta: { gte: ahora } }],
+      },
+      orderBy: { vigenteDesde: 'desc' },
+    });
+    return Number(tarifa?.valor ?? 0);
+  }
 }
