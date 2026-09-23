@@ -220,3 +220,36 @@ export async function actionCrearCliente(
     return { ok: false, error: "No se pudo registrar el cliente en el backend." };
   }
 }
+
+export interface UpdatePrendaParams {
+  tallaId?: string;
+  numero?: string;
+  genero?: "HOMBRE" | "MUJER" | "NINO" | "NINA" | "SIN_ESPECIFICAR";
+  nombreEnPrenda?: string;
+}
+
+export async function actionActualizarPrenda(
+  prendaId: string,
+  pedidoId: string,
+  data: UpdatePrendaParams
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await apiPatch(`/api/prendas/${encodeURIComponent(prendaId)}`, {
+      tallaId: data.tallaId || undefined,
+      numero: data.numero?.trim() || undefined,
+      genero: data.genero || undefined,
+      nombreEnPrenda: data.nombreEnPrenda?.trim() || undefined,
+    });
+
+    revalidatePath(`/pedidos/${pedidoId}/prendas`);
+    revalidatePath(`/pedidos/${pedidoId}/participantes`);
+    revalidatePath(`/pedidos/${pedidoId}`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo actualizar la prenda." };
+  }
+}
+

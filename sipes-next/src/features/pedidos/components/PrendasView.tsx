@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { TallaCatalogoItem } from "../api/pedidos.api";
 import type { GrupoPedido, PrendaDetalle } from "../types/pedido";
 import { PrendasTable } from "./PrendasTable";
 import styles from "./prendas.module.css";
@@ -8,9 +9,11 @@ import styles from "./prendas.module.css";
 interface PrendasViewProps {
   prendas: PrendaDetalle[];
   grupos: GrupoPedido[];
+  pedidoId: string;
+  tallas: TallaCatalogoItem[];
 }
 
-export function PrendasView({ prendas, grupos }: PrendasViewProps) {
+export function PrendasView({ prendas, grupos, pedidoId, tallas }: PrendasViewProps) {
   const [grupoActivo, setGrupoActivo] = useState<string>("TODOS");
   const [busqueda, setBusqueda] = useState<string>("");
 
@@ -113,7 +116,7 @@ export function PrendasView({ prendas, grupos }: PrendasViewProps) {
         </div>
       </div>
 
-      <PrendasTable prendas={prendasFiltradas} />
+      <PrendasTable prendas={prendasFiltradas} pedidoId={pedidoId} tallas={tallas} />
 
       <div className={styles.countSummary}>
         Mostrando <strong>{prendasFiltradas.length}</strong> de <strong>{prendas.length}</strong> prendas en total.

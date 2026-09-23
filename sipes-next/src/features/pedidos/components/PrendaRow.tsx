@@ -1,9 +1,13 @@
+import { useState } from "react";
 import type { PrendaDetalle } from "../types/pedido";
+import { ModalEditarPrenda } from "./ModalEditarPrenda";
 import styles from "./prendas.module.css";
 
 interface PrendaRowProps {
   index: number;
   prenda: PrendaDetalle;
+  pedidoId: string;
+  tallasDisponibles: Array<{ id: string; codigo: string; etiqueta: string }>;
 }
 
 function formatGenero(genero: string): string {
@@ -29,7 +33,13 @@ function getGroupBadgeClass(nombreGrupo?: string | null): string {
   return styles.groupBadgeDefault;
 }
 
-export function PrendaRow({ index, prenda }: PrendaRowProps) {
+export function PrendaRow({
+  index,
+  prenda,
+  pedidoId,
+  tallasDisponibles,
+}: PrendaRowProps) {
+  const [isEditing, setIsEditing] = useState(false);
   const nombreGrupo = prenda.grupo?.nombre ?? "Sin grupo";
   const badgeClass = getGroupBadgeClass(nombreGrupo);
   const esSinNumero = !prenda.numero || prenda.numero === "S/N";
@@ -81,6 +91,26 @@ export function PrendaRow({ index, prenda }: PrendaRowProps) {
           </span>
         ) : (
           <span style={{ color: "#cbd5e1" }}>—</span>
+        )}
+      </td>
+      <td>
+        <button
+          type="button"
+          className={styles.actionButton}
+          onClick={() => setIsEditing(true)}
+          title="Editar prenda"
+        >
+          Editar
+        </button>
+
+        {isEditing && (
+          <ModalEditarPrenda
+            isOpen={isEditing}
+            onClose={() => setIsEditing(false)}
+            prenda={prenda}
+            pedidoId={pedidoId}
+            tallasDisponibles={tallasDisponibles}
+          />
         )}
       </td>
     </tr>

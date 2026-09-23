@@ -103,7 +103,12 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
         <EstadoPedidoBadge estado={pedido.estado} size="lg" />
       </header>
 
-      <PrendasView prendas={prendas} grupos={pedido.grupos} />
+      <PrendasView
+        prendas={prendas}
+        grupos={pedido.grupos}
+        pedidoId={id}
+        tallas={tallasCatalogo ?? []}
+      />
     </main>
   );
 }
