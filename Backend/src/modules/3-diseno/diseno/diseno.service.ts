@@ -4,8 +4,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { EstadoDiseno, Prisma } from '@prisma/client';
+import { EstadoDiseno, RolUsuario } from '@prisma/client';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { AuditoriaService } from '../../5-auditoria/auditoria/auditoria.service';
 import { CrearDisenoDto } from './dto/crear-diseno.dto';
 import { ActualizarArtefactosDto } from './dto/actualizar-artefactos.dto';
 import { EstadoDisenoDto } from './dto/estado-diseno.dto';
@@ -14,7 +15,10 @@ const ESTADOS_EDITABLES = ['BORRADOR', 'PROPUESTO', 'RECHAZADO'];
 
 @Injectable()
 export class DisenoService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditoria: AuditoriaService,
+  ) {}
 
   // ==========================================================================
   // CREAR VERSIÓN
@@ -29,18 +33,31 @@ export class DisenoService {
     }
 
     const version = await this.siguienteVersion(dto.pedidoId);
-    const diseno = await this.crearConAuditoria({
-      pedidoId: dto.pedidoId,
-      version,
-      data: {
-        archivoUrl: dto.archivoUrl,
-        imagenUrl: dto.imagenUrl,
-      },
-      campo: 'creacion',
-      valorNuevo: String(version),
-    });
 
-    return diseno;
+    return this.prisma.$transaction(async (tx) => {
+      const diseno = await tx.diseno.create({
+        data: {
+          pedidoId: dto.pedidoId,
+          version,
+          archivoUrl: dto.archivoUrl,
+          imagenUrl: dto.imagenUrl,
+        },
+      });
+
+      await this.auditoria.registrar(
+        {
+          pedidoId: dto.pedidoId,
+          entidad: 'Diseno',
+          entidadId: diseno.id,
+          campo: 'creacion',
+          valorNuevo: String(version),
+          origen: 'USUARIO',
+        },
+        tx,
+      );
+
+      return diseno;
+    });
   }
 
   // ==========================================================================
@@ -63,44 +80,52 @@ export class DisenoService {
     }
 
     const data: { archivoUrl?: string; imagenUrl?: string } = {};
-    if (dto.archivoUrl !== undefined) {
-      data.archivoUrl = dto.archivoUrl;
-    }
-    if (dto.imagenUrl !== undefined) {
-      data.imagenUrl = dto.imagenUrl;
-    }
-
-    await this.prisma.diseno.update({ where: { id }, data });
-
     const cambios: {
       campo: string;
       anterior?: string | null;
       nuevo?: string | null;
     }[] = [];
-    if (dto.archivoUrl !== undefined && dto.archivoUrl !== diseno.archivoUrl) {
-      cambios.push({
-        campo: 'archivoUrl',
-        anterior: diseno.archivoUrl,
-        nuevo: dto.archivoUrl,
-      });
+
+    if (dto.archivoUrl !== undefined) {
+      data.archivoUrl = dto.archivoUrl;
+      if (dto.archivoUrl !== diseno.archivoUrl) {
+        cambios.push({
+          campo: 'archivoUrl',
+          anterior: diseno.archivoUrl,
+          nuevo: dto.archivoUrl,
+        });
+      }
     }
-    if (dto.imagenUrl !== undefined && dto.imagenUrl !== diseno.imagenUrl) {
-      cambios.push({
-        campo: 'imagenUrl',
-        anterior: diseno.imagenUrl,
-        nuevo: dto.imagenUrl,
-      });
+    if (dto.imagenUrl !== undefined) {
+      data.imagenUrl = dto.imagenUrl;
+      if (dto.imagenUrl !== diseno.imagenUrl) {
+        cambios.push({
+          campo: 'imagenUrl',
+          anterior: diseno.imagenUrl,
+          nuevo: dto.imagenUrl,
+        });
+      }
     }
 
-    for (const c of cambios) {
-      await this.registrarCambio({
-        pedidoId: diseno.pedidoId,
-        entidadId: id,
-        campo: c.campo,
-        valorAnterior: c.anterior,
-        valorNuevo: c.nuevo,
-      });
-    }
+    // R-I01: la actualización y su auditoría son atómicas.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.diseno.update({ where: { id }, data });
+
+      for (const c of cambios) {
+        await this.auditoria.registrar(
+          {
+            pedidoId: diseno.pedidoId,
+            entidad: 'Diseno',
+            entidadId: id,
+            campo: c.campo,
+            valorAnterior: c.anterior,
+            valorNuevo: c.nuevo,
+            origen: 'USUARIO',
+          },
+          tx,
+        );
+      }
+    });
 
     return this.obtenerDetalle(id);
   }
@@ -149,6 +174,7 @@ export class DisenoService {
         aprobadoEn: new Date(),
         aprobadoPorId: dto.usuarioId,
       },
+      { autorRol: usuario.rol, autorUsuarioId: dto.usuarioId },
     );
 
     return disenoEditado;
@@ -162,17 +188,40 @@ export class DisenoService {
       );
     }
 
-    await this.registrarCambio({
-      pedidoId: diseno.pedidoId,
-      entidadId: id,
-      campo: 'estado',
-      valorAnterior: diseno.estado,
-      valorNuevo: `RECHAZADO${dto.motivo ? ` (${dto.motivo})` : ''}`,
-    });
+    // R-I01: el estado y su auditoría son atómicos; el motivo se registra como
+    // un campo aparte, no mezclado en el string del estado.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.diseno.update({
+        where: { id },
+        data: { estado: 'RECHAZADO' },
+      });
 
-    await this.prisma.diseno.update({
-      where: { id },
-      data: { estado: 'RECHAZADO' },
+      await this.auditoria.registrar(
+        {
+          pedidoId: diseno.pedidoId,
+          entidad: 'Diseno',
+          entidadId: id,
+          campo: 'estado',
+          valorAnterior: diseno.estado,
+          valorNuevo: 'RECHAZADO',
+          origen: 'USUARIO',
+        },
+        tx,
+      );
+
+      if (dto.motivo) {
+        await this.auditoria.registrar(
+          {
+            pedidoId: diseno.pedidoId,
+            entidad: 'Diseno',
+            entidadId: id,
+            campo: 'motivoRechazo',
+            valorNuevo: dto.motivo,
+            origen: 'USUARIO',
+          },
+          tx,
+        );
+      }
     });
 
     return this.obtenerDetalle(id);
@@ -225,40 +274,13 @@ export class DisenoService {
     return diseno;
   }
 
-  private async crearConAuditoria(data: {
-    pedidoId: string;
-    version: number;
-    data: { archivoUrl?: string; imagenUrl?: string };
-    campo: string;
-    valorNuevo: string;
-  }) {
-    return this.prisma.$transaction(async (tx) => {
-      const diseno = await tx.diseno.create({
-        data: {
-          pedidoId: data.pedidoId,
-          version: data.version,
-          archivoUrl: data.data.archivoUrl,
-          imagenUrl: data.data.imagenUrl,
-        },
-      });
-
-      await this.crearRegistro(tx, {
-        pedidoId: data.pedidoId,
-        entidadId: diseno.id,
-        campo: data.campo,
-        valorNuevo: data.valorNuevo,
-      });
-
-      return diseno;
-    });
-  }
-
   private async editarConAuditoria(
     id: string,
     diseno: { pedidoId: string; estado: string },
     nuevoEstado: EstadoDiseno,
     campo: string,
     dataAdicional: { aprobadoEn?: Date; aprobadoPorId?: string } = {},
+    autor: { autorRol?: RolUsuario; autorUsuarioId?: string } = {},
   ) {
     return this.prisma.$transaction(async (tx) => {
       const actualizado = await tx.diseno.update({
@@ -266,48 +288,22 @@ export class DisenoService {
         data: { estado: nuevoEstado, ...dataAdicional },
       });
 
-      await this.crearRegistro(tx, {
-        pedidoId: diseno.pedidoId,
-        entidadId: id,
-        campo,
-        valorAnterior: diseno.estado,
-        valorNuevo: nuevoEstado,
-      });
+      await this.auditoria.registrar(
+        {
+          pedidoId: diseno.pedidoId,
+          entidad: 'Diseno',
+          entidadId: id,
+          campo,
+          valorAnterior: diseno.estado,
+          valorNuevo: nuevoEstado,
+          origen: 'USUARIO',
+          autorRol: autor.autorRol,
+          autorUsuarioId: autor.autorUsuarioId,
+        },
+        tx,
+      );
 
       return actualizado;
-    });
-  }
-
-  private async registrarCambio(data: {
-    pedidoId: string;
-    entidadId: string;
-    campo: string;
-    valorAnterior?: string | null;
-    valorNuevo?: string | null;
-  }) {
-    await this.crearRegistro(this.prisma, data);
-  }
-
-  private async crearRegistro(
-    tx: Prisma.TransactionClient | PrismaService,
-    data: {
-      pedidoId: string;
-      entidadId: string;
-      campo: string;
-      valorAnterior?: string | null;
-      valorNuevo?: string | null;
-    },
-  ) {
-    await tx.registroCambio.create({
-      data: {
-        pedidoId: data.pedidoId,
-        entidad: 'Diseno',
-        entidadId: data.entidadId,
-        campo: data.campo,
-        valorAnterior: data.valorAnterior ?? null,
-        valorNuevo: data.valorNuevo ?? null,
-        origen: 'USUARIO',
-      },
     });
   }
 }

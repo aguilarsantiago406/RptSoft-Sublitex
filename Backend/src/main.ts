@@ -40,6 +40,14 @@ async function bootstrap() {
     )
     .addTag('Personalizaciones', 'Estampados con ubicación declarada (BK2)')
     .addTag('Diseños', 'Versionado y aprobación gráfica (FRENTE DISEÑO)')
+    .addTag(
+      'Producción',
+      'Nesting, corte, consumo de tela y archivos TIF (FRENTE PRODUCCIÓN)',
+    )
+    .addTag(
+      'Auditoría',
+      'Trazabilidad inmutable append-only (FRENTE AUDITORÍA)',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
