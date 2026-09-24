@@ -1,10 +1,13 @@
-import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { ParticipantesService } from './participantes.service';
 import { CreateParticipanteDto } from './dto/create-participante.dto';
 
 @ApiTags('Participantes')
 @Controller('api')
+@UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
 export class ParticipantesController {
   constructor(private readonly service: ParticipantesService) {}
 

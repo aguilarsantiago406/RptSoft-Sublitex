@@ -1,10 +1,13 @@
-import { Controller, Post, Delete, Body, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { ExcepcionesService } from './excepciones.service';
 import { CreateExcepcionDto } from './dto/create-excepcion.dto';
 
 @ApiTags('Excepciones de Prenda')
 @Controller('api')
+@UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
 export class ExcepcionesController {
   constructor(private readonly service: ExcepcionesService) {}
 
