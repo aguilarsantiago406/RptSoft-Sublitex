@@ -16,7 +16,8 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "types": ["jest", "node"]
   },
   "include": [
     "src/**/*"
@@ -25,7 +26,6 @@
     "node_modules",
     "dist",
     "sublitex-web",
-    "test",
-    "**/*.spec.ts"
+    "test"
   ]
 }
