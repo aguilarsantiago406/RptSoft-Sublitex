@@ -32,7 +32,7 @@ const sections: NavSectionData[] = [
     label: "Configuración",
     items: [
       { label: "Catálogos", href: "/catalogos", icon: BookOpen },
-      { label: "Usuarios", icon: UserCheck },
+      { label: "Usuarios", href: "/usuarios", icon: UserCheck },
     ],
   },
 ];
