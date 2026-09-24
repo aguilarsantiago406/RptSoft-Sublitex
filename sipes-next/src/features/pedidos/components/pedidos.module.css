@@ -1099,6 +1099,60 @@
   color: #475569;
 }
 
+.envioEditButton {
+  background: rgba(14, 165, 233, 0.08);
+  color: var(--sky-dark);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.envioEditButton:hover {
+  background: rgba(14, 165, 233, 0.16);
+  color: #0284c7;
+}
+
+.envioDeleteRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.envioDeleteButton {
+  background: transparent;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.envioDeleteButton:hover:not(:disabled) {
+  background: #fff1f2;
+}
+
+.envioDeleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.envioError {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #be123c;
+}
+
 @media (max-width: 900px) {
   .detailGrid { grid-template-columns: 1fr; }
   .twoColsLayout { grid-template-columns: 1fr; }
