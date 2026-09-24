@@ -31,16 +31,23 @@ export class ComercialService {
       throw new ConflictException('Ya existe una tarifa con ese tipo, concepto y fecha de vigencia');
     }
 
-    return this.prisma.tarifa.create({
-      data: {
-        tipo: dto.tipo,
-        concepto: dto.concepto,
-        valor: dto.valor,
-        vigenteDesde,
-        vigenteHasta,
-        nota: dto.nota,
-      },
-    });
+    try {
+      return await this.prisma.tarifa.create({
+        data: {
+          tipo: dto.tipo,
+          concepto: dto.concepto,
+          valor: dto.valor,
+          vigenteDesde,
+          vigenteHasta,
+          nota: dto.nota,
+        },
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2002') {
+        throw new ConflictException('Ya existe una tarifa con ese tipo, concepto y fecha de vigencia');
+      }
+      throw error;
+    }
   }
 
   async findAllTarifas(tipo?: string) {
@@ -205,6 +212,9 @@ export class ComercialService {
     const adelantoSugerido = Math.round((totalSinIgv * 0.5) * 100) / 100;
     const adelantoRecibido = dto.adelantoRecibido ?? 0;
     const saldo = Math.max(0, Math.round((totalSinIgv - adelantoRecibido) * 100) / 100);
+    const igvCalculado = (dto.comprobante === 'FACTURA' || (dto.comprobante as any) === 'FACTURA')
+      ? Math.round(totalSinIgv * 0.18 * 100) / 100
+      : null;
 
     return this.prisma.confirmacion.create({
       data: {
@@ -220,6 +230,7 @@ export class ComercialService {
         adelantoRecibido,
         saldo,
         comprobante: dto.comprobante ?? 'NINGUNO',
+        igvCalculado,
         pdfUrl: dto.pdfUrl,
         emitidaPorId: autorId,
       },

@@ -73,7 +73,10 @@ export class AuthController {
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string, @Request() req: { user: { id: string; rol: RolUsuario } }) {
+    if (req.user.rol !== RolUsuario.ADMINISTRADOR && req.user.id !== id) {
+      throw new ForbiddenException('No tienes permiso para consultar este usuario');
+    }
     return this.authService.findOne(id);
   }
 

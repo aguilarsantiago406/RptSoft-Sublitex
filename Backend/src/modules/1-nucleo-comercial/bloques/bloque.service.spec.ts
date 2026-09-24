@@ -154,6 +154,32 @@ describe('BloqueService - Gobernanza de Bloques (R-H01, R-H11, R-H12, R-H13, R-H
       expect(prisma.versionBloque.create).toHaveBeenCalled();
       expect(prisma.bloquePedido.update).toHaveBeenCalled();
     });
+
+    it('rechaza cerrar Diseno si no tiene un diseno aprobado (R-H02)', async () => {
+      prisma.pedido.findUnique.mockResolvedValue({
+        id: 'ped_1',
+        grupos: [],
+        disenos: [{ id: 'd1', estado: 'BORRADOR' }],
+      });
+      prisma.bloquePedido.findUnique.mockResolvedValue({ id: 'b_diseno', estado: EstadoBloque.ABIERTO });
+
+      await expect(service.cerrarBloque('ped_1', TipoBloque.DISENO, 'usr_1')).rejects.toThrow('R-H02');
+    });
+
+    it('cierra Diseno exitosamente si cuenta con diseno aprobado (R-H02)', async () => {
+      prisma.pedido.findUnique.mockResolvedValue({
+        id: 'ped_1',
+        grupos: [],
+        disenos: [{ id: 'd1', estado: 'APROBADO', archivoUrl: 'https://cdn/art.ai' }],
+      });
+      prisma.bloquePedido.findUnique.mockResolvedValue({ id: 'b_diseno', estado: EstadoBloque.ABIERTO });
+      prisma.versionBloque.findFirst.mockResolvedValue(null);
+      prisma.versionBloque.create.mockResolvedValue({ id: 'v1', numero: 1 });
+      prisma.bloquePedido.update.mockResolvedValue({ id: 'b_diseno', estado: EstadoBloque.CERRADO });
+
+      const res = await service.cerrarBloque('ped_1', TipoBloque.DISENO, 'usr_1');
+      expect(res.version).toBe(1);
+    });
   });
 
   describe('reabrirBloque (BK1-02 / R-H12, R-H13, R-H14)', () => {

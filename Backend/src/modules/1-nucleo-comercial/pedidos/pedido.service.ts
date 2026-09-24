@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
@@ -56,21 +57,35 @@ export class PedidoService {
     if (!cliente) throw new NotFoundException('Cliente no encontrado: ' + dto.clienteId);
 
     const responsableId = userId ?? (await this.getSystemUserId());
-    const codigo = await this.generarCodigo();
-
-    const creado = await this.prisma.pedido.create({
-      data: {
-        codigo,
-        clienteId: dto.clienteId,
-        vendedoraId: dto.vendedoraId || dto.vendedorId,
-        fechaCompromiso,
-        observaciones: dto.observaciones,
-        estado: EstadoPedido.BORRADOR,
-        creadoPorId: responsableId,
-        coordinadorId: responsableId,
-      },
-      include: { cliente: true, vendedora: true },
-    });
+    let creado;
+    let intentos = 0;
+    while (!creado && intentos < 3) {
+      try {
+        const codigo = await this.generarCodigo();
+        creado = await this.prisma.pedido.create({
+          data: {
+            codigo,
+            clienteId: dto.clienteId,
+            vendedoraId: dto.vendedoraId || dto.vendedorId,
+            fechaCompromiso,
+            observaciones: dto.observaciones,
+            estado: EstadoPedido.BORRADOR,
+            creadoPorId: responsableId,
+            coordinadorId: responsableId,
+          },
+          include: { cliente: true, vendedora: true },
+        });
+      } catch (error: any) {
+        if (error?.code === 'P2002' && error?.meta?.target?.includes('codigo')) {
+          intentos++;
+          if (intentos >= 3) {
+            throw new ConflictException('No se pudo generar un codigo unico para el pedido');
+          }
+        } else {
+          throw error;
+        }
+      }
+    }
 
     return {
       ...creado,
@@ -412,6 +427,9 @@ export class PedidoService {
     } catch (error: any) {
       if (error?.code === 'P2025') {
         throw new NotFoundException('Color no encontrado: ' + colorId);
+      }
+      if (error?.code === 'P2003') {
+        throw new ConflictException('No se puede eliminar el color porque esta asignado a prendas');
       }
       throw error;
     }
