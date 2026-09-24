@@ -1,0 +1,53 @@
+.card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tableHeaderBone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.bone {
+  background: #eaf0f5;
+  border-radius: 8px;
+  animation: subtlePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes subtlePulse {
+  0%, 100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+.columnHeaderBone {
+  height: 14px;
+  border-radius: 4px;
+}
+
+.rowsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rowBone {
+  height: 44px;
+  width: 100%;
+  border-radius: 10px;
+  background: #f1f6fa;
+}
