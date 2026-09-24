@@ -7,7 +7,14 @@ export class ClienteService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateClienteDto) {
-    return this.prisma.cliente.create({ data: dto as any });
+    return this.prisma.cliente.create({
+      data: {
+        nombre: dto.nombre,
+        tipo: dto.tipo,
+        telefono: dto.telefono,
+        ciudad: dto.ciudad,
+      },
+    });
   }
 
   async findAll(q?: string) {

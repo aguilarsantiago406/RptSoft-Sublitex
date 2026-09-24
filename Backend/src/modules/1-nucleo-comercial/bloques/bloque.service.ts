@@ -57,6 +57,12 @@ export class BloqueService {
             prendas: {
               include: {
                 talla: true,
+                excepciones: {
+                  include: { atributo: true, valor: true },
+                },
+                personalizaciones: {
+                  include: { ubicacion: true },
+                },
               },
             },
           },
@@ -86,6 +92,13 @@ export class BloqueService {
 
     if (bloque.estado === EstadoBloque.CERRADO) {
       throw new BadRequestException(`El bloque ${tipo} ya se encuentra cerrado`);
+    }
+
+    if (tipo === TipoBloque.DISENO) {
+      const tieneAprobado = pedido.disenos && pedido.disenos.some((d: any) => d.estado === 'APROBADO');
+      if (!tieneAprobado) {
+        throw new BadRequestException('No se puede cerrar el bloque Diseno sin un diseno aprobado (R-H02)');
+      }
     }
 
     if (tipo === TipoBloque.LISTA) {
@@ -173,6 +186,12 @@ export class BloqueService {
             prendas: {
               include: {
                 talla: true,
+                excepciones: {
+                  include: { atributo: true, valor: true },
+                },
+                personalizaciones: {
+                  include: { ubicacion: true },
+                },
               },
             },
           },
@@ -259,6 +278,14 @@ export class BloqueService {
             tipoPrenda: p.tipoPrenda,
             nombreEnPrenda: p.nombreEnPrenda,
             esArquero: p.esArquero,
+            excepciones: (p.excepciones || []).map((e: any) => ({
+              atributo: e.atributo?.codigo,
+              valor: e.valor?.codigo,
+            })),
+            personalizaciones: (p.personalizaciones || []).map((per: any) => ({
+              ubicacion: per.ubicacion?.codigo,
+              contenido: per.contenido,
+            })),
           })),
         })),
       };

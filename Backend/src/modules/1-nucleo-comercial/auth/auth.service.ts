@@ -146,9 +146,11 @@ export class AuthService {
       throw new NotFoundException('Usuario no encontrado: ' + id);
     }
 
-    const isValid = await bcrypt.compare(currentPassword, user.password);
-    if (!isValid) {
-      throw new UnauthorizedException('Contrasena actual incorrecta');
+    if (callerId === id) {
+      const isValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isValid) {
+        throw new UnauthorizedException('Contrasena actual incorrecta');
+      }
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
