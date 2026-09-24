@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, Request, ForbiddenException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolUsuario } from '@prisma/client';
 import { AuthService } from './auth.service';
@@ -21,7 +21,8 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Iniciar sesion - devuelve JWT' })
-  @ApiResponse({ status: 200, description: 'Login exitoso' })
+  @ApiResponse({ status: 200, description: 'Login exitoso - retorna token JWT y datos del usuario' })
+  @ApiResponse({ status: 400, description: 'Datos de inicio de sesion invalidos' })
   @ApiResponse({ status: 401, description: 'Credenciales invalidas' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -29,7 +30,9 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Registrar nuevo usuario (solo ADMINISTRADOR)' })
-  @ApiResponse({ status: 201, description: 'Usuario creado' })
+  @ApiResponse({ status: 201, description: 'Usuario creado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Datos invalidos' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Requiere JWT' })
   @ApiResponse({ status: 403, description: 'Solo administradores pueden registrar usuarios' })
   @ApiResponse({ status: 409, description: 'Email ya registrado' })
   @UseGuards(AuthGuard('jwt'))
@@ -41,8 +44,8 @@ export class AuthController {
 
   @Get('me')
   @ApiOperation({ summary: 'Obtener usuario autenticado actual' })
-  @ApiResponse({ status: 200 })
-  @ApiResponse({ status: 401 })
+  @ApiResponse({ status: 200, description: 'Datos del usuario autenticado' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Token ausente o invalido' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   me(@Request() req: { user: { id: string } }) {
@@ -51,7 +54,10 @@ export class AuthController {
 
   @Get()
   @ApiOperation({ summary: 'Listar usuarios (solo ADMINISTRADOR)' })
-  @ApiQuery({ name: 'rol', required: false, enum: RolUsuario })
+  @ApiQuery({ name: 'rol', required: false, enum: RolUsuario, description: 'Filtrar por rol de usuario' })
+  @ApiResponse({ status: 200, description: 'Lista de usuarios' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Requiere JWT' })
+  @ApiResponse({ status: 403, description: 'Solo administradores pueden listar usuarios' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   findAll(@Query('rol') rol: string | undefined, @Request() req: { user: { rol: RolUsuario } }) {
@@ -61,6 +67,9 @@ export class AuthController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener usuario por ID' })
+  @ApiParam({ name: 'id', description: 'ID unico del usuario (CUID)' })
+  @ApiResponse({ status: 200, description: 'Detalle del usuario' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Requiere JWT' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
@@ -70,7 +79,11 @@ export class AuthController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar usuario (solo ADMINISTRADOR)' })
-  @ApiResponse({ status: 403, description: 'Solo administradores' })
+  @ApiParam({ name: 'id', description: 'ID unico del usuario (CUID)' })
+  @ApiResponse({ status: 200, description: 'Usuario actualizado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Datos de actualizacion invalidos' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Requiere JWT' })
+  @ApiResponse({ status: 403, description: 'Solo administradores pueden modificar usuarios' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
@@ -81,9 +94,12 @@ export class AuthController {
 
   @Patch(':id/password')
   @ApiOperation({ summary: 'Cambiar contrasena (propio usuario o ADMINISTRADOR)' })
+  @ApiParam({ name: 'id', description: 'ID unico del usuario (CUID)' })
+  @ApiResponse({ status: 200, description: 'Contrasena cambiada exitosamente' })
+  @ApiResponse({ status: 400, description: 'Contrasena no cumple requisitos' })
+  @ApiResponse({ status: 401, description: 'Contrasena actual incorrecta o token invalido' })
   @ApiResponse({ status: 403, description: 'Solo puedes cambiar tu propia contrasena' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
-  @ApiResponse({ status: 401, description: 'Contrasena actual incorrecta' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   changePassword(
@@ -96,7 +112,10 @@ export class AuthController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar usuario (solo ADMINISTRADOR)' })
-  @ApiResponse({ status: 403, description: 'Solo administradores' })
+  @ApiParam({ name: 'id', description: 'ID unico del usuario (CUID)' })
+  @ApiResponse({ status: 200, description: 'Usuario eliminado exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Requiere JWT' })
+  @ApiResponse({ status: 403, description: 'Solo administradores pueden eliminar usuarios' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()

@@ -1,4 +1,4 @@
-﻿import { Test } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { ComercialService } from './comercial.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
@@ -21,6 +21,14 @@ function buildPrismaMock() {
     },
     pedido: {
       findUnique: jest.fn(),
+    },
+    confirmacion: {
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+    },
+    usuario: {
+      findFirst: jest.fn(),
     },
   };
 }
@@ -171,3 +179,91 @@ describe('R-K08 - findDatosEnvio', () => {
     await expect(service.findDatosEnvio('ped-sin-envio')).rejects.toThrow(NotFoundException);
   });
 });
+
+describe('R-H05 / R-K06 / R-K07 - emitirConfirmacion', () => {
+  it('emite confirmacion calculando totalSinIgv, adelanto 50% y saldo', async () => {
+    const prisma = buildPrismaMock();
+    prisma.pedido.findUnique.mockResolvedValue({
+      id: 'ped_1',
+      creadoPorId: 'usr_creador',
+      grupos: [
+        {
+          id: 'g_1',
+          cantidadContratada: 10,
+          tipoProducto: { id: 'tp_1', nombre: 'Conjunto' },
+          prendas: [{ id: 'p_1' }, { id: 'p_2' }],
+        },
+      ],
+    });
+    prisma.tarifa.findFirst.mockResolvedValue({
+      valor: 100,
+    });
+    prisma.confirmacion.findFirst.mockResolvedValue(null);
+    prisma.confirmacion.create.mockImplementation(async ({ data }: any) => ({
+      id: 'conf_1',
+      ...data,
+    }));
+
+    const service = await crearServicio(prisma);
+    const result = await service.emitirConfirmacion('ped_1', { adelantoRecibido: 100 });
+
+    expect(result.version).toBe(1);
+    expect(result.totalSinIgv).toBe(200);
+    expect(result.adelantoSugerido).toBe(100);
+    expect(result.adelantoRecibido).toBe(100);
+    expect(result.saldo).toBe(100);
+  });
+
+  it('emite confirmacion sumando recargos de tallas, telas, cuellos y adicionales (R-H07 / R-H08)', async () => {
+    const prisma = buildPrismaMock();
+    prisma.pedido.findUnique.mockResolvedValue({
+      id: 'ped_1',
+      creadoPorId: 'usr_creador',
+      grupos: [
+        {
+          id: 'g_1',
+          cantidadContratada: 1,
+          tipoProducto: { id: 'tp_1', nombre: 'Conjunto' },
+          prendas: [{ id: 'p_1' }],
+        },
+      ],
+    });
+    prisma.tarifa.findFirst.mockResolvedValue({ valor: 100 });
+    prisma.confirmacion.findFirst.mockResolvedValue({ version: 1 });
+    prisma.confirmacion.create.mockImplementation(async ({ data }: any) => ({
+      id: 'conf_2',
+      ...data,
+    }));
+
+    const service = await crearServicio(prisma);
+    const result = await service.emitirConfirmacion('ped_1', {
+      recargoTallas: 20,
+      recargoTelas: 15,
+      recargoCuellos: 10,
+      recargoAcabados: 5,
+      adicionales: 50,
+      adelantoRecibido: 100,
+    });
+
+    expect(result.version).toBe(2);
+    expect(result.totalSinIgv).toBe(200);
+    expect(result.recargoTallas).toBe(20);
+    expect(result.recargoTelas).toBe(15);
+    expect(result.recargoCuellos).toBe(10);
+    expect(result.recargoAcabados).toBe(5);
+    expect(result.adicionales).toBe(50);
+    expect(result.adelantoSugerido).toBe(100);
+    expect(result.saldo).toBe(100);
+  });
+
+  it('lanza NotFoundException al emitir confirmacion si el pedido no existe', async () => {
+    const prisma = buildPrismaMock();
+    prisma.pedido.findUnique.mockResolvedValue(null);
+    const service = await crearServicio(prisma);
+
+    await expect(
+      service.emitirConfirmacion('ped_inexistente', {}),
+    ).rejects.toThrow(NotFoundException);
+  });
+});
+

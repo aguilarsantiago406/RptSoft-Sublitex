@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
+import { UpdatePedidoDto } from './dto/update-pedido.dto';
 import { UpdateEstadoDto } from './dto/update-estado.dto';
 import { AddColorDto } from './dto/add-color.dto';
 import { EstadoPedido } from './estado-pedido.enum';
@@ -34,7 +35,14 @@ export class PedidoService {
     return user.id;
   }
 
-  async create(dto: CreatePedidoDto) {
+  private calcularTiempoDias(fechaPedido?: Date | string | null, fechaCompromiso?: Date | string | null): number | null {
+    if (!fechaPedido || !fechaCompromiso) return null;
+    const inicio = new Date(fechaPedido).getTime();
+    const fin = new Date(fechaCompromiso).getTime();
+    return Math.max(0, Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)));
+  }
+
+  async create(dto: CreatePedidoDto, userId?: string) {
     const ahora = new Date();
     const fechaCompromiso = new Date(dto.fechaCompromiso);
     if (fechaCompromiso <= ahora) {
@@ -47,22 +55,29 @@ export class PedidoService {
     });
     if (!cliente) throw new NotFoundException('Cliente no encontrado: ' + dto.clienteId);
 
-    const systemId = await this.getSystemUserId();
+    const responsableId = userId ?? (await this.getSystemUserId());
     const codigo = await this.generarCodigo();
 
-    return this.prisma.pedido.create({
+    const creado = await this.prisma.pedido.create({
       data: {
         codigo,
         clienteId: dto.clienteId,
+        vendedoraId: dto.vendedoraId || dto.vendedorId,
         fechaCompromiso,
         observaciones: dto.observaciones,
         estado: EstadoPedido.BORRADOR,
-        creadoPorId: systemId,
-        coordinadorId: systemId,
+        creadoPorId: responsableId,
+        coordinadorId: responsableId,
       },
-      include: { cliente: true },
+      include: { cliente: true, vendedora: true },
     });
+
+    return {
+      ...creado,
+      tiempoDias: this.calcularTiempoDias(creado.fechaPedido ?? ahora, creado.fechaCompromiso),
+    };
   }
+
 
   async findAll(estado?: string, clienteId?: string) {
     const pedidos = await this.prisma.pedido.findMany({
@@ -72,6 +87,7 @@ export class PedidoService {
       },
       include: {
         cliente: true,
+        vendedora: true,
       },
       orderBy: { fechaPedido: 'desc' },
     });
@@ -100,6 +116,7 @@ export class PedidoService {
 
     return pedidos.map((pedido) => ({
       ...pedido,
+      tiempoDias: this.calcularTiempoDias(pedido.fechaPedido, pedido.fechaCompromiso),
       totalPrendas: prendasPorPedidoId.get(pedido.id) ?? 0,
     }));
   }
@@ -109,6 +126,7 @@ export class PedidoService {
       where: { id },
       include: {
         cliente: true,
+        vendedora: true,
         grupos: {
           include: {
             tipoProducto: true,
@@ -124,6 +142,7 @@ export class PedidoService {
     if (!pedido) throw new NotFoundException('Pedido no encontrado: ' + id);
     return {
       ...pedido,
+      tiempoDias: this.calcularTiempoDias(pedido.fechaPedido, pedido.fechaCompromiso),
       grupos: (pedido.grupos ?? []).map((grupo) => ({
         id: grupo.id,
         nombre: grupo.nombre,
@@ -344,6 +363,32 @@ export class PedidoService {
       }
       throw error;
     }
+  }
+
+  async update(id: string, dto: UpdatePedidoDto) {
+    const pedido = await this.prisma.pedido.findUnique({ where: { id } });
+    if (!pedido) throw new NotFoundException('Pedido no encontrado: ' + id);
+
+    if (dto.fechaCompromiso) {
+      const nuevaFecha = new Date(dto.fechaCompromiso);
+      if (nuevaFecha <= new Date(pedido.fechaPedido)) {
+        throw new BadRequestException(
+          'La fecha de compromiso debe ser posterior a la fecha del pedido (R-A09)',
+        );
+      }
+    }
+
+    const vendedoraId = dto.vendedoraId !== undefined ? dto.vendedoraId : dto.vendedorId;
+
+    return this.prisma.pedido.update({
+      where: { id },
+      data: {
+        ...(dto.fechaCompromiso ? { fechaCompromiso: new Date(dto.fechaCompromiso) } : {}),
+        ...(vendedoraId !== undefined ? { vendedoraId } : {}),
+        ...(dto.observaciones !== undefined ? { observaciones: dto.observaciones } : {}),
+      },
+      include: { cliente: true, vendedora: true },
+    });
   }
 
   async getColores(pedidoId: string) {

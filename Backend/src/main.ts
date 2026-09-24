@@ -29,6 +29,7 @@ async function bootstrap() {
     .addTag('Grupos', 'Gestion de grupos y politicas de numeracion (BK1)')
     .addTag('Catalogos', 'Catalogos de tipos de producto, tallas, atributos y ubicaciones (BK1)')
     .addTag('Comercial / Tarifas y Envios', 'Tarifas y datos de envio (BK1)')
+    .addTag('Bloques de Pedido', 'Gobernanza y ciclo de vida de bloques (BK1)')
     .addTag('Participantes', 'Gestion de participantes y enlaces WhatsApp (BK2)')
     .addTag('Prendas', 'Gestion de prendas y calculo de produccion (BK2)')
     .addTag('Excepciones de Prenda', 'Deltas de configuracion sobre prendas (BK2)')

@@ -5,6 +5,7 @@ import { CreateTarifaDto } from './dto/create-tarifa.dto';
 import { UpdateTarifaDto } from './dto/update-tarifa.dto';
 import { CreateDatosEnvioDto } from './dto/create-datos-envio.dto';
 import { UpdateDatosEnvioDto } from './dto/update-datos-envio.dto';
+import { EmitirConfirmacionDto } from './dto/emitir-confirmacion.dto';
 
 @Injectable()
 export class ComercialService {
@@ -152,5 +153,88 @@ export class ComercialService {
       orderBy: { vigenteDesde: 'desc' },
     });
     return Number(tarifa?.valor ?? 0);
+  }
+
+  async emitirConfirmacion(pedidoId: string, dto: EmitirConfirmacionDto, emitidaPorId?: string) {
+    const pedido = await this.prisma.pedido.findUnique({
+      where: { id: pedidoId },
+      include: {
+        grupos: {
+          include: {
+            tipoProducto: true,
+            prendas: {
+              where: { tipoPrenda: 'VENTA' },
+            },
+          },
+        },
+      },
+    });
+
+    if (!pedido) {
+      throw new NotFoundException('Pedido no encontrado: ' + pedidoId);
+    }
+
+    let autorId = emitidaPorId;
+    if (!autorId) {
+      const systemUser = await this.prisma.usuario.findFirst({
+        where: { email: 'sistema@sublitex.com' },
+      });
+      autorId = systemUser?.id || pedido.creadoPorId;
+    }
+
+    const ultima = await this.prisma.confirmacion.findFirst({
+      where: { pedidoId },
+      orderBy: { version: 'desc' },
+    });
+    const siguienteVersion = (ultima?.version ?? 0) + 1;
+
+    const recargoTallas = dto.recargoTallas ?? 0;
+    const recargoTelas = dto.recargoTelas ?? 0;
+    const recargoCuellos = dto.recargoCuellos ?? 0;
+    const recargoAcabados = dto.recargoAcabados ?? 0;
+    const adicionales = dto.adicionales ?? 0;
+
+    let baseProductos = 0;
+    for (const grupo of pedido.grupos) {
+      const tarifaProducto = await this.getTarifaVigentePorConcepto('PRODUCTO', grupo.tipoProducto.nombre);
+      const prendasVenta = grupo.prendas.length > 0 ? grupo.prendas.length : grupo.cantidadContratada;
+      baseProductos += prendasVenta * tarifaProducto;
+    }
+
+    const totalSinIgv = Math.round((baseProductos + recargoTallas + recargoTelas + recargoCuellos + recargoAcabados + adicionales) * 100) / 100;
+    const adelantoSugerido = Math.round((totalSinIgv * 0.5) * 100) / 100;
+    const adelantoRecibido = dto.adelantoRecibido ?? 0;
+    const saldo = Math.max(0, Math.round((totalSinIgv - adelantoRecibido) * 100) / 100);
+
+    return this.prisma.confirmacion.create({
+      data: {
+        pedidoId,
+        version: siguienteVersion,
+        totalSinIgv,
+        recargoTallas,
+        recargoTelas,
+        recargoCuellos,
+        recargoAcabados,
+        adicionales,
+        adelantoSugerido,
+        adelantoRecibido,
+        saldo,
+        comprobante: dto.comprobante ?? 'NINGUNO',
+        pdfUrl: dto.pdfUrl,
+        emitidaPorId: autorId,
+      },
+    });
+  }
+
+  async findConfirmaciones(pedidoId: string) {
+    const pedido = await this.prisma.pedido.findUnique({ where: { id: pedidoId } });
+    if (!pedido) {
+      throw new NotFoundException('Pedido no encontrado: ' + pedidoId);
+    }
+    return this.prisma.confirmacion.findMany({
+      where: { pedidoId },
+      orderBy: { version: 'desc' },
+      include: { emitidaPor: true },
+    });
   }
 }
