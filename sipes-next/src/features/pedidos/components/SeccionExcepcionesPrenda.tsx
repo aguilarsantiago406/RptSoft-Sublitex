@@ -7,7 +7,7 @@ import type { PrendaDetalle } from "../types/pedido";
 import {
   actionCrearExcepcionPrenda,
   actionEliminarExcepcionPrenda,
-} from "../actions/pedidos.actions";
+} from "../actions/prendas.actions";
 import styles from "./prendas.module.css";
 
 interface SeccionExcepcionesPrendaProps {

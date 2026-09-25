@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import type { GrupoPedido } from "../types/pedido";
 import type { TipoProductoCatalogoItem } from "../api/pedidos.api";
-import { actionEliminarGrupo } from "../actions/pedidos.actions";
+import { actionEliminarGrupo } from "../actions/grupos.actions";
 import { ModalGrupoForm } from "./ModalGrupoForm";
 import styles from "./pedidos.module.css";
 

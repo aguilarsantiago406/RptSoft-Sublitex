@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { TipoProductoCatalogoItem } from "../api/pedidos.api";
-import { actionCrearGrupo } from "../actions/pedidos.actions";
+import { actionCrearGrupo } from "../actions/grupos.actions";
 import styles from "./pedidos.module.css";
 
 interface ModalGrupoFormProps {

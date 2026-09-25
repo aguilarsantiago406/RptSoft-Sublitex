@@ -86,8 +86,6 @@ export async function actionEliminarColorPedido(
     return { ok: false, error: "No se pudo eliminar el color." };
   }
 }
-export * from "./grupos.actions";
-
 
 export interface CreatePedidoParams {
   clienteId: string;
@@ -160,8 +158,3 @@ export async function actionCrearCliente(
     return { ok: false, error: "No se pudo registrar el cliente en el backend." };
   }
 }
-
-export * from "./prendas.actions";
-
-
-
