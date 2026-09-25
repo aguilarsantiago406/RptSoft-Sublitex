@@ -6,6 +6,7 @@ import { EstadoPedido } from './estado-pedido.enum';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdateEstadoDto } from './dto/update-estado.dto';
 import { AddColorDto } from './dto/add-color.dto';
+import { UpdatePedidoDto } from './dto/update-pedido.dto';
 
 const pedidoBORRADOR = {
   id: 'ped_1',
@@ -72,9 +73,33 @@ describe('R-A03 · Código legible y único generado por el sistema', () => {
     const creado = await service.create(dto);
 
     expect(creado.codigo).toBe('SUB-0004');
+    expect(creado.tiempoDias).toBeGreaterThan(0);
     const llamado = prisma.pedido.create.mock.calls[0][0].data;
     expect(llamado.codigo).toBe('SUB-0004');
     expect(llamado.estado).toBe(EstadoPedido.BORRADOR);
+  });
+
+  it('permite asignar vendedoraId opcional al crear el pedido', async () => {
+    const prisma = buildPrismaMock();
+    prisma.pedido.aggregate.mockResolvedValue({ _max: { codigo: 'SUB-0001' } });
+    prisma.usuario.findFirst.mockResolvedValue({ id: 'u1' });
+    prisma.cliente.findUnique.mockResolvedValue({ id: 'c1' });
+    prisma.pedido.create.mockImplementation(async ({ data }: any) => ({
+      id: 'ped_nuevo',
+      ...data,
+    }));
+
+    const service = await crearServicio(prisma);
+    const dto: CreatePedidoDto = {
+      clienteId: 'c1',
+      vendedoraId: 'vend_123',
+      fechaCompromiso: '2026-12-25T00:00:00Z',
+    };
+    const creado = await service.create(dto);
+
+    const llamado = prisma.pedido.create.mock.calls[0][0].data;
+    expect(llamado.vendedoraId).toBe('vend_123');
+    expect(creado.tiempoDias).toBeGreaterThan(0);
   });
 });
 
@@ -179,3 +204,47 @@ describe('R-K05 · Colores con código HEX obligatorio', () => {
     await expect(service.deleteColor('ped_1', 'col_x')).rejects.toThrow(NotFoundException);
   });
 });
+
+describe('PATCH /api/pedidos/:id · Actualizar datos generales del pedido', () => {
+  it('actualiza observaciones correctamente', async () => {
+    const prisma = buildPrismaMock();
+    prisma.pedido.findUnique.mockResolvedValue(pedidoBORRADOR);
+    prisma.pedido.update.mockImplementation(async ({ data }: any) => ({
+      ...pedidoBORRADOR,
+      ...data,
+    }));
+    const service = await crearServicio(prisma);
+    const dto: UpdatePedidoDto = { observaciones: 'Nueva nota' };
+    const result = await service.update('ped_1', dto);
+    expect(result.observaciones).toBe('Nueva nota');
+  });
+
+  it('rechaza nueva fechaCompromiso anterior o igual a fechaPedido', async () => {
+    const prisma = buildPrismaMock();
+    prisma.pedido.findUnique.mockResolvedValue(pedidoBORRADOR);
+    const service = await crearServicio(prisma);
+    const dto: UpdatePedidoDto = { fechaCompromiso: '2026-08-01T00:00:00Z' };
+    await expect(service.update('ped_1', dto)).rejects.toThrow(BadRequestException);
+  });
+
+  it('lanza 404 si el pedido no existe', async () => {
+    const prisma = buildPrismaMock();
+    prisma.pedido.findUnique.mockResolvedValue(null);
+    const service = await crearServicio(prisma);
+    await expect(service.update('inexistente', {})).rejects.toThrow(NotFoundException);
+  });
+
+  it('actualiza vendedoraId correctamente', async () => {
+    const prisma = buildPrismaMock();
+    prisma.pedido.findUnique.mockResolvedValue(pedidoBORRADOR);
+    prisma.pedido.update.mockImplementation(async ({ data }: any) => ({
+      ...pedidoBORRADOR,
+      ...data,
+    }));
+    const service = await crearServicio(prisma);
+    const dto: UpdatePedidoDto = { vendedoraId: 'vend_nuevo' };
+    await service.update('ped_1', dto);
+    const llamado = prisma.pedido.update.mock.calls[0][0].data;
+    expect(llamado.vendedoraId).toBe('vend_nuevo');
+  });
+});
