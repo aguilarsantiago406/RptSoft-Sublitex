@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsEnum, IsString, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsEnum, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoComprobante } from '@prisma/client';
 
@@ -13,11 +13,6 @@ export class EmitirConfirmacionDto {
   @IsOptional()
   @IsEnum(TipoComprobante)
   comprobante?: TipoComprobante;
-
-  @ApiPropertyOptional({ example: 'https://storage.sublitex.com/confirmaciones/SUB-0001-v1.pdf' })
-  @IsOptional()
-  @IsString()
-  pdfUrl?: string;
 
   @ApiPropertyOptional({ example: 25.0, description: 'Recargos por tallas especiales (R-H07)' })
   @IsOptional()
