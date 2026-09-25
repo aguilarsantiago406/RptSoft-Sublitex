@@ -52,9 +52,6 @@ export function PrendaRow({
   return (
     <tr>
       <td className={styles.colIndex}>{index + 1}</td>
-      <td className={styles.cellGrupo}>
-        <span className={badgeClass} title={nombreGrupo}>{nombreGrupo}</span>
-      </td>
       <td className={styles.cellTruncate}>
         <span
           className={styles.participanteName}

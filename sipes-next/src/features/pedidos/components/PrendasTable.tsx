@@ -28,8 +28,7 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos, colores }: 
         <table className={styles.prendasTable}>
           <colgroup>
             <col style={{ width: "44px" }} />
-            <col style={{ width: "140px" }} />
-            <col style={{ width: "180px" }} />
+            <col style={{ width: "200px" }} />
             <col style={{ width: "140px" }} />
             <col style={{ width: "60px" }} />
             <col style={{ width: "70px" }} />
@@ -42,7 +41,6 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos, colores }: 
           <thead>
             <tr>
               <th className={styles.colIndex}>#</th>
-              <th>Grupo</th>
               <th>Participante</th>
               <th>Apodo</th>
               <th>N°</th>

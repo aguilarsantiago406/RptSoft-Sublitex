@@ -33,15 +33,13 @@ export function ParticipantesTable({
         <table className={styles.table}>
           <colgroup>
             <col style={{ width: "48px" }} />
-            <col style={{ width: "160px" }} />
-            <col style={{ width: "240px" }} />
+            <col style={{ width: "320px" }} />
             <col style={{ width: "130px" }} />
             <col style={{ width: "320px" }} />
           </colgroup>
           <thead>
             <tr>
               <th className={styles.colIndex}>#</th>
-              <th>Grupo</th>
               <th>Participante</th>
               <th>Estado</th>
               <th>Enlace WhatsApp</th>
