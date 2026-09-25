@@ -106,7 +106,7 @@
   border-collapse: collapse;
   font-size: 0.84rem;
   text-align: left;
-  min-width: 960px;
+  min-width: 1140px;
 }
 
 .prendasTable th {
@@ -115,7 +115,7 @@
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 12px 14px;
+  padding: 12px 10px;
   border-bottom: 1px solid #e2e8f0;
   white-space: nowrap;
   overflow: hidden;
@@ -123,10 +123,30 @@
 }
 
 .prendasTable td {
-  padding: 11px 14px;
+  padding: 11px 10px;
   border-bottom: 1px solid #f1f5f9;
   color: var(--navy);
   vertical-align: middle;
+  overflow: hidden;
+}
+
+.cellTruncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cellGrupo {
+  overflow: hidden;
+}
+
+.participanteName {
+  font-weight: 500;
+  color: var(--navy);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .prendasTable tbody tr:last-child td {
@@ -146,8 +166,11 @@
 }
 
 .groupBadgeKit {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
   font-size: 0.72rem;
   font-weight: 500;
   padding: 3px 8px;
@@ -159,8 +182,11 @@
 }
 
 .groupBadgeCamiseta {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
   font-size: 0.72rem;
   font-weight: 500;
   padding: 3px 8px;
@@ -172,8 +198,11 @@
 }
 
 .groupBadgeDefault {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
   font-size: 0.72rem;
   font-weight: 500;
   padding: 3px 8px;
@@ -220,6 +249,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
+  overflow: hidden;
 }
 
 .colorDot {
@@ -228,6 +258,12 @@
   border-radius: 50%;
   border: 1px solid rgba(0, 0, 0, 0.15);
   flex: 0 0 auto;
+}
+
+.colorName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .excepcionBadge {

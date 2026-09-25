@@ -50,13 +50,22 @@ export function PrendaRow({
   return (
     <tr>
       <td className={styles.colIndex}>{index + 1}</td>
-      <td>
-        <span className={badgeClass}>{nombreGrupo}</span>
+      <td className={styles.cellGrupo}>
+        <span className={badgeClass} title={nombreGrupo}>{nombreGrupo}</span>
       </td>
-      <td>
-        <span style={{ fontWeight: 500, color: "var(--navy)" }}>{prenda.participante?.nombrePersona || prenda.nombreEnPrenda || "Sin registrar"}</span>
+      <td className={styles.cellTruncate}>
+        <span
+          className={styles.participanteName}
+          title={prenda.participante?.nombrePersona || prenda.nombreEnPrenda || "Sin registrar"}
+        >
+          {prenda.participante?.nombrePersona || prenda.nombreEnPrenda || "Sin registrar"}
+        </span>
       </td>
-      <td>{prenda.nombreEnPrenda || "—"}</td>
+      <td className={styles.cellTruncate}>
+        <span title={prenda.nombreEnPrenda || "—"}>
+          {prenda.nombreEnPrenda || "—"}
+        </span>
+      </td>
       <td>
         <span className={esSinNumero ? styles.numeroSin : styles.numeroBadge}>
           {prenda.numero || "S/N"}
@@ -70,13 +79,12 @@ export function PrendaRow({
       </td>
       <td>
         {prenda.color ? (
-          <div className={styles.colorCell}>
+          <div className={styles.colorCell} title={`${prenda.color.nombre} (${prenda.color.codigoHex})`}>
             <span
               className={styles.colorDot}
               style={{ backgroundColor: prenda.color.codigoHex }}
-              title={`${prenda.color.nombre} (${prenda.color.codigoHex})`}
             />
-            <span>{prenda.color.nombre}</span>
+            <span className={styles.colorName}>{prenda.color.nombre}</span>
           </div>
         ) : (
           <span style={{ color: "#94a3b8" }}>—</span>

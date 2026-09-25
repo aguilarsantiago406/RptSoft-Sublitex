@@ -27,16 +27,16 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos }: PrendasTa
         <table className={styles.prendasTable}>
           <colgroup>
             <col style={{ width: "44px" }} />
-            <col style={{ width: "130px" }} />
-            <col style={{ width: "18%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "65px" }} />
+            <col style={{ width: "140px" }} />
+            <col style={{ width: "180px" }} />
+            <col style={{ width: "140px" }} />
+            <col style={{ width: "60px" }} />
             <col style={{ width: "70px" }} />
-            <col style={{ width: "85px" }} />
-            <col style={{ width: "125px" }} />
-            <col style={{ width: "115px" }} />
+            <col style={{ width: "90px" }} />
             <col style={{ width: "130px" }} />
-            <col style={{ width: "80px" }} />
+            <col style={{ width: "90px" }} />
+            <col style={{ width: "120px" }} />
+            <col style={{ width: "76px" }} />
           </colgroup>
           <thead>
             <tr>
@@ -46,7 +46,7 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos }: PrendasTa
               <th>Apodo</th>
               <th>N°</th>
               <th>Talla</th>
-              <th>Corte</th>
+              <th>Género</th>
               <th>Color</th>
               <th>Tipo</th>
               <th>Excepciones</th>

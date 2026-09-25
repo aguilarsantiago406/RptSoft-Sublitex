@@ -73,11 +73,16 @@ export function ParticipantesRow({
   return (
     <tr>
       <td className={styles.colIndex}>{index + 1}</td>
-      <td>
-        <span className={badgeClass}>{nombreGrupo}</span>
+      <td className={styles.cellGrupo}>
+        <span className={badgeClass} title={nombreGrupo}>{nombreGrupo}</span>
       </td>
-      <td>
-        <span style={{ fontWeight: 500, color: "var(--navy)" }}>{participante.nombrePersona}</span>
+      <td className={styles.cellTruncate}>
+        <span
+          className={styles.participanteNombre}
+          title={participante.nombrePersona}
+        >
+          {participante.nombrePersona}
+        </span>
       </td>
       <td>
         <span className={statusBadgeClass}>

@@ -137,7 +137,7 @@
   border-collapse: collapse;
   font-size: 0.84rem;
   text-align: left;
-  min-width: 860px;
+  min-width: 900px;
 }
 
 .table th {
@@ -149,6 +149,8 @@
   padding: 12px 14px;
   border-bottom: 1px solid #e2e8f0;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .table td {
@@ -156,6 +158,26 @@
   border-bottom: 1px solid #f1f5f9;
   color: var(--navy);
   vertical-align: middle;
+  overflow: hidden;
+}
+
+.cellTruncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cellGrupo {
+  overflow: hidden;
+}
+
+.participanteNombre {
+  font-weight: 500;
+  color: var(--navy);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .table tbody tr:last-child td {
@@ -217,8 +239,11 @@
 }
 
 .groupBadgeKit {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
   font-size: 0.72rem;
   font-weight: 500;
   padding: 3px 8px;
@@ -230,8 +255,11 @@
 }
 
 .groupBadgeCamiseta {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
   font-size: 0.72rem;
   font-weight: 500;
   padding: 3px 8px;
@@ -243,8 +271,11 @@
 }
 
 .groupBadgeDefault {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
   font-size: 0.72rem;
   font-weight: 500;
   padding: 3px 8px;

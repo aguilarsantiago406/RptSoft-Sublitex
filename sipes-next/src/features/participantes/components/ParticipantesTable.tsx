@@ -33,10 +33,10 @@ export function ParticipantesTable({
         <table className={styles.table}>
           <colgroup>
             <col style={{ width: "48px" }} />
-            <col style={{ width: "150px" }} />
+            <col style={{ width: "160px" }} />
             <col style={{ width: "240px" }} />
             <col style={{ width: "130px" }} />
-            <col style={{ width: "auto" }} />
+            <col style={{ width: "320px" }} />
           </colgroup>
           <thead>
             <tr>
