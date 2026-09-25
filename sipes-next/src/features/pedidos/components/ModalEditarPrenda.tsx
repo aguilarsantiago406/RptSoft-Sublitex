@@ -4,9 +4,17 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { AtributoCatalogoItem } from "../api/pedidos.api";
 import type { PrendaDetalle } from "../types/pedido";
-import { actionActualizarPrenda } from "../actions/pedidos.actions";
+import { actionActualizarPrenda } from "../actions/prendas.actions";
 import { SeccionExcepcionesPrenda } from "./SeccionExcepcionesPrenda";
 import styles from "./pedidos.module.css";
+
+const GENEROS = [
+  { val: "HOMBRE", label: "Hombre" },
+  { val: "MUJER", label: "Mujer" },
+  { val: "NINO", label: "Niño" },
+  { val: "NINA", label: "Niña" },
+  { val: "SIN_ESPECIFICAR", label: "Estándar / Sin especificar" },
+] as const;
 
 interface ModalEditarPrendaProps {
   isOpen: boolean;
@@ -15,6 +23,7 @@ interface ModalEditarPrendaProps {
   pedidoId: string;
   tallasDisponibles: Array<{ id: string; codigo: string; etiqueta: string }>;
   atributosCatalogo: AtributoCatalogoItem[];
+  coloresDisponibles?: Array<{ id: string; nombre: string; codigoHex: string }>;
 }
 
 export function ModalEditarPrenda({
@@ -24,15 +33,16 @@ export function ModalEditarPrenda({
   pedidoId,
   tallasDisponibles,
   atributosCatalogo,
+  coloresDisponibles = [],
 }: ModalEditarPrendaProps) {
   const router = useRouter();
   const [nombreEnPrenda, setNombreEnPrenda] = useState(prenda.nombreEnPrenda ?? "");
   const [numero, setNumero] = useState(prenda.numero ?? "");
   const [tallaId, setTallaId] = useState(prenda.tallaId ?? "");
-  const [genero, setGenero] = useState<
-    "HOMBRE" | "MUJER" | "NINO" | "NINA" | "SIN_ESPECIFICAR"
-  >(prenda.genero as any ?? "SIN_ESPECIFICAR");
-
+  const [genero, setGenero] = useState<typeof GENEROS[number]["val"]>(
+    (prenda.genero as any) ?? "SIN_ESPECIFICAR"
+  );
+  const [colorId, setColorId] = useState(prenda.colorId ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -41,20 +51,19 @@ export function ModalEditarPrenda({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-
     startTransition(async () => {
       const res = await actionActualizarPrenda(prenda.id, pedidoId, {
         nombreEnPrenda: nombreEnPrenda.trim() || undefined,
         numero: numero.trim() || undefined,
         tallaId: tallaId || undefined,
         genero,
+        colorId: colorId || undefined,
       });
 
       if (!res.ok) {
         setError(res.error || "No se pudo actualizar la prenda.");
         return;
       }
-
       onClose();
       router.refresh();
     });
@@ -69,25 +78,12 @@ export function ModalEditarPrenda({
         <div className={styles.modalHeader}>
           <div>
             <h3 className={styles.modalTitle}>Editar Prenda</h3>
-            <p className={styles.modalSubtitle}>
-              {nombrePersona} · {grupoNombre}
-            </p>
+            <p className={styles.modalSubtitle}>{nombrePersona} · {grupoNombre}</p>
           </div>
-          <button
-            type="button"
-            className={styles.modalCloseButton}
-            onClick={onClose}
-            aria-label="Cerrar"
-          >
-            ✕
-          </button>
+          <button type="button" className={styles.modalCloseButton} onClick={onClose} aria-label="Cerrar">✕</button>
         </div>
 
-        {error && (
-          <div className={styles.modalErrorBanner} role="alert">
-            {error}
-          </div>
-        )}
+        {error && <div className={styles.modalErrorBanner} role="alert">{error}</div>}
 
         <form onSubmit={handleSubmit} className={styles.modalFormCompact}>
           <div className={styles.formField}>
@@ -115,59 +111,38 @@ export function ModalEditarPrenda({
                 className={styles.formInput}
               />
             </div>
-
             <div className={styles.formField}>
               <label htmlFor="prenda-talla">Talla Oficial</label>
-              <select
-                id="prenda-talla"
-                value={tallaId}
-                onChange={(e) => setTallaId(e.target.value)}
-                className={styles.formInput}
-              >
+              <select id="prenda-talla" value={tallaId} onChange={(e) => setTallaId(e.target.value)} className={styles.formInput}>
                 <option value="">Sin especificar</option>
                 {tallasDisponibles.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.etiqueta || t.codigo}
-                  </option>
+                  <option key={t.id} value={t.id}>{t.etiqueta || t.codigo}</option>
                 ))}
               </select>
             </div>
           </div>
 
-          <div className={styles.formField}>
-            <label htmlFor="prenda-genero">Corte / Género del Portador</label>
-            <select
-              id="prenda-genero"
-              value={genero}
-              onChange={(e) =>
-                setGenero(
-                  e.target.value as "HOMBRE" | "MUJER" | "NINO" | "NINA" | "SIN_ESPECIFICAR"
-                )
-              }
-              className={styles.formInput}
-            >
-              <option value="HOMBRE">Hombre</option>
-              <option value="MUJER">Mujer</option>
-              <option value="NINO">Niño</option>
-              <option value="NINA">Niña</option>
-              <option value="SIN_ESPECIFICAR">Estándar / Sin especificar</option>
-            </select>
+          <div className={styles.twoColsLayout} style={{ gap: "10px" }}>
+            <div className={styles.formField}>
+              <label htmlFor="prenda-genero">Corte / Género del Portador</label>
+              <select id="prenda-genero" value={genero} onChange={(e) => setGenero(e.target.value as any)} className={styles.formInput}>
+                {GENEROS.map((g) => <option key={g.val} value={g.val}>{g.label}</option>)}
+              </select>
+            </div>
+            <div className={styles.formField}>
+              <label htmlFor="prenda-color">Color Oficial de la Prenda</label>
+              <select id="prenda-color" value={colorId} onChange={(e) => setColorId(e.target.value)} className={styles.formInput}>
+                <option value="">Por defecto del grupo</option>
+                {coloresDisponibles.map((c) => (
+                  <option key={c.id} value={c.id}>{c.nombre} ({c.codigoHex})</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className={styles.modalFooter}>
-            <button
-              type="button"
-              className={styles.modalCancelButton}
-              onClick={onClose}
-              disabled={isPending}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className={styles.modalSubmitButton}
-              disabled={isPending}
-            >
+            <button type="button" className={styles.modalCancelButton} onClick={onClose} disabled={isPending}>Cancelar</button>
+            <button type="submit" className={styles.modalSubmitButton} disabled={isPending}>
               {isPending ? "Guardando..." : "Guardar Ficha"}
             </button>
           </div>

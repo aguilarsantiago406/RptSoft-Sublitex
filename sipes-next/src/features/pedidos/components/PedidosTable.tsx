@@ -23,6 +23,7 @@ export function PedidosTable({ pedidos }: { pedidos: PedidoResumen[] }) {
             <tr>
               <th>Código</th>
               <th>Cliente</th>
+              <th>Asesora</th>
               <th>Estado</th>
               <th>Prendas</th>
               <th>Compromiso</th>
@@ -34,9 +35,40 @@ export function PedidosTable({ pedidos }: { pedidos: PedidoResumen[] }) {
               <tr key={pedido.id}>
                 <td className={styles.code}>{pedido.codigo}</td>
                 <td>{pedido.cliente.nombre}</td>
+                <td>
+                  {pedido.vendedora?.nombre ? (
+                    <span title={pedido.vendedora.nombre}>{pedido.vendedora.nombre}</span>
+                  ) : (
+                    <span style={{ color: "#94a3b8" }}>—</span>
+                  )}
+                </td>
                 <td><EstadoPedidoBadge estado={pedido.estado} /></td>
                 <td>{pedido.totalPrendas}</td>
-                <td>{formatDate(pedido.fechaCompromiso)}</td>
+                <td>
+                  <div>{formatDate(pedido.fechaCompromiso)}</div>
+                  {typeof pedido.tiempoDias === "number" && (
+                    <span
+                      style={{
+                        display: "inline-block",
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        marginTop: "2px",
+                        color:
+                          pedido.tiempoDias < 0
+                            ? "#e11d48"
+                            : pedido.tiempoDias <= 3
+                            ? "#d97706"
+                            : "#16a34a",
+                      }}
+                    >
+                      {pedido.tiempoDias < 0
+                        ? `Vencido (${Math.abs(pedido.tiempoDias)}d)`
+                        : pedido.tiempoDias === 0
+                        ? "Vence hoy"
+                        : `${pedido.tiempoDias}d restantes`}
+                    </span>
+                  )}
+                </td>
                 <td className={styles.actionCell}>
                   <Link className={styles.linkButton} href={`/pedidos/${pedido.id}`}>
                     Ver detalle

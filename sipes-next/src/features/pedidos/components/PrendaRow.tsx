@@ -10,6 +10,7 @@ interface PrendaRowProps {
   pedidoId: string;
   tallasDisponibles: Array<{ id: string; codigo: string; etiqueta: string }>;
   atributosCatalogo: AtributoCatalogoItem[];
+  coloresDisponibles?: Array<{ id: string; nombre: string; codigoHex: string }>;
 }
 
 function formatGenero(genero: string): string {
@@ -41,6 +42,7 @@ export function PrendaRow({
   pedidoId,
   tallasDisponibles,
   atributosCatalogo,
+  coloresDisponibles,
 }: PrendaRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const nombreGrupo = prenda.grupo?.nombre ?? "Sin grupo";
@@ -122,6 +124,7 @@ export function PrendaRow({
             pedidoId={pedidoId}
             tallasDisponibles={tallasDisponibles}
             atributosCatalogo={atributosCatalogo}
+            coloresDisponibles={coloresDisponibles}
           />
         )}
       </td>

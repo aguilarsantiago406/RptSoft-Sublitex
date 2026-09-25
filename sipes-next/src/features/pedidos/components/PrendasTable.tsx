@@ -8,9 +8,10 @@ interface PrendasTableProps {
   pedidoId: string;
   tallas: TallaCatalogoItem[];
   atributos: AtributoCatalogoItem[];
+  colores?: Array<{ id: string; nombre: string; codigoHex: string }>;
 }
 
-export function PrendasTable({ prendas, pedidoId, tallas, atributos }: PrendasTableProps) {
+export function PrendasTable({ prendas, pedidoId, tallas, atributos, colores }: PrendasTableProps) {
   if (prendas.length === 0) {
     return (
       <div className={styles.tableCard}>
@@ -66,6 +67,7 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos }: PrendasTa
                   pedidoId={pedidoId}
                   tallasDisponibles={tallasPrenda.length > 0 ? tallasPrenda : tallas}
                   atributosCatalogo={atributos}
+                  coloresDisponibles={colores}
                 />
               );
             })}

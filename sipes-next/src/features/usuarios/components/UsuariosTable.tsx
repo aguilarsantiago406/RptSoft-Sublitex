@@ -14,6 +14,7 @@ function getRoleBadgeClass(rol: RolUsuario): string {
       return styles.roleAdmin;
     case "COORDINADOR_OPERATIVO":
       return styles.roleCoordinador;
+    case "VENDEDOR":
     case "VENDEDORA":
       return styles.roleVendedora;
     case "DISENO":
@@ -33,6 +34,8 @@ function formatRoleLabel(rol: RolUsuario): string {
       return "Administrador";
     case "COORDINADOR_OPERATIVO":
       return "Coord. Operativo";
+    case "VENDEDOR":
+      return "Vendedor";
     case "VENDEDORA":
       return "Vendedora";
     case "DISENO":

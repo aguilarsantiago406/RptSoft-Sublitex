@@ -133,6 +133,7 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
         pedidoId={id}
         tallas={tallasCatalogo ?? []}
         atributos={atributosCatalogo ?? []}
+        colores={pedido.colores}
       />
     </main>
   );

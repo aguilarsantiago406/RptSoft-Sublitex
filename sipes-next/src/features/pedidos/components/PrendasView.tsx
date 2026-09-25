@@ -12,6 +12,7 @@ interface PrendasViewProps {
   pedidoId: string;
   tallas: TallaCatalogoItem[];
   atributos: AtributoCatalogoItem[];
+  colores?: Array<{ id: string; nombre: string; codigoHex: string }>;
 }
 
 export function PrendasView({
@@ -20,6 +21,7 @@ export function PrendasView({
   pedidoId,
   tallas,
   atributos,
+  colores,
 }: PrendasViewProps) {
   const [grupoActivo, setGrupoActivo] = useState<string>("TODOS");
   const [busqueda, setBusqueda] = useState<string>("");
@@ -128,6 +130,7 @@ export function PrendasView({
         pedidoId={pedidoId}
         tallas={tallas}
         atributos={atributos}
+        colores={colores}
       />
 
       <div className={styles.countSummary}>
