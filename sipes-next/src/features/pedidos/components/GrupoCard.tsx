@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 import type { GrupoPedido } from "../types/pedido";
 import styles from "./pedidos.module.css";
 
@@ -46,7 +47,7 @@ export function GrupoCard({
             title={`Editar grupo ${grupo.nombre}`}
             aria-label={`Editar grupo ${grupo.nombre}`}
           >
-            ✏️
+            <Pencil size={14} />
           </button>
           <button
             type="button"
