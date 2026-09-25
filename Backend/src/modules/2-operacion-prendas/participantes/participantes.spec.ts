@@ -27,6 +27,9 @@ describe('🔴 TDD BK2: ParticipantesService (Bloque D)', () => {
     colorPedido: {
       findFirst: jest.fn(),
     },
+    grupo: {
+      findUnique: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -227,4 +230,136 @@ describe('🔴 TDD BK2: ParticipantesService (Bloque D)', () => {
       await expect(service.eliminar('part_1')).rejects.toThrow(BadRequestException);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // R-D05 / R-D06 / R-I04: COMPILADOR Y EXPORTADOR DE ENLACES PARA WHATSAPP
+  // ---------------------------------------------------------------------------
+  describe('R-D05 / R-D06: Compilador de Enlaces para WhatsApp Grupal', () => {
+    it('debe lanzar NotFoundException si el grupo no existe', async () => {
+      mockPrisma.grupo.findUnique.mockResolvedValue(null);
+
+      await expect(service.obtenerEnlacesWhatsApp('grp_inexistente')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('debe compilar enlaces y generar el mensaje formateado para WhatsApp grupal', async () => {
+      mockPrisma.grupo.findUnique.mockResolvedValue({
+        id: 'grp_promo',
+        nombre: 'Polos Alumnos',
+        pedidoId: 'ped_842',
+        pedido: {
+          id: 'ped_842',
+          codigo: 'SUB-000842',
+        },
+      });
+
+      mockPrisma.participante.findMany.mockResolvedValue([
+        {
+          id: 'part_1',
+          nombrePersona: 'Ana Li',
+          estado: 'PENDIENTE',
+          enlaceToken: 'tok_anali123',
+          enlaceExpiraEn: new Date(Date.now() + 5 * 86400000),
+          enlaceRevocado: false,
+        },
+        {
+          id: 'part_2',
+          nombrePersona: 'Carlos Chapoñán',
+          estado: 'REGISTRADO',
+          enlaceToken: 'tok_chapo456',
+          enlaceExpiraEn: new Date(Date.now() + 5 * 86400000),
+          enlaceRevocado: false,
+        },
+      ]);
+
+      const res = await service.obtenerEnlacesWhatsApp('grp_promo');
+
+      expect(res.pedidoCodigo).toBe('SUB-000842');
+      expect(res.grupoNombre).toBe('Polos Alumnos');
+      expect(res.total).toBe(2);
+      expect(res.soloPendientes).toBe(false);
+      expect(res.participantes).toHaveLength(2);
+      expect(res.participantes[0].url).toContain('/ficha/tok_anali123');
+      expect(res.participantes[0].valido).toBe(true);
+
+      // Verificamos que el mensaje formateado para el coordinador contenga emojis y enlaces
+      expect(res.mensajeGrupal).toContain('📢 *Registro de Tallas y Nombres — SUB-000842 (Polos Alumnos)*');
+      expect(res.mensajeGrupal).toContain('👉 *Ana Li*:');
+      expect(res.mensajeGrupal).toContain('👉 *Carlos Chapoñán*:');
+      expect(res.mensajeGrupal).toContain('/ficha/tok_anali123');
+    });
+
+    it('debe filtrar solo participantes PENDIENTES si soloPendientes=true', async () => {
+      mockPrisma.grupo.findUnique.mockResolvedValue({
+        id: 'grp_promo',
+        nombre: 'Polos Alumnos',
+        pedidoId: 'ped_842',
+        pedido: {
+          id: 'ped_842',
+          codigo: 'SUB-000842',
+        },
+      });
+
+      mockPrisma.participante.findMany.mockResolvedValue([
+        {
+          id: 'part_1',
+          nombrePersona: 'Ana Li',
+          estado: 'PENDIENTE',
+          enlaceToken: 'tok_anali123',
+          enlaceExpiraEn: new Date(Date.now() + 5 * 86400000),
+          enlaceRevocado: false,
+        },
+      ]);
+
+      const res = await service.obtenerEnlacesWhatsApp('grp_promo', true);
+
+      expect(mockPrisma.participante.findMany).toHaveBeenCalledWith({
+        where: { grupoId: 'grp_promo', estado: 'PENDIENTE' },
+        orderBy: { nombrePersona: 'asc' },
+      });
+      expect(res.total).toBe(1);
+      expect(res.soloPendientes).toBe(true);
+      expect(res.mensajeGrupal).toContain('📢 *Recordatorio: Registro de Tallas y Nombres');
+    });
+
+    it('debe marcar valido=false si el enlace fue revocado o ha expirado', async () => {
+      mockPrisma.grupo.findUnique.mockResolvedValue({
+        id: 'grp_promo',
+        nombre: 'Polos Alumnos',
+        pedidoId: 'ped_842',
+        pedido: {
+          id: 'ped_842',
+          codigo: 'SUB-000842',
+        },
+      });
+
+      mockPrisma.participante.findMany.mockResolvedValue([
+        {
+          id: 'part_exp',
+          nombrePersona: 'Hada Expirada',
+          estado: 'PENDIENTE',
+          enlaceToken: 'tok_exp123',
+          enlaceExpiraEn: new Date(Date.now() - 86400000), // Venció ayer
+          enlaceRevocado: false,
+        },
+        {
+          id: 'part_rev',
+          nombrePersona: 'Pedro Revocado',
+          estado: 'PENDIENTE',
+          enlaceToken: 'tok_rev456',
+          enlaceExpiraEn: new Date(Date.now() + 86400000),
+          enlaceRevocado: true, // Revocado
+        },
+      ]);
+
+      const res = await service.obtenerEnlacesWhatsApp('grp_promo');
+
+      expect(res.participantes[0].expirado).toBe(true);
+      expect(res.participantes[0].valido).toBe(false);
+      expect(res.participantes[1].enlaceRevocado).toBe(true);
+      expect(res.participantes[1].valido).toBe(false);
+    });
+  });
 });
+
