@@ -1,6 +1,7 @@
 import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { TipoTarifa } from '@prisma/client';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { PdfService } from '../../../core/pdf/pdf.service';
 import { CreateTarifaDto } from './dto/create-tarifa.dto';
 import { UpdateTarifaDto } from './dto/update-tarifa.dto';
 import { CreateDatosEnvioDto } from './dto/create-datos-envio.dto';
@@ -9,7 +10,10 @@ import { EmitirConfirmacionDto } from './dto/emitir-confirmacion.dto';
 
 @Injectable()
 export class ComercialService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly pdfService: PdfService,
+  ) {}
 
   async createTarifa(dto: CreateTarifaDto) {
     const vigenteDesde = new Date(dto.vigenteDesde);
@@ -166,6 +170,7 @@ export class ComercialService {
     const pedido = await this.prisma.pedido.findUnique({
       where: { id: pedidoId },
       include: {
+        cliente: true,
         grupos: {
           include: {
             tipoProducto: true,
@@ -202,10 +207,17 @@ export class ComercialService {
     const adicionales = dto.adicionales ?? 0;
 
     let baseProductos = 0;
+    const gruposDetalle: { nombre: string; tipoProducto: string; cantidadContratada: number; prendasVenta: number }[] = [];
     for (const grupo of pedido.grupos) {
       const tarifaProducto = await this.getTarifaVigentePorConcepto('PRODUCTO', grupo.tipoProducto.nombre);
       const prendasVenta = grupo.prendas.length > 0 ? grupo.prendas.length : grupo.cantidadContratada;
       baseProductos += prendasVenta * tarifaProducto;
+      gruposDetalle.push({
+        nombre: grupo.nombre,
+        tipoProducto: grupo.tipoProducto.nombre,
+        cantidadContratada: grupo.cantidadContratada,
+        prendasVenta,
+      });
     }
 
     const totalSinIgv = Math.round((baseProductos + recargoTallas + recargoTelas + recargoCuellos + recargoAcabados + adicionales) * 100) / 100;
@@ -215,6 +227,25 @@ export class ComercialService {
     const igvCalculado = (dto.comprobante === 'FACTURA' || (dto.comprobante as any) === 'FACTURA')
       ? Math.round(totalSinIgv * 0.18 * 100) / 100
       : null;
+
+    const pdfUrl = await this.pdfService.generarConfirmacionPdf({
+      codigo: pedido.codigo,
+      version: siguienteVersion,
+      clienteNombre: pedido.cliente.nombre,
+      fechaEmision: new Date(),
+      grupos: gruposDetalle,
+      totalSinIgv,
+      recargoTallas,
+      recargoTelas,
+      recargoCuellos,
+      recargoAcabados,
+      adicionales,
+      adelantoSugerido,
+      adelantoRecibido,
+      saldo,
+      igvCalculado,
+      comprobante: dto.comprobante ?? 'NINGUNO',
+    });
 
     return this.prisma.confirmacion.create({
       data: {
@@ -231,7 +262,7 @@ export class ComercialService {
         saldo,
         comprobante: dto.comprobante ?? 'NINGUNO',
         igvCalculado,
-        pdfUrl: dto.pdfUrl,
+        pdfUrl,
         emitidaPorId: autorId,
       },
     });
