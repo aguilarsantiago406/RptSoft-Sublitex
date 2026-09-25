@@ -14,7 +14,8 @@
 | **BK2** | Operación de Prendas | 5 controladores | **17** | JWT (Privados) + Token Enlace (Públicos) |
 | **BK3** | Diseño · Taller-Producción · Auditoría | 3 controladores | **14** | JWT Bearer Token |
 | **BK1** | Núcleo Comercial · Gobernanza · Auth | 8 controladores | **37** | JWT Bearer Token |
-| **TOTAL** | **Plataforma Completa** | **16 controladores** | **68** | **Seguridad integral por roles** |
+| **Core** | Infraestructura / Supabase Storage | 1 controlador | **3** | JWT Bearer Token / Healthcheck |
+| **TOTAL** | **Plataforma Completa** | **17 controladores** | **71** | **Seguridad integral por roles** |
 
 ---
 
@@ -252,3 +253,19 @@
 | `PATCH` | `/api/auth/users/:id` | Modifica datos o rol de un usuario. | `R-J01` |
 | `PUT` | `/api/auth/change-password` | Permite al usuario autenticado cambiar su contraseña actual. | `R-J01` |
 | `DELETE` | `/api/auth/users/:id` | Desactiva a un usuario del sistema. | `R-J01` |
+
+---
+
+## 🟣 SECCIÓN 4: CORE INFRAESTRUCTURA — ALMACENAMIENTO (`core/storage`)
+
+### 4.1 Supabase Storage: Subida y Gestión de Archivos Físicos
+> **Módulo:** `core/storage`  
+> **Controlador:** `StorageController`  
+> **Autenticación:** JWT para subida y borrado / Público para healthcheck
+
+| Método | Endpoint | Descripción | Reglas |
+|---|---|---|---|
+| `GET` | `/api/archivos/estado` | Verifica si Supabase Storage está activo y configurado con credenciales en el servidor. | Infra |
+| `POST` | `/api/archivos/subir` | Sube un archivo o imagen (`multipart/form-data`) a Supabase Storage y retorna su URL pública inmutable (soporta query `?carpeta=disenos\|mockups\|tifs`). | `R-H11`, `R-K13` |
+| `DELETE` | `/api/archivos` | Elimina un archivo físico almacenado en Supabase Storage mediante su path (`?path=carpeta/archivo.ext`). | Infra |
+
