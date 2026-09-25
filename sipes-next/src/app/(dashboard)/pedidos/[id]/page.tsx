@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { getPedido, getTiposProducto } from "@/features/pedidos/api/pedidos.api";
+import { getPedido, getTiposProducto, getAtributosCatalogo } from "@/features/pedidos/api/pedidos.api";
 import { getDatosEnvio } from "@/features/pedidos/api/comercial.api";
+import { getUsuarios } from "@/features/usuarios/api/usuarios.api";
 import { PedidoHeader } from "@/features/pedidos/components/PedidoHeader";
 import { PedidoIdentificacion } from "@/features/pedidos/components/PedidoIdentificacion";
 import { PedidoGrupos } from "@/features/pedidos/components/PedidoGrupos";
@@ -21,19 +22,38 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   let pedido;
   let tiposProducto = [];
   let datosEnvio;
+  let usuarios = [];
+  let atributosCatalogo = [];
 
   try {
-    const [pedidoRes, tiposRes, envioRes] = await Promise.all([
+    const [pedidoRes, tiposRes, envioRes, usuariosRes, atributosRes] = await Promise.all([
       getPedido(id),
       getTiposProducto().catch(() => []),
       getDatosEnvio(id).catch(() => null),
+      getUsuarios().catch(() => []),
+      getAtributosCatalogo().catch(() => []),
     ]);
     pedido = pedidoRes;
     tiposProducto = tiposRes;
     datosEnvio = envioRes;
+    usuarios = usuariosRes;
+    atributosCatalogo = atributosRes;
   } catch (error) {
     if (error instanceof SipesApiError && error.status === 404) notFound();
     throw error;
+  }
+
+  let vendedoras = (usuarios ?? [])
+    .filter((u) => u.activo && (u.rol === "VENDEDORA" || u.rol === "VENDEDOR"))
+    .map((u) => ({ id: u.id, nombre: u.nombre }));
+
+  if (vendedoras.length === 0) {
+    vendedoras = (usuarios ?? [])
+      .filter((u) => u.activo && (u.rol === "ADMINISTRADOR" || u.rol === "COORDINADOR_OPERATIVO"))
+      .map((u) => ({
+        id: u.id,
+        nombre: `${u.nombre} (${u.rol === "ADMINISTRADOR" ? "Admin" : "Coordinador"})`,
+      }));
   }
 
   const totalPrendas = pedido.grupos.reduce((acc, g) => acc + g.cantidadContratada, 0);
@@ -42,12 +62,13 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
     <main>
       <PedidoHeader pedido={pedido} />
       <div className={styles.sheetContainer}>
-        <PedidoIdentificacion pedido={pedido} />
+        <PedidoIdentificacion pedido={pedido} vendedoras={vendedoras} />
         <PedidoGrupos
           grupos={pedido.grupos}
           pedidoId={pedido.id}
           totalPrendas={totalPrendas}
           tiposProducto={tiposProducto}
+          atributosCatalogo={atributosCatalogo}
         />
         <PedidoEnvio pedidoId={pedido.id} datosEnvio={datosEnvio} />
         <div className={styles.twoColsLayout}>

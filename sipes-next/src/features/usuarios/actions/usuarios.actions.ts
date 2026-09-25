@@ -5,6 +5,7 @@ import {
   createUsuario,
   updateUsuario,
   deleteUsuario,
+  changePasswordUsuario,
 } from "../api/usuarios.api";
 import type { CreateUsuarioInput, UpdateUsuarioInput } from "../types/usuario";
 
@@ -88,3 +89,24 @@ export async function actionEliminarUsuario(id: string) {
     return { ok: false, error: message };
   }
 }
+
+export async function actionCambiarPasswordUsuario(
+  id: string,
+  newPassword: string,
+  currentPassword?: string
+) {
+  try {
+    if (!newPassword || newPassword.length < 6) {
+      return { ok: false, error: "La nueva contraseña debe tener al menos 6 caracteres." };
+    }
+
+    await changePasswordUsuario(id, newPassword, currentPassword);
+    revalidatePath("/usuarios");
+    return { ok: true };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Error al actualizar la contraseña.";
+    return { ok: false, error: message };
+  }
+}
+

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import { actionActualizarUsuario } from "../actions/usuarios.actions";
+import { actionActualizarUsuario, actionCambiarPasswordUsuario } from "../actions/usuarios.actions";
 import { ROLES_DISPONIBLES, type UsuarioItem, type RolUsuario } from "../types/usuario";
 import styles from "./usuarios.module.css";
 
@@ -19,6 +19,7 @@ export function ModalEditarUsuario({
   const [nombre, setNombre] = useState("");
   const [rol, setRol] = useState<RolUsuario>("VENDEDORA");
   const [activo, setActivo] = useState(true);
+  const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -27,6 +28,7 @@ export function ModalEditarUsuario({
       setNombre(usuario.nombre);
       setRol(usuario.rol);
       setActivo(usuario.activo);
+      setNewPassword("");
       setError(null);
     }
   }, [usuario]);
@@ -34,6 +36,7 @@ export function ModalEditarUsuario({
   if (!isOpen || !usuario) return null;
 
   function handleClose() {
+    setNewPassword("");
     setError(null);
     onClose();
   }
@@ -41,9 +44,9 @@ export function ModalEditarUsuario({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!usuario) return;
-    if (!nombre.trim()) {
-      setError("El nombre es obligatorio.");
-      return;
+    if (!nombre.trim()) return setError("El nombre es obligatorio.");
+    if (newPassword && newPassword.length < 6) {
+      return setError("La nueva contraseña debe tener al menos 6 caracteres.");
     }
 
     setError(null);
@@ -54,9 +57,11 @@ export function ModalEditarUsuario({
         activo,
       });
 
-      if (!res.ok) {
-        setError(res.error || "No se pudo actualizar el usuario.");
-        return;
+      if (!res.ok) return setError(res.error || "No se pudo actualizar el usuario.");
+
+      if (newPassword.trim()) {
+        const pwdRes = await actionCambiarPasswordUsuario(usuario.id, newPassword.trim());
+        if (!pwdRes.ok) return setError(pwdRes.error || "No se pudo cambiar la contraseña.");
       }
 
       handleClose();
@@ -71,27 +76,14 @@ export function ModalEditarUsuario({
             <h3 className={styles.modalTitle}>Editar Usuario</h3>
             <p className={styles.modalSubtitle}>{usuario.email}</p>
           </div>
-          <button
-            type="button"
-            className={styles.modalCloseButton}
-            onClick={handleClose}
-            aria-label="Cerrar"
-          >
-            ✕
-          </button>
+          <button type="button" className={styles.modalCloseButton} onClick={handleClose} aria-label="Cerrar">✕</button>
         </header>
 
-        {error && (
-          <div className={styles.modalErrorBanner} role="alert">
-            {error}
-          </div>
-        )}
+        {error && <div className={styles.modalErrorBanner} role="alert">{error}</div>}
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
-            <label htmlFor="edit-usr-nombre" className={styles.label}>
-              Nombre Completo *
-            </label>
+            <label htmlFor="edit-usr-nombre" className={styles.label}>Nombre Completo *</label>
             <input
               id="edit-usr-nombre"
               type="text"
@@ -104,9 +96,7 @@ export function ModalEditarUsuario({
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="edit-usr-rol" className={styles.label}>
-              Rol Operativo en el Sistema *
-            </label>
+            <label htmlFor="edit-usr-rol" className={styles.label}>Rol Operativo en el Sistema *</label>
             <select
               id="edit-usr-rol"
               className={styles.select}
@@ -115,11 +105,26 @@ export function ModalEditarUsuario({
               disabled={isPending}
             >
               {ROLES_DISPONIBLES.map((r) => (
-                <option key={r.rol} value={r.rol}>
-                  {r.label}
-                </option>
+                <option key={r.rol} value={r.rol}>{r.label}</option>
               ))}
             </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="edit-usr-pwd" className={styles.label}>Restablecer Contraseña (Opcional)</label>
+            <input
+              id="edit-usr-pwd"
+              type="password"
+              placeholder="Dejar vacío para no modificar"
+              className={styles.input}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              disabled={isPending}
+              autoComplete="new-password"
+            />
+            <span style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "4px", display: "block" }}>
+              Blanqueo administrativo directo (mínimo 6 caracteres).
+            </span>
           </div>
 
           <label className={styles.checkboxRow}>
@@ -133,19 +138,10 @@ export function ModalEditarUsuario({
           </label>
 
           <footer className={styles.modalFooter}>
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              onClick={handleClose}
-              disabled={isPending}
-            >
+            <button type="button" className={styles.secondaryButton} onClick={handleClose} disabled={isPending}>
               Cancelar
             </button>
-            <button
-              type="submit"
-              className={styles.submitButton}
-              disabled={isPending}
-            >
+            <button type="submit" className={styles.submitButton} disabled={isPending}>
               {isPending ? "Guardando..." : "Actualizar Usuario"}
             </button>
           </footer>

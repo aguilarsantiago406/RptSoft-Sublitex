@@ -1,12 +1,19 @@
+"use client";
+
+import { useState } from "react";
 import type { PedidoDetalle } from "../types/pedido";
 import { formatDate } from "@/lib/format/date";
+import { ModalEditarPedido } from "./ModalEditarPedido";
 import styles from "./pedidos.module.css";
 
 interface PedidoIdentificacionProps {
   pedido: PedidoDetalle;
+  vendedoras?: Array<{ id: string; nombre: string }>;
 }
 
-export function PedidoIdentificacion({ pedido }: PedidoIdentificacionProps) {
+export function PedidoIdentificacion({ pedido, vendedoras = [] }: PedidoIdentificacionProps) {
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
   return (
     <section className={styles.sectionBlock}>
       <div className={styles.sectionHeaderRow}>
@@ -14,6 +21,14 @@ export function PedidoIdentificacion({ pedido }: PedidoIdentificacionProps) {
           <h2 className={styles.sectionTitle}>1 · IDENTIFICACIÓN</h2>
           <p className={styles.sectionSubtitle}>Datos generales de la orden y contacto comercial</p>
         </div>
+        <button
+          type="button"
+          className={styles.envioEditButton}
+          onClick={() => setIsEditOpen(true)}
+          title="Modificar fecha de entrega, asesor u observaciones"
+        >
+          Editar identificación
+        </button>
       </div>
       <dl className={styles.dataGrid4}>
         <div>
@@ -27,6 +42,10 @@ export function PedidoIdentificacion({ pedido }: PedidoIdentificacionProps) {
         <div>
           <dt>Fecha de entrega / compromiso</dt>
           <dd>{formatDate(pedido.fechaCompromiso)}</dd>
+        </div>
+        <div>
+          <dt>Asesora comercial</dt>
+          <dd>{pedido.vendedora?.nombre || "Sin asignar"}</dd>
         </div>
         <div>
           <dt>Cliente</dt>
@@ -47,6 +66,15 @@ export function PedidoIdentificacion({ pedido }: PedidoIdentificacionProps) {
           </div>
         )}
       </dl>
+
+      {isEditOpen && (
+        <ModalEditarPedido
+          isOpen={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          pedido={pedido}
+          vendedoras={vendedoras}
+        />
+      )}
     </section>
   );
 }

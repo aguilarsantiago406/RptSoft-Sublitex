@@ -24,9 +24,18 @@ export default async function PedidosPage({ searchParams }: PedidosPageProps) {
     getUsuarios().catch(() => []),
   ]);
 
-  const vendedoras = (usuarios ?? [])
+  let vendedoras = (usuarios ?? [])
     .filter((u) => u.activo && (u.rol === "VENDEDORA" || u.rol === "VENDEDOR"))
     .map((u) => ({ id: u.id, nombre: u.nombre }));
+
+  if (vendedoras.length === 0) {
+    vendedoras = (usuarios ?? [])
+      .filter((u) => u.activo && (u.rol === "ADMINISTRADOR" || u.rol === "COORDINADOR_OPERATIVO"))
+      .map((u) => ({
+        id: u.id,
+        nombre: `${u.nombre} (${u.rol === "ADMINISTRADOR" ? "Admin" : "Coordinador"})`,
+      }));
+  }
 
   return (
     <main>

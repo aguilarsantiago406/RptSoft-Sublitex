@@ -37,37 +37,74 @@ export interface AgregarColorParams {
   referenciaFisica?: string;
 }
 
+const hexRegex = /^#([0-9A-F]{6})$/;
+
+function sanitizarColor(item: AgregarColorParams) {
+  const nombre = item.nombre.trim();
+  const codigoHex = item.codigoHex.trim().toUpperCase();
+  const referenciaFisica = item.referenciaFisica?.trim() || undefined;
+
+  if (!nombre) throw new Error("El nombre del color es obligatorio.");
+  if (!hexRegex.test(codigoHex)) {
+    throw new Error(`Código HEX '${codigoHex}' inválido. Debe tener formato #RRGGBB.`);
+  }
+  return { nombre, codigoHex, referenciaFisica };
+}
+
 export async function actionAgregarColorPedido(
   pedidoId: string,
-  data: AgregarColorParams
+  data: AgregarColorParams | AgregarColorParams[]
 ): Promise<{ ok: boolean; error?: string }> {
-  const nombre = data.nombre.trim();
-  const codigoHex = data.codigoHex.trim().toUpperCase();
-  const referenciaFisica = data.referenciaFisica?.trim() || undefined;
-
-  if (!nombre) {
-    return { ok: false, error: "El nombre del color es obligatorio." };
-  }
-
-  const hexRegex = /^#([0-9A-F]{6})$/;
-  if (!hexRegex.test(codigoHex)) {
-    return { ok: false, error: "El código HEX debe tener formato #RRGGBB (ej: #001489)." };
-  }
-
   try {
-    await apiPost(`/api/pedidos/${encodeURIComponent(pedidoId)}/colores`, {
-      nombre,
-      codigoHex,
-      referenciaFisica,
-    });
+    const payload = Array.isArray(data)
+      ? data.map(sanitizarColor)
+      : sanitizarColor(data);
 
+    if (Array.isArray(payload) && payload.length === 0) {
+      return { ok: false, error: "Debes enviar al menos un color." };
+    }
+
+    await apiPost(`/api/pedidos/${encodeURIComponent(pedidoId)}/colores`, payload);
     revalidatePath(`/pedidos/${pedidoId}`);
     return { ok: true };
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof SipesApiError) {
       return { ok: false, error: error.message };
     }
-    return { ok: false, error: "No se pudo registrar el color en el pedido." };
+    return { ok: false, error: error?.message || "No se pudo registrar el color en el pedido." };
+  }
+}
+
+export interface UpdatePedidoCabeceraParams {
+  fechaCompromiso?: string;
+  vendedoraId?: string | null;
+  observaciones?: string;
+}
+
+export async function actionActualizarCabeceraPedido(
+  pedidoId: string,
+  data: UpdatePedidoCabeceraParams
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    let fechaCompromisoISO: string | undefined;
+    if (data.fechaCompromiso) {
+      const d = new Date(data.fechaCompromiso);
+      if (isNaN(d.getTime())) return { ok: false, error: "Fecha de compromiso inválida." };
+      fechaCompromisoISO = d.toISOString();
+    }
+
+    await apiPatch(`/api/pedidos/${encodeURIComponent(pedidoId)}`, {
+      fechaCompromiso: fechaCompromisoISO,
+      vendedoraId: data.vendedoraId || undefined,
+      observaciones: data.observaciones?.trim() || undefined,
+    });
+
+    revalidatePath(`/pedidos/${pedidoId}`);
+    revalidatePath("/pedidos");
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) return { ok: false, error: error.message };
+    return { ok: false, error: "No se pudo actualizar la información del pedido." };
   }
 }
 

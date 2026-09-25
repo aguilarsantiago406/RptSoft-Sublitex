@@ -105,22 +105,22 @@ export function ModalNuevoPedido({
             </select>
           </div>
 
-          {vendedoras.length > 0 && (
-            <div className={styles.formField}>
-              <label htmlFor="pedido-vendedora">Asesora / Vendedor Comercial (Opcional)</label>
-              <select
-                id="pedido-vendedora"
-                value={vendedoraId}
-                onChange={(e) => setVendedoraId(e.target.value)}
-                className={styles.formInput}
-              >
-                <option value="">Sin asesora asignada</option>
-                {vendedoras.map((v) => (
-                  <option key={v.id} value={v.id}>{v.nombre}</option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div className={styles.formField}>
+            <label htmlFor="pedido-vendedora">Asesora / Vendedor Comercial (Opcional)</label>
+            <select
+              id="pedido-vendedora"
+              value={vendedoraId}
+              onChange={(e) => setVendedoraId(e.target.value)}
+              className={styles.formInput}
+            >
+              <option value="">
+                {vendedoras.length > 0 ? "Sin asesora asignada" : "Sin asesora asignada (opcional)"}
+              </option>
+              {vendedoras.map((v) => (
+                <option key={v.id} value={v.id}>{v.nombre}</option>
+              ))}
+            </select>
+          </div>
 
           <div className={styles.formField}>
             <label htmlFor="pedido-fecha">Fecha de compromiso de entrega *</label>

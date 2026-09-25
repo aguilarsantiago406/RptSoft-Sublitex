@@ -24,3 +24,15 @@ export async function updateUsuario(
 export async function deleteUsuario(id: string): Promise<void> {
   return apiDelete<void>(`/api/auth/${encodeURIComponent(id)}`);
 }
+
+export async function changePasswordUsuario(
+  id: string,
+  newPassword: string,
+  currentPassword?: string
+): Promise<{ message: string }> {
+  return apiPatch<{ message: string }>(`/api/auth/${encodeURIComponent(id)}/password`, {
+    newPassword,
+    currentPassword: currentPassword?.trim() || undefined,
+  });
+}
+
