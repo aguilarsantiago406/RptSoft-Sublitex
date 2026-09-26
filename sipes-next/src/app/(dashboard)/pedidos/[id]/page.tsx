@@ -2,10 +2,12 @@ import { notFound } from "next/navigation";
 import { getPedido, getTiposProducto, getAtributosCatalogo } from "@/features/pedidos/api/pedidos.api";
 import { getDatosEnvio } from "@/features/pedidos/api/comercial.api";
 import { getUsuarios } from "@/features/usuarios/api/usuarios.api";
+import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { PedidoHeader } from "@/features/pedidos/components/PedidoHeader";
 import { PedidoIdentificacion } from "@/features/pedidos/components/PedidoIdentificacion";
 import { PedidoGrupos } from "@/features/pedidos/components/PedidoGrupos";
 import { PedidoEnvio } from "@/features/pedidos/components/PedidoEnvio";
+import { PedidoDiseno } from "@/features/pedidos/components/PedidoDiseno";
 import { PedidoColores } from "@/features/pedidos/components/PedidoColores";
 import { PedidoRevision } from "@/features/pedidos/components/PedidoRevision";
 import styles from "@/features/pedidos/components/pedidos.module.css";
@@ -24,20 +26,23 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   let datosEnvio;
   let usuarios = [];
   let atributosCatalogo = [];
+  let disenos = [];
 
   try {
-    const [pedidoRes, tiposRes, envioRes, usuariosRes, atributosRes] = await Promise.all([
+    const [pedidoRes, tiposRes, envioRes, usuariosRes, atributosRes, disenosRes] = await Promise.all([
       getPedido(id),
       getTiposProducto().catch(() => []),
       getDatosEnvio(id).catch(() => null),
       getUsuarios().catch(() => []),
       getAtributosCatalogo().catch(() => []),
+      getDisenosPedido(id).catch(() => []),
     ]);
     pedido = pedidoRes;
     tiposProducto = tiposRes;
     datosEnvio = envioRes;
     usuarios = usuariosRes;
     atributosCatalogo = atributosRes;
+    disenos = disenosRes;
   } catch (error) {
     if (error instanceof SipesApiError && error.status === 404) notFound();
     throw error;
@@ -71,6 +76,7 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
           atributosCatalogo={atributosCatalogo}
         />
         <PedidoEnvio pedidoId={pedido.id} datosEnvio={datosEnvio} />
+        <PedidoDiseno pedidoId={pedido.id} disenos={disenos} />
         <div className={styles.twoColsLayout}>
           <PedidoColores colores={pedido.colores} pedidoId={pedido.id} />
           <PedidoRevision pedido={pedido} totalPrendas={totalPrendas} />

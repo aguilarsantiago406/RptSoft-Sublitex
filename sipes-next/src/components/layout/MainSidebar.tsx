@@ -57,7 +57,7 @@ export function MainSidebar() {
               height={32}
               priority
               className={styles.brandLogo}
-              style={{ width: "auto", height: "auto" }}
+              style={{ height: "32px", width: "auto" }}
             />
           </Link>
         </div>

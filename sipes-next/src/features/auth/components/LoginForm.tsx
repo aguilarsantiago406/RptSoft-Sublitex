@@ -41,7 +41,7 @@ export function LoginForm() {
             width={210}
             height={40}
             priority
-            style={{ width: "auto", height: "auto" }}
+            style={{ height: "40px", width: "auto" }}
           />
         </div>
         <p className={styles.subtitle} style={{ marginTop: "12px", marginBottom: "24px" }}>

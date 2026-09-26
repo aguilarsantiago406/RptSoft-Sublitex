@@ -61,7 +61,6 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
               height={32}
               priority
               className={styles.brandLogo}
-              style={{ width: "auto", height: "auto" }}
             />
           </Link>
         </div>
