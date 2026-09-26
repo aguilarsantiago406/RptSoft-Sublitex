@@ -1,6 +1,9 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useTransition } from "react";
 import type { AtributoCatalogoItem } from "../api/pedidos.api";
 import type { PrendaDetalle } from "../types/pedido";
+import { actionEliminarPrenda } from "../actions/pedidos.actions";
 import { ModalEditarPrenda } from "./ModalEditarPrenda";
 import styles from "./prendas.module.css";
 
@@ -43,9 +46,33 @@ export function PrendaRow({
   atributosCatalogo,
 }: PrendaRowProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
   const nombreGrupo = prenda.grupo?.nombre ?? "Sin grupo";
   const badgeClass = getGroupBadgeClass(nombreGrupo);
   const esSinNumero = !prenda.numero || prenda.numero === "S/N";
+
+  function handleEliminar() {
+    if (isDeleting) return;
+
+    const etiqueta = prenda.participante?.nombrePersona || prenda.nombreEnPrenda || "la prenda";
+    const detalleNumero = esSinNumero ? "" : ` (N° ${prenda.numero})`;
+    const confirmar = window.confirm(
+      `¿Eliminar la prenda de ${etiqueta}${detalleNumero}?\n\nLa prenda se quitará del pedido de forma permanente.`
+    );
+    if (!confirmar) return;
+
+    setErrorMsg(null);
+    setIsDeleting(true);
+    startTransition(async () => {
+      const res = await actionEliminarPrenda(prenda.id, pedidoId);
+      setIsDeleting(false);
+      if (!res.ok) {
+        setErrorMsg(res.error || "No se pudo eliminar la prenda.");
+      }
+    });
+  }
 
   return (
     <tr>
@@ -97,14 +124,32 @@ export function PrendaRow({
         )}
       </td>
       <td>
-        <button
-          type="button"
-          className={styles.actionButton}
-          onClick={() => setIsEditing(true)}
-          title="Editar prenda"
-        >
-          Editar
-        </button>
+        <div className={styles.rowActions}>
+          <button
+            type="button"
+            className={styles.actionButton}
+            onClick={() => setIsEditing(true)}
+            title="Editar prenda"
+          >
+            Editar
+          </button>
+
+          <button
+            type="button"
+            className={styles.deleteButton}
+            onClick={handleEliminar}
+            disabled={isDeleting}
+            title="Eliminar prenda"
+          >
+            {isDeleting ? "Eliminando…" : "Eliminar"}
+          </button>
+        </div>
+
+        {errorMsg && (
+          <div className={styles.rowActionError} role="alert">
+            {errorMsg}
+          </div>
+        )}
 
         {isEditing && (
           <ModalEditarPrenda

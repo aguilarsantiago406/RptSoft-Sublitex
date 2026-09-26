@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { apiGet, apiPost, SipesApiError } from "@/lib/api/http";
+import { revocarEnlaceParticipante } from "../api/participantes.api";
 
 export interface CrearParticipanteResult {
   ok: boolean;
@@ -108,5 +109,22 @@ export async function actionConfirmarManual(
       return { ok: false, error: error.message };
     }
     return { ok: false, error: "No se pudo confirmar el participante." };
+  }
+}
+
+export async function actionRevocarEnlace(
+  participanteId: string,
+  pedidoId: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await revocarEnlaceParticipante(participanteId);
+
+    revalidatePath(`/pedidos/${pedidoId}/participantes`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo revocar el enlace del participante." };
   }
 }

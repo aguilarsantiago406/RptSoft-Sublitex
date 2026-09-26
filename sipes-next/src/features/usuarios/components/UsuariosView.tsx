@@ -1,22 +1,26 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import type { UsuarioItem, RolUsuario } from "../types/usuario";
 import { ROLES_DISPONIBLES } from "../types/usuario";
+import type { UsuarioItem, RolUsuario } from "../types/usuario";
 import { UsuariosTable } from "./UsuariosTable";
 import { ModalNuevoUsuario } from "./ModalNuevoUsuario";
 import { ModalEditarUsuario } from "./ModalEditarUsuario";
+import { ModalCambiarPassword } from "./ModalCambiarPassword";
+import shared from "@/components/ui/table/tableShared.module.css";
 import styles from "./usuarios.module.css";
 
 interface UsuariosViewProps {
   usuarios: UsuarioItem[];
+  error?: string | null;
 }
 
-export function UsuariosView({ usuarios }: UsuariosViewProps) {
+export function UsuariosView({ usuarios, error }: UsuariosViewProps) {
   const [search, setSearch] = useState("");
   const [rolFiltro, setRolFiltro] = useState<string>("TODOS");
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UsuarioItem | null>(null);
+  const [passwordUser, setPasswordUser] = useState<UsuarioItem | null>(null);
 
   const filteredUsuarios = useMemo(() => {
     return usuarios.filter((usr) => {
@@ -70,9 +74,16 @@ export function UsuariosView({ usuarios }: UsuariosViewProps) {
         </button>
       </div>
 
+      {error && (
+        <div className={shared.inlineWarning} role="alert">
+          {error}
+        </div>
+      )}
+
       <UsuariosTable
         usuarios={filteredUsuarios}
         onEdit={(usr) => setEditingUser(usr)}
+        onChangePassword={(usr) => setPasswordUser(usr)}
       />
 
       <ModalNuevoUsuario
@@ -84,6 +95,12 @@ export function UsuariosView({ usuarios }: UsuariosViewProps) {
         isOpen={editingUser !== null}
         usuario={editingUser}
         onClose={() => setEditingUser(null)}
+      />
+
+      <ModalCambiarPassword
+        isOpen={passwordUser !== null}
+        usuario={passwordUser}
+        onClose={() => setPasswordUser(null)}
       />
     </div>
   );

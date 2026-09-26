@@ -4,6 +4,7 @@ import {
   getParticipantesGrupo,
   getTallasCatalogo,
   getAtributosCatalogo,
+  type ParticipanteConPrendas,
 } from "@/features/pedidos/api/pedidos.api";
 import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
 import { PrendasView } from "@/features/pedidos/components/PrendasView";
@@ -66,9 +67,23 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
   }
 
   // Consultar los participantes de cada grupo usando el endpoint oficial GET /api/grupos/:id/participantes
-  const participantesPorGrupo = await Promise.all(
-    pedido.grupos.map((g) => getParticipantesGrupo(g.id).catch(() => []))
+  // Un grupo que falla se reporta por nombre en lugar de confundirse con un grupo vacío.
+  const resultadosPorGrupo = await Promise.allSettled(
+    pedido.grupos.map((g) => getParticipantesGrupo(g.id))
   );
+
+  const participantesPorGrupo: ParticipanteConPrendas[][] = [];
+  const errorGrupos: string[] = [];
+
+  pedido.grupos.forEach((grupo, index) => {
+    const resultado = resultadosPorGrupo[index];
+    if (resultado.status === "fulfilled") {
+      participantesPorGrupo.push(resultado.value);
+    } else {
+      participantesPorGrupo.push([]);
+      errorGrupos.push(grupo.nombre);
+    }
+  });
 
   // Consolidar y aplanar las prendas
   const prendas: PrendaDetalle[] = [];
@@ -133,6 +148,7 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
         pedidoId={id}
         tallas={tallasCatalogo ?? []}
         atributos={atributosCatalogo ?? []}
+        errorGrupos={errorGrupos}
       />
     </main>
   );

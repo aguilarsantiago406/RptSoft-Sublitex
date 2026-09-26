@@ -1,10 +1,15 @@
 "use client";
 
+import { useTableState } from "@/lib/useTableState";
+import { Pagination } from "@/components/ui/table/Pagination";
+import { SortableTh } from "@/components/ui/table/SortableTh";
+import shared from "@/components/ui/table/tableShared.module.css";
 import type { Cliente, TipoCliente } from "../types/cliente";
 import styles from "./clientes.module.css";
 
 interface ClientesTableProps {
   clientes: Cliente[];
+  error?: string | null;
 }
 
 function getBadgeClass(tipo: TipoCliente): string {
@@ -40,61 +45,100 @@ function getTipoLabel(tipo: TipoCliente): string {
   }
 }
 
-export function ClientesTable({ clientes }: ClientesTableProps) {
-  if (clientes.length === 0) {
-    return (
-      <div className={styles.tableCard}>
-        <div className={styles.emptyState}>
-          No se encontraron clientes ni organizaciones registradas con los filtros seleccionados.
-        </div>
-      </div>
-    );
-  }
+export function ClientesTable({ clientes, error }: ClientesTableProps) {
+  const table = useTableState<Cliente>(clientes);
+  const offset = (table.page - 1) * table.pageSize;
 
   return (
-    <div className={styles.tableCard}>
-      <div className={styles.tableScroll}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.colIndex}>#</th>
-              <th>Organización / Cliente</th>
-              <th style={{ width: "140px" }}>Tipo</th>
-              <th style={{ width: "160px" }}>Ciudad / Sede</th>
-              <th style={{ width: "160px" }}>Teléfono</th>
-              <th style={{ width: "150px" }}>Registrado el</th>
-            </tr>
-          </thead>
-          <tbody>
-            {clientes.map((cliente, index) => {
-              const fecha = cliente.creadoEn
-                ? new Date(cliente.creadoEn).toLocaleDateString("es-PE", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—";
+    <>
+      {error && (
+        <div className={shared.inlineWarning} role="alert">
+          {error}
+        </div>
+      )}
 
-              return (
-                <tr key={cliente.id}>
-                  <td className={styles.colIndex}>{index + 1}</td>
-                  <td>
-                    <div className={styles.clientName}>{cliente.nombre}</div>
-                  </td>
-                  <td>
-                    <span className={getBadgeClass(cliente.tipo)}>
-                      {getTipoLabel(cliente.tipo)}
-                    </span>
-                  </td>
-                  <td>{cliente.ciudad || "—"}</td>
-                  <td>{cliente.telefono || "—"}</td>
-                  <td style={{ color: "#64748b", fontSize: "0.82rem" }}>{fecha}</td>
+      {clientes.length === 0 ? (
+        <div className={styles.tableCard}>
+          <div className={styles.emptyState}>
+            No se encontraron clientes ni organizaciones registradas con los filtros
+            seleccionados.
+          </div>
+        </div>
+      ) : (
+        <div className={styles.tableCard}>
+          <div className={styles.tableScroll}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th className={styles.colIndex}>#</th>
+                  <SortableTh<Cliente>
+                    label="Organización / Cliente"
+                    sortKey="nombre"
+                    activeKey={table.sortKey}
+                    dir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                  <SortableTh<Cliente>
+                    label="Tipo"
+                    sortKey="tipo"
+                    activeKey={table.sortKey}
+                    dir={table.sortDir}
+                    onSort={table.toggleSort}
+                    width={140}
+                  />
+                  <SortableTh<Cliente>
+                    label="Ciudad / Sede"
+                    sortKey="ciudad"
+                    activeKey={table.sortKey}
+                    dir={table.sortDir}
+                    onSort={table.toggleSort}
+                    width={160}
+                  />
+                  <th style={{ width: "160px" }}>Teléfono</th>
+                  <th style={{ width: "150px" }}>Registrado el</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+              </thead>
+              <tbody>
+                {table.sortedRows.map((cliente, index) => {
+                  const fecha = cliente.creadoEn
+                    ? new Date(cliente.creadoEn).toLocaleDateString("es-PE", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "—";
+
+                  return (
+                    <tr key={cliente.id}>
+                      <td className={styles.colIndex}>{offset + index + 1}</td>
+                      <td>
+                        <div className={styles.clientName}>{cliente.nombre}</div>
+                      </td>
+                      <td>
+                        <span className={getBadgeClass(cliente.tipo)}>
+                          {getTipoLabel(cliente.tipo)}
+                        </span>
+                      </td>
+                      <td>{cliente.ciudad || "—"}</td>
+                      <td>{cliente.telefono || "—"}</td>
+                      <td style={{ color: "#64748b", fontSize: "0.82rem" }}>{fecha}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <Pagination
+            page={table.page}
+            totalPages={table.totalPages}
+            totalRows={table.totalRows}
+            firstRow={table.firstRow}
+            lastRow={table.lastRow}
+            onPage={table.setPage}
+          />
+        </div>
+      )}
+    </>
   );
 }

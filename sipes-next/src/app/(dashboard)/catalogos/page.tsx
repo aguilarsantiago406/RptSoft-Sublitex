@@ -3,21 +3,32 @@ import {
   getTallas,
   getAtributos,
   getUbicaciones,
-  getTarifasVigentes,
+  getTarifas,
 } from "@/features/catalogos/api/catalogos.api";
 import { CatalogosView } from "@/features/catalogos/components/CatalogosView";
+import { loadData } from "@/lib/api/loadData";
 
 export const dynamic = "force-dynamic";
 
 export default async function CatalogosPage() {
-  const [tiposProducto, tallas, atributos, ubicaciones, tarifas] =
+  const [tiposProductoRes, tallasRes, atributosRes, ubicacionesRes, tarifasRes] =
     await Promise.all([
-      getTiposProducto().catch(() => []),
-      getTallas().catch(() => []),
-      getAtributos().catch(() => []),
-      getUbicaciones().catch(() => []),
-      getTarifasVigentes().catch(() => []),
+      loadData(() => getTiposProducto()),
+      loadData(() => getTallas()),
+      loadData(() => getAtributos()),
+      loadData(() => getUbicaciones()),
+      loadData(() => getTarifas()),
     ]);
+
+  const errores = [
+    ["Tipos de producto", tiposProductoRes.error],
+    ["Tallas", tallasRes.error],
+    ["Atributos", atributosRes.error],
+    ["Ubicaciones", ubicacionesRes.error],
+    ["Tarifas", tarifasRes.error],
+  ]
+    .filter(([, mensaje]) => mensaje !== null)
+    .map(([seccion, mensaje]) => `${seccion}: ${mensaje}`);
 
   return (
     <main>
@@ -31,11 +42,12 @@ export default async function CatalogosPage() {
       </header>
 
       <CatalogosView
-        tiposProducto={tiposProducto}
-        tallas={tallas}
-        atributos={atributos}
-        ubicaciones={ubicaciones}
-        tarifas={tarifas}
+        tiposProducto={tiposProductoRes.data ?? []}
+        tallas={tallasRes.data ?? []}
+        atributos={atributosRes.data ?? []}
+        ubicaciones={ubicacionesRes.data ?? []}
+        tarifas={tarifasRes.data ?? []}
+        error={errores.length > 0 ? errores.join(" · ") : null}
       />
     </main>
   );

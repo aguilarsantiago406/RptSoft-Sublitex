@@ -151,6 +151,36 @@ export async function actionEliminarGrupo(
   }
 }
 
+const POLITICAS_NUMERACION: ReadonlySet<string> = new Set(["LIBRE", "UNICA"]);
+
+export async function actionCambiarPoliticaGrupo(
+  grupoId: string,
+  pedidoId: string,
+  politicaNumeracion: string
+): Promise<{ ok: boolean; error?: string }> {
+  // R-G01: UNICA exige numeros irrepetibles dentro del grupo. El backend
+  // responde 409 si existen numeros repetidos (R-G06).
+  if (!POLITICAS_NUMERACION.has(politicaNumeracion)) {
+    return { ok: false, error: "La política de numeración debe ser LIBRE o UNICA." };
+  }
+
+  try {
+    await apiPatch(`/api/grupos/${encodeURIComponent(grupoId)}/politica`, {
+      politicaNumeracion,
+    });
+
+    revalidatePath(`/pedidos/${pedidoId}`);
+    revalidatePath(`/pedidos/${pedidoId}/prendas`);
+    revalidatePath(`/pedidos/${pedidoId}/participantes`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo cambiar la política de numeración del grupo." };
+  }
+}
+
 export interface CreatePedidoParams {
   clienteId: string;
   fechaCompromiso: string;
@@ -250,6 +280,25 @@ export async function actionActualizarPrenda(
       return { ok: false, error: error.message };
     }
     return { ok: false, error: "No se pudo actualizar la prenda." };
+  }
+}
+
+export async function actionEliminarPrenda(
+  prendaId: string,
+  pedidoId: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await apiDelete(`/api/prendas/${encodeURIComponent(prendaId)}`);
+
+    revalidatePath(`/pedidos/${pedidoId}/prendas`);
+    revalidatePath(`/pedidos/${pedidoId}/participantes`);
+    revalidatePath(`/pedidos/${pedidoId}`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo eliminar la prenda." };
   }
 }
 

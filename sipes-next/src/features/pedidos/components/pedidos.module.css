@@ -30,12 +30,19 @@
   border-color: var(--sky-dark);
 }
 
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
 .tableCard {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 
 .tableScroll { overflow-x: auto; }
@@ -50,7 +57,8 @@
   text-transform: uppercase;
 }
 .table td { padding: 16px 18px; border-top: 1px solid var(--border-soft); }
-.table tbody tr:hover { background: #fbfdfc; }
+.table tbody tr { transition: background-color var(--duration-fast) var(--ease-out); }
+.table tbody tr:hover { background: var(--sky-soft); }
 .code { color: var(--navy); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 550; }
 .actionCell { text-align: right; }
 .linkButton { color: var(--sky-dark); font-size: 0.86rem; font-weight: 550; text-decoration: none; }
@@ -174,7 +182,7 @@
 .emptyIcon { display: grid; width: 48px; height: 48px; margin: 0 auto; place-items: center; border-radius: 14px; background: var(--green-soft); color: var(--green-dark); font-weight: 900; }
 
 .detailGrid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(260px, 0.8fr); gap: 20px; }
-.panel { border: 1px solid var(--border); border-radius: 18px; background: var(--surface); padding: 22px; box-shadow: var(--shadow-sm); }
+.panel { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); padding: 22px; box-shadow: var(--shadow-md); }
 .panelHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .panelHeader h2 { margin: 0; font-size: 1rem; }
 .groupList {
@@ -279,6 +287,52 @@
 .policyBadge {
   font-size: 0.74rem;
   color: #64748b;
+  font-weight: 500;
+}
+
+.policyLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.policySelect {
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: var(--navy);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.policySelect:focus {
+  border-color: var(--sky);
+}
+
+.policySelect:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.policySpinner {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.groupPolicyError {
+  padding: 5px 9px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+  color: #be123c;
+  font-size: 0.76rem;
   font-weight: 500;
 }
 
@@ -789,39 +843,45 @@
   justify-content: center;
   z-index: 9999;
   padding: 16px;
+  animation: backdropIn var(--duration-med) var(--ease-out);
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modalCard {
   background: #ffffff;
-  border-radius: 18px;
+  border-radius: var(--radius-xl);
   width: 100%;
   max-width: 440px;
   max-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
   overflow-y: auto;
-  animation: modalFadeIn 0.18s ease-out;
+  animation: modalIn var(--duration-med) var(--ease-out);
 }
 
 .modalCardWide {
   background: #ffffff;
-  border-radius: 18px;
+  border-radius: var(--radius-xl);
   width: 100%;
   max-width: 500px;
   max-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
   overflow-y: auto;
-  animation: modalFadeIn 0.18s ease-out;
+  animation: modalIn var(--duration-med) var(--ease-out);
 }
 
-@keyframes modalFadeIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modalHeader {

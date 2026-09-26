@@ -1,3 +1,8 @@
+"use client";
+
+import { useTableState } from "@/lib/useTableState";
+import { Pagination } from "@/components/ui/table/Pagination";
+import { SortableTh } from "@/components/ui/table/SortableTh";
 import type { AtributoCatalogoItem, TallaCatalogoItem } from "../api/pedidos.api";
 import type { PrendaDetalle } from "../types/pedido";
 import { PrendaRow } from "./PrendaRow";
@@ -11,6 +16,9 @@ interface PrendasTableProps {
 }
 
 export function PrendasTable({ prendas, pedidoId, tallas, atributos }: PrendasTableProps) {
+  const table = useTableState<PrendaDetalle>(prendas);
+  const offset = (table.page - 1) * table.pageSize;
+
   if (prendas.length === 0) {
     return (
       <div className={styles.tableCard}>
@@ -36,32 +44,56 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos }: PrendasTa
             <col style={{ width: "125px" }} />
             <col style={{ width: "115px" }} />
             <col style={{ width: "130px" }} />
-            <col style={{ width: "80px" }} />
+            <col style={{ width: "150px" }} />
           </colgroup>
           <thead>
             <tr>
               <th className={styles.colIndex}>#</th>
               <th>Grupo</th>
               <th>Participante</th>
-              <th>Apodo</th>
-              <th>N°</th>
+              <SortableTh<PrendaDetalle>
+                label="Apodo"
+                sortKey="nombreEnPrenda"
+                activeKey={table.sortKey}
+                dir={table.sortDir}
+                onSort={table.toggleSort}
+              />
+              <SortableTh<PrendaDetalle>
+                label="N°"
+                sortKey="numero"
+                activeKey={table.sortKey}
+                dir={table.sortDir}
+                onSort={table.toggleSort}
+              />
               <th>Talla</th>
-              <th>Corte</th>
+              <SortableTh<PrendaDetalle>
+                label="Corte"
+                sortKey="genero"
+                activeKey={table.sortKey}
+                dir={table.sortDir}
+                onSort={table.toggleSort}
+              />
               <th>Color</th>
-              <th>Tipo</th>
+              <SortableTh<PrendaDetalle>
+                label="Tipo"
+                sortKey="tipoPrenda"
+                activeKey={table.sortKey}
+                dir={table.sortDir}
+                onSort={table.toggleSort}
+              />
               <th>Excepciones</th>
               <th>Acción</th>
             </tr>
           </thead>
           <tbody>
-            {prendas.map((prenda, idx) => {
+            {table.sortedRows.map((prenda, idx) => {
               const tallasPrenda = tallas.filter(
                 (t) => !prenda.tipoProductoId || t.tipoProductoId === prenda.tipoProductoId
               );
               return (
                 <PrendaRow
                   key={prenda.id}
-                  index={idx}
+                  index={offset + idx}
                   prenda={prenda}
                   pedidoId={pedidoId}
                   tallasDisponibles={tallasPrenda.length > 0 ? tallasPrenda : tallas}
@@ -72,6 +104,15 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos }: PrendasTa
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        page={table.page}
+        totalPages={table.totalPages}
+        totalRows={table.totalRows}
+        firstRow={table.firstRow}
+        lastRow={table.lastRow}
+        onPage={table.setPage}
+      />
     </div>
   );
 }
