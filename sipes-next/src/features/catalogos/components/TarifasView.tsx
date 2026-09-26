@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useTableState } from "@/lib/useTableState";
 import { Pagination } from "@/components/ui/table/Pagination";
 import { SortableTh } from "@/components/ui/table/SortableTh";
+import { formatDateNumeric } from "@/lib/format/date";
 import type { TarifaCatalogo } from "../types/catalogo";
 import { ETIQUETA_TIPO_TARIFA } from "../types/catalogo";
 import { actionEliminarTarifa } from "../actions/tarifas.actions";
@@ -15,10 +16,7 @@ interface TarifasViewProps {
 }
 
 function formatFecha(iso?: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return formatDateNumeric(iso);
 }
 
 function getEstado(t: TarifaCatalogo): { label: string; className: string } {
@@ -155,8 +153,8 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
                       <td className={styles.tarifaValor}>
                         {Number(t.valor).toFixed(2)}
                       </td>
-                      <td>{formatFecha(t.vigenteDesde)}</td>
-                      <td>{formatFecha(t.vigenteHasta)}</td>
+                      <td suppressHydrationWarning>{formatFecha(t.vigenteDesde)}</td>
+                      <td suppressHydrationWarning>{formatFecha(t.vigenteHasta)}</td>
                       <td>
                         <span className={estado.className}>{estado.label}</span>
                       </td>

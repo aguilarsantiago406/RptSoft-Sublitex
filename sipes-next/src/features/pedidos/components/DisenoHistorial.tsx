@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format/date";
 import type { DisenoItem } from "../types/diseno";
 
 interface DisenoHistorialProps {
@@ -25,7 +26,7 @@ export function DisenoHistorial({ versiones }: DisenoHistorialProps) {
             }}
           >
             <span>v{v.version} · {v.estado}</span>
-            <span>{new Date(v.creadoEn).toLocaleDateString()}</span>
+            <span suppressHydrationWarning>{formatDate(v.creadoEn)}</span>
           </div>
         ))}
       </div>

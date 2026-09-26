@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { PedidoDetalle } from "../../types/pedido";
+import { formatDate } from "@/lib/format/date";
 import type { TarifaItem, DatosEnvioItem, ResumenProduccionItem } from "../../api/comercial.api";
 import styles from "./proforma.module.css";
 
@@ -148,7 +149,7 @@ export function ProformaView({
           <div className={styles.docCol}>
             <div className={styles.docTitle}>Proforma Comercial</div>
             <div className={styles.docCode}>{pedido.codigo}</div>
-            <div className={styles.docMeta}>Emisión: {fechaEmision}</div>
+            <div className={styles.docMeta} suppressHydrationWarning>Emisión: {fechaEmision}</div>
             <div className={styles.docMeta}>
               Validez de la oferta: 15 días calendario
             </div>
@@ -181,10 +182,8 @@ export function ProformaView({
             <div className={styles.infoBlockTitle}>Condiciones de Entrega</div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Fecha Entrega:</span>
-              <span className={styles.infoValue}>
-                {pedido.fechaCompromiso
-                  ? new Date(pedido.fechaCompromiso).toLocaleDateString("es-PE")
-                  : "Por definir"}
+              <span className={styles.infoValue} suppressHydrationWarning>
+                {formatDate(pedido.fechaCompromiso)}
               </span>
             </div>
             <div className={styles.infoRow}>

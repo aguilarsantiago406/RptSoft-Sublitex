@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate } from "@/lib/format/date";
 import { useTableState } from "@/lib/useTableState";
 import { Pagination } from "@/components/ui/table/Pagination";
 import { SortableTh } from "@/components/ui/table/SortableTh";
@@ -53,19 +54,6 @@ function formatRoleLabel(rol: RolUsuario): string {
   }
 }
 
-function formatDate(dateString: string): string {
-  if (!dateString) return "—";
-  try {
-    const d = new Date(dateString);
-    return d.toLocaleDateString("es-PE", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return dateString;
-  }
-}
 
 export function UsuariosTable({ usuarios, onEdit, onChangePassword }: UsuariosTableProps) {
   const table = useTableState<UsuarioItem>(usuarios);
@@ -140,7 +128,7 @@ export function UsuariosTable({ usuarios, onEdit, onChangePassword }: UsuariosTa
                     {usr.activo ? "Activo" : "Inactivo"}
                   </span>
                 </td>
-                <td style={{ fontSize: "0.82rem", color: "#64748b" }}>
+                <td style={{ fontSize: "0.82rem", color: "#64748b" }} suppressHydrationWarning>
                   {formatDate(usr.creadoEn)}
                 </td>
                 <td>

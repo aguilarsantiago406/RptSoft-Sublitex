@@ -90,7 +90,7 @@ export function PedidosTable({ pedidos, error }: PedidosTableProps) {
                     </td>
                     <td>{pedido.totalPrendas}</td>
                     <td>
-                      <div>{formatDate(pedido.fechaCompromiso)}</div>
+                      <div suppressHydrationWarning>{formatDate(pedido.fechaCompromiso)}</div>
                       {typeof pedido.tiempoDias === "number" && (
                         <span
                           style={{

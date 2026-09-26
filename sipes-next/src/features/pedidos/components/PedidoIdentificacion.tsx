@@ -37,11 +37,11 @@ export function PedidoIdentificacion({ pedido, vendedoras = [] }: PedidoIdentifi
         </div>
         <div>
           <dt>Fecha de registro</dt>
-          <dd>{formatDate(pedido.fechaPedido)}</dd>
+          <dd suppressHydrationWarning>{formatDate(pedido.fechaPedido)}</dd>
         </div>
         <div>
           <dt>Fecha de entrega / compromiso</dt>
-          <dd>{formatDate(pedido.fechaCompromiso)}</dd>
+          <dd suppressHydrationWarning>{formatDate(pedido.fechaCompromiso)}</dd>
         </div>
         <div>
           <dt>Asesora comercial</dt>

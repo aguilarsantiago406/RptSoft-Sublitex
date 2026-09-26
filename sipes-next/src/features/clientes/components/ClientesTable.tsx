@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate } from "@/lib/format/date";
 import { useTableState } from "@/lib/useTableState";
 import { Pagination } from "@/components/ui/table/Pagination";
 import { SortableTh } from "@/components/ui/table/SortableTh";
@@ -100,14 +101,6 @@ export function ClientesTable({ clientes, error }: ClientesTableProps) {
               </thead>
               <tbody>
                 {table.sortedRows.map((cliente, index) => {
-                  const fecha = cliente.creadoEn
-                    ? new Date(cliente.creadoEn).toLocaleDateString("es-PE", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })
-                    : "—";
-
                   return (
                     <tr key={cliente.id}>
                       <td className={styles.colIndex}>{offset + index + 1}</td>
@@ -121,7 +114,9 @@ export function ClientesTable({ clientes, error }: ClientesTableProps) {
                       </td>
                       <td>{cliente.ciudad || "—"}</td>
                       <td>{cliente.telefono || "—"}</td>
-                      <td style={{ color: "#64748b", fontSize: "0.82rem" }}>{fecha}</td>
+                      <td style={{ color: "#64748b", fontSize: "0.82rem" }} suppressHydrationWarning>
+                        {formatDate(cliente.creadoEn)}
+                      </td>
                     </tr>
                   );
                 })}
