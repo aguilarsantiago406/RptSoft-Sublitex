@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/format/date";
 import type { DisenoItem } from "../types/diseno";
 
 interface DisenoDetallesCardProps {
@@ -11,7 +12,7 @@ export function DisenoDetallesCard({ diseno }: DisenoDetallesCardProps) {
         Detalles del diseño (v{diseno.version}):
       </strong>
       <div style={{ fontSize: "0.82rem", color: "#475569", display: "grid", gap: "6px" }}>
-        <div><strong>Registrado:</strong> {new Date(diseno.creadoEn).toLocaleString()}</div>
+        <div suppressHydrationWarning><strong>Registrado:</strong> {formatDateTime(diseno.creadoEn)}</div>
         {diseno.archivoUrl && (
           <div>
             <strong>Archivo Vectorial:</strong>{" "}
@@ -21,7 +22,7 @@ export function DisenoDetallesCard({ diseno }: DisenoDetallesCardProps) {
           </div>
         )}
         {diseno.aprobadoEn && (
-          <div><strong>Aprobado el:</strong> {new Date(diseno.aprobadoEn).toLocaleString()}</div>
+          <div suppressHydrationWarning><strong>Aprobado el:</strong> {formatDateTime(diseno.aprobadoEn)}</div>
         )}
       </div>
     </div>
