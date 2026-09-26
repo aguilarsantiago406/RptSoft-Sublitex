@@ -1,10 +1,13 @@
-import { Controller, Post, Delete, Body, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { PersonalizacionesService } from './personalizaciones.service';
 import { CreatePersonalizacionDto } from './dto/create-personalizacion.dto';
 
 @ApiTags('Personalizaciones')
 @Controller('api')
+@UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
 export class PersonalizacionesController {
   constructor(private readonly service: PersonalizacionesService) {}
 

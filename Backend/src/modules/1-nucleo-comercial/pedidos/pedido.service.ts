@@ -43,9 +43,17 @@ export class PedidoService {
     return Math.max(0, Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)));
   }
 
+  private normalizarFechaCompromiso(fecha: string): Date {
+    const SOLO_FECHA = /^\d{4}-\d{2}-\d{2}$/;
+    if (SOLO_FECHA.test(fecha.trim())) {
+      return new Date(`${fecha.trim()}T23:59:59.999-05:00`);
+    }
+    return new Date(fecha);
+  }
+
   async create(dto: CreatePedidoDto, userId?: string) {
     const ahora = new Date();
-    const fechaCompromiso = new Date(dto.fechaCompromiso);
+    const fechaCompromiso = this.normalizarFechaCompromiso(dto.fechaCompromiso);
     if (fechaCompromiso <= ahora) {
       throw new BadRequestException(
         'La fecha de compromiso debe ser posterior a la fecha del pedido (R-A09)',
@@ -385,7 +393,7 @@ export class PedidoService {
     if (!pedido) throw new NotFoundException('Pedido no encontrado: ' + id);
 
     if (dto.fechaCompromiso) {
-      const nuevaFecha = new Date(dto.fechaCompromiso);
+      const nuevaFecha = this.normalizarFechaCompromiso(dto.fechaCompromiso);
       if (nuevaFecha <= new Date(pedido.fechaPedido)) {
         throw new BadRequestException(
           'La fecha de compromiso debe ser posterior a la fecha del pedido (R-A09)',

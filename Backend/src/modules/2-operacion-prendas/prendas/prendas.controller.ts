@@ -1,11 +1,14 @@
-import { Controller, Post, Patch, Delete, Get, Body, Param, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Post, Patch, Delete, Get, Body, Param, Request, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { PrendasService } from './prendas.service';
 import { CreatePrendaDto } from './dto/create-prenda.dto';
 import { UpdateFichaMinimaDto } from './dto/update-ficha-minima.dto';
 
 @ApiTags('Prendas')
 @Controller('api')
+@UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
 export class PrendasController {
   constructor(private readonly service: PrendasService) {}
 

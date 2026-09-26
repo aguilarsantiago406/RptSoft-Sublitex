@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { ComercialService } from './comercial.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { PdfService } from '../../../core/pdf/pdf.service';
 
 function buildPrismaMock() {
   return {
@@ -33,11 +34,18 @@ function buildPrismaMock() {
   };
 }
 
-async function crearServicio(prisma: any): Promise<ComercialService> {
+function buildPdfMock() {
+  return {
+    generarConfirmacionPdf: jest.fn().mockResolvedValue('/storage/confirmaciones/PED-001-v1.pdf'),
+  };
+}
+
+async function crearServicio(prisma: any, pdf?: any): Promise<ComercialService> {
   const moduleRef = await Test.createTestingModule({
     providers: [
       ComercialService,
       { provide: PrismaService, useValue: prisma },
+      { provide: PdfService, useValue: pdf ?? buildPdfMock() },
     ],
   }).compile();
   return moduleRef.get(ComercialService);
@@ -185,10 +193,13 @@ describe('R-H05 / R-K06 / R-K07 - emitirConfirmacion', () => {
     const prisma = buildPrismaMock();
     prisma.pedido.findUnique.mockResolvedValue({
       id: 'ped_1',
+      codigo: 'SUB-000001',
       creadoPorId: 'usr_creador',
+      cliente: { nombre: 'Colegio San Agustin' },
       grupos: [
         {
           id: 'g_1',
+          nombre: 'Grupo A',
           cantidadContratada: 10,
           tipoProducto: { id: 'tp_1', nombre: 'Conjunto' },
           prendas: [{ id: 'p_1' }, { id: 'p_2' }],
@@ -218,10 +229,13 @@ describe('R-H05 / R-K06 / R-K07 - emitirConfirmacion', () => {
     const prisma = buildPrismaMock();
     prisma.pedido.findUnique.mockResolvedValue({
       id: 'ped_1',
+      codigo: 'SUB-000001',
       creadoPorId: 'usr_creador',
+      cliente: { nombre: 'Club Atletico' },
       grupos: [
         {
           id: 'g_1',
+          nombre: 'Grupo B',
           cantidadContratada: 1,
           tipoProducto: { id: 'tp_1', nombre: 'Conjunto' },
           prendas: [{ id: 'p_1' }],
@@ -265,5 +279,36 @@ describe('R-H05 / R-K06 / R-K07 - emitirConfirmacion', () => {
       service.emitirConfirmacion('ped_inexistente', {}),
     ).rejects.toThrow(NotFoundException);
   });
-});
 
+  it('genera el pdfUrl automaticamente sin recibirlo del cliente (R-K06)', async () => {
+    const prisma = buildPrismaMock();
+    prisma.pedido.findUnique.mockResolvedValue({
+      id: 'ped_1',
+      codigo: 'SUB-000099',
+      creadoPorId: 'usr_creador',
+      cliente: { nombre: 'Promo 2025' },
+      grupos: [
+        {
+          id: 'g_1',
+          nombre: 'Conjunto Azul',
+          cantidadContratada: 5,
+          tipoProducto: { id: 'tp_1', nombre: 'Kit' },
+          prendas: [],
+        },
+      ],
+    });
+    prisma.tarifa.findFirst.mockResolvedValue({ valor: 80 });
+    prisma.confirmacion.findFirst.mockResolvedValue(null);
+    prisma.confirmacion.create.mockImplementation(async ({ data }: any) => ({ id: 'conf_pdf', ...data }));
+
+    const pdfMock = buildPdfMock();
+    const service = await crearServicio(prisma, pdfMock);
+    const result = await service.emitirConfirmacion('ped_1', {});
+
+    expect(pdfMock.generarConfirmacionPdf).toHaveBeenCalledTimes(1);
+    expect(pdfMock.generarConfirmacionPdf).toHaveBeenCalledWith(
+      expect.objectContaining({ codigo: 'SUB-000099', version: 1, clienteNombre: 'Promo 2025' }),
+    );
+    expect(result.pdfUrl).toBe('/storage/confirmaciones/PED-001-v1.pdf');
+  });
+});
