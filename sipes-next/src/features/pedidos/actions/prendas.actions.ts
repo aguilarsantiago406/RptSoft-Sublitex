@@ -37,6 +37,25 @@ export async function actionActualizarPrenda(
   }
 }
 
+export async function actionEliminarPrenda(
+  prendaId: string,
+  pedidoId: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await apiDelete(`/api/prendas/${encodeURIComponent(prendaId)}`);
+
+    revalidatePath(`/pedidos/${pedidoId}/prendas`);
+    revalidatePath(`/pedidos/${pedidoId}/participantes`);
+    revalidatePath(`/pedidos/${pedidoId}`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo eliminar la prenda." };
+  }
+}
+
 export interface CreateExcepcionParams {
   prendaId: string;
   atributoId: string;

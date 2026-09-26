@@ -1,6 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTableState } from "@/lib/useTableState";
+import { Pagination } from "@/components/ui/table/Pagination";
+import { SortableTh } from "@/components/ui/table/SortableTh";
+import shared from "@/components/ui/table/tableShared.module.css";
 import type {
   TipoProductoCatalogo,
   TallaCatalogo,
@@ -8,6 +12,7 @@ import type {
   UbicacionPersonalizacionCatalogo,
   TarifaCatalogo,
 } from "../types/catalogo";
+import { TarifasView } from "./TarifasView";
 import styles from "./catalogos.module.css";
 
 interface CatalogosViewProps {
@@ -16,11 +21,19 @@ interface CatalogosViewProps {
   atributos: AtributoCatalogo[];
   ubicaciones: UbicacionPersonalizacionCatalogo[];
   tarifas: TarifaCatalogo[];
+  error?: string | null;
 }
 
 function getReferenciaPrecio(codigo: string, tarifas: TarifaCatalogo[]): number | null {
   const codeLower = codigo.toLowerCase();
+  const ahora = new Date();
   const encontrada = tarifas.find((t) => {
+    if (!t.activo) return false;
+    const desde = new Date(t.vigenteDesde);
+    const hasta = t.vigenteHasta ? new Date(t.vigenteHasta) : null;
+    if (Number.isNaN(desde.getTime()) || desde > ahora) return false;
+    if (hasta && (Number.isNaN(hasta.getTime()) || hasta < ahora)) return false;
+
     const c = t.concepto.toLowerCase();
     return c === codeLower || codeLower.includes(c) || c.includes(codeLower);
   });
@@ -38,7 +51,11 @@ export function CatalogosView({
   atributos,
   ubicaciones,
   tarifas,
+  error,
 }: CatalogosViewProps) {
+  const productos = useTableState<TipoProductoCatalogo>(tiposProducto);
+  const offset = (productos.page - 1) * productos.pageSize;
+
   // Indexar tallas por tipoProductoId para renderizado eficiente
   const tallasPorProducto = useMemo(() => {
     const map = new Map<string, TallaCatalogo[]>();
@@ -52,6 +69,12 @@ export function CatalogosView({
 
   return (
     <div className={styles.container}>
+      {error && (
+        <div className={shared.inlineWarning} role="alert">
+          {error}
+        </div>
+      )}
+
       {/* Tabla Unificada de Prendas */}
       <section className={styles.tableCard}>
         <div className={styles.tableScroll}>
@@ -59,14 +82,20 @@ export function CatalogosView({
             <thead>
               <tr>
                 <th className={styles.colIndex}>#</th>
-                <th>Prenda / Producto</th>
+                <SortableTh<TipoProductoCatalogo>
+                  label="Prenda / Producto"
+                  sortKey="nombre"
+                  activeKey={productos.sortKey}
+                  dir={productos.sortDir}
+                  onSort={productos.toggleSort}
+                />
                 <th>Piezas Físicas</th>
                 <th>Tallas Disponibles</th>
                 <th style={{ textAlign: "right" }}>Precio Base</th>
               </tr>
             </thead>
             <tbody>
-              {tiposProducto.map((prod, index) => {
+              {productos.sortedRows.map((prod, index) => {
                 const prodTallas = tallasPorProducto.get(prod.id) ?? [];
                 const precio = getReferenciaPrecio(
                   prod.codigo || prod.nombre,
@@ -78,7 +107,7 @@ export function CatalogosView({
 
                 return (
                   <tr key={prod.id}>
-                    <td className={styles.colIndex}>{index + 1}</td>
+                    <td className={styles.colIndex}>{offset + index + 1}</td>
                     <td>
                       <div className={styles.productCell}>
                         <span className={styles.productName}>{prod.nombre}</span>
@@ -129,6 +158,15 @@ export function CatalogosView({
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          page={productos.page}
+          totalPages={productos.totalPages}
+          totalRows={productos.totalRows}
+          firstRow={productos.firstRow}
+          lastRow={productos.lastRow}
+          onPage={productos.setPage}
+        />
       </section>
 
       {/* Seccion Inferior: Estandares de Taller */}
@@ -180,6 +218,9 @@ export function CatalogosView({
           </div>
         </div>
       </section>
+
+      {/* Gestion del Catalogo de Tarifas (R-K10) */}
+      <TarifasView tarifas={tarifas} />
     </div>
   );
 }

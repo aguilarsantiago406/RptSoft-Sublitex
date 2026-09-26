@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { ParticipanteConPrendas } from "@/features/pedidos/api/pedidos.api";
-import { actionRegenerarEnlace } from "../actions/participantes.actions";
+import {
+  actionRegenerarEnlace,
+  actionRevocarEnlace,
+} from "../actions/participantes.actions";
 import styles from "./participantes.module.css";
 
 interface ParticipantesRowProps {
   index: number;
-  participante: ParticipanteConPrendas;
+  participante: ParticipanteConPrendas & { enlaceRevocado?: boolean };
   nombreGrupo: string;
   pedidoId: string;
 }
@@ -29,6 +32,9 @@ export function ParticipantesRow({
   const estado = participante.estado;
   const [copied, setCopied] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [isRevoking, setIsRevoking] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
 
   function handleCopy() {
     if (!token) return;
@@ -57,6 +63,27 @@ export function ParticipantesRow({
       setCopied(false);
     }
   }
+
+  function handleRevocar() {
+    if (isRevoking) return;
+
+    const confirmar = window.confirm(
+      `¿Revocar el enlace público de ${participante.nombrePersona}?\n\nEl enlace dejará de funcionar y el participante deberá solicitar un nuevo token.`
+    );
+    if (!confirmar) return;
+
+    setErrorMsg(null);
+    setIsRevoking(true);
+    startTransition(async () => {
+      const res = await actionRevocarEnlace(participante.id, pedidoId);
+      setIsRevoking(false);
+      if (!res.ok) {
+        setErrorMsg(res.error || "No se pudo revocar el enlace del participante.");
+      }
+    });
+  }
+
+  const puedeRevocar = !participante.enlaceRevocado && estado !== "CONFIRMADO";
 
   const badgeClass = getGroupBadgeClass(nombreGrupo);
 
@@ -88,32 +115,51 @@ export function ParticipantesRow({
       </td>
       <td>
         {token ? (
-          <div className={styles.linkActions}>
-            <button
-              type="button"
-              className={styles.copyButton}
-              onClick={handleCopy}
-              title="Copiar enlace público para WhatsApp"
-            >
-              {copied ? "Copiado" : "Copiar enlace"}
-            </button>
-            <button
-              type="button"
-              onClick={handleOpenWhatsApp}
-              className={styles.whatsappButton}
-              title="Abrir chat de WhatsApp con el mensaje"
-            >
-              WhatsApp
-            </button>
-            <button
-              type="button"
-              className={styles.regenerateButton}
-              onClick={handleRegenerate}
-              disabled={regenerating}
-              title="Regenerar nuevo token de 7 días"
-            >
-              {regenerating ? "…" : "Renovar"}
-            </button>
+          <div className={styles.linkCell}>
+            <div className={styles.linkActions}>
+              <button
+                type="button"
+                className={styles.copyButton}
+                onClick={handleCopy}
+                title="Copiar enlace público para WhatsApp"
+              >
+                {copied ? "Copiado" : "Copiar enlace"}
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenWhatsApp}
+                className={styles.whatsappButton}
+                title="Abrir chat de WhatsApp con el mensaje"
+              >
+                WhatsApp
+              </button>
+              <button
+                type="button"
+                className={styles.regenerateButton}
+                onClick={handleRegenerate}
+                disabled={regenerating}
+                title="Regenerar nuevo token de 7 días"
+              >
+                {regenerating ? "…" : "Renovar"}
+              </button>
+              {puedeRevocar && (
+                <button
+                  type="button"
+                  className={styles.revokeButton}
+                  onClick={handleRevocar}
+                  disabled={isRevoking}
+                  title="Revocar el enlace público de forma permanente"
+                >
+                  {isRevoking ? "Revocando…" : "Revocar enlace"}
+                </button>
+              )}
+            </div>
+
+            {errorMsg && (
+              <div className={styles.linkError} role="alert">
+                {errorMsg}
+              </div>
+            )}
           </div>
         ) : (
           <button

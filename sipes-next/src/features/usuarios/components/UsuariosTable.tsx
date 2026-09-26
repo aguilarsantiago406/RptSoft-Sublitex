@@ -1,11 +1,15 @@
 "use client";
 
+import { useTableState } from "@/lib/useTableState";
+import { Pagination } from "@/components/ui/table/Pagination";
+import { SortableTh } from "@/components/ui/table/SortableTh";
 import type { UsuarioItem, RolUsuario } from "../types/usuario";
 import styles from "./usuarios.module.css";
 
 interface UsuariosTableProps {
   usuarios: UsuarioItem[];
   onEdit: (usuario: UsuarioItem) => void;
+  onChangePassword: (usuario: UsuarioItem) => void;
 }
 
 function getRoleBadgeClass(rol: RolUsuario): string {
@@ -63,7 +67,10 @@ function formatDate(dateString: string): string {
   }
 }
 
-export function UsuariosTable({ usuarios, onEdit }: UsuariosTableProps) {
+export function UsuariosTable({ usuarios, onEdit, onChangePassword }: UsuariosTableProps) {
+  const table = useTableState<UsuarioItem>(usuarios);
+  const offset = (table.page - 1) * table.pageSize;
+
   if (usuarios.length === 0) {
     return (
       <div className={styles.tableCard}>
@@ -81,18 +88,37 @@ export function UsuariosTable({ usuarios, onEdit }: UsuariosTableProps) {
           <thead>
             <tr>
               <th style={{ width: "46px", textAlign: "center" }}>#</th>
-              <th>Usuario</th>
-              <th>Rol en el Sistema</th>
+              <SortableTh<UsuarioItem>
+                label="Usuario"
+                sortKey="nombre"
+                activeKey={table.sortKey}
+                dir={table.sortDir}
+                onSort={table.toggleSort}
+              />
+              <SortableTh<UsuarioItem>
+                label="Rol en el Sistema"
+                sortKey="rol"
+                activeKey={table.sortKey}
+                dir={table.sortDir}
+                onSort={table.toggleSort}
+              />
               <th>Estado</th>
               <th>Fecha de Alta</th>
               <th style={{ textAlign: "right" }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {usuarios.map((usr, index) => (
+            {table.sortedRows.map((usr, index) => (
               <tr key={usr.id}>
-                <td style={{ textAlign: "center", color: "#94a3b8", fontSize: "0.8rem", fontWeight: 600 }}>
-                  {index + 1}
+                <td
+                  style={{
+                    textAlign: "center",
+                    color: "#94a3b8",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  {offset + index + 1}
                 </td>
                 <td>
                   <div className={styles.userCell}>
@@ -126,6 +152,14 @@ export function UsuariosTable({ usuarios, onEdit }: UsuariosTableProps) {
                     >
                       Editar
                     </button>
+                    <button
+                      type="button"
+                      className={styles.secondaryActionButton}
+                      onClick={() => onChangePassword(usr)}
+                      title={`Cambiar la contraseña de ${usr.nombre}`}
+                    >
+                      Cambiar contraseña
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -133,6 +167,15 @@ export function UsuariosTable({ usuarios, onEdit }: UsuariosTableProps) {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        page={table.page}
+        totalPages={table.totalPages}
+        totalRows={table.totalRows}
+        firstRow={table.firstRow}
+        lastRow={table.lastRow}
+        onPage={table.setPage}
+      />
     </div>
   );
 }

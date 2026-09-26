@@ -4,6 +4,7 @@ import { ClientesTable } from "@/features/clientes/components/ClientesTable";
 import { ClientesFiltros } from "@/features/clientes/components/ClientesFiltros";
 import { NuevoClienteHeaderAction } from "@/features/clientes/components/NuevoClienteHeaderAction";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
+import { loadData } from "@/lib/api/loadData";
 
 export const dynamic = "force-dynamic";
 
@@ -18,12 +19,13 @@ async function ClientesTableAsync({
   query?: string;
   tipo?: string;
 }) {
-  const rawClientes = await getClientes(query).catch(() => []);
+  const { data, error } = await loadData(() => getClientes(query));
+  const rawClientes = data ?? [];
   const clientes = tipo
     ? rawClientes.filter((c) => c.tipo === tipo)
     : rawClientes;
 
-  return <ClientesTable clientes={clientes} />;
+  return <ClientesTable clientes={clientes} error={error} />;
 }
 
 export default async function ClientesPage({ searchParams }: ClientesPageProps) {

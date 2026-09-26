@@ -1,10 +1,11 @@
 import { getUsuarios } from "@/features/usuarios/api/usuarios.api";
 import { UsuariosView } from "@/features/usuarios/components/UsuariosView";
+import { loadData } from "@/lib/api/loadData";
 
 export const dynamic = "force-dynamic";
 
 export default async function UsuariosPage() {
-  const usuarios = await getUsuarios().catch(() => []);
+  const { data, error } = await loadData(() => getUsuarios());
 
   return (
     <main>
@@ -17,7 +18,7 @@ export default async function UsuariosPage() {
         </div>
       </header>
 
-      <UsuariosView usuarios={usuarios} />
+      <UsuariosView usuarios={data ?? []} error={error} />
     </main>
   );
 }

@@ -44,6 +44,16 @@ export function PortalParticipanteView({
   );
 
   const isConfirmed = estado === "CONFIRMADO";
+  const isRegistered = estado === "REGISTRADO";
+
+  // Pasos del flujo del participante (1: completar datos, 2: guardar, 3: confirmar)
+  const stepDone =
+    estado === "CONFIRMADO" ? 3 : isRegistered ? 1 : 0;
+  const steps = [
+    { label: "Completá tus datos", desc: "Talla, corte y detalle" },
+    { label: "Guardá tu ficha", desc: "Queda lista para revisión" },
+    { label: "Confirmá definitivamente", desc: "Bloquea tus datos" },
+  ];
 
   function handleFieldChange(
     index: number,
@@ -121,9 +131,37 @@ export function PortalParticipanteView({
   return (
     <div className={styles.container}>
       <header className={styles.brandHeader}>
-        <div className={styles.brandLogo}>SUBLITEX</div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo-sublitex.png"
+          alt="Sublitex"
+          className={styles.brandLogo}
+        />
         <div className={styles.brandSubtitle}>Ficha Técnica de Participante</div>
       </header>
+
+      <ol className={styles.steps} aria-label="Progreso de tu ficha">
+        {steps.map((s, i) => {
+          const paso = i + 1;
+          const cls =
+            paso <= stepDone
+              ? styles.stepDone
+              : paso === stepDone + 1
+                ? styles.stepActive
+                : styles.stepPending;
+          return (
+            <li key={s.label} className={`${styles.step} ${cls}`}>
+              <span className={styles.stepDot}>
+                {paso <= stepDone ? "✓" : paso}
+              </span>
+              <span className={styles.stepText}>
+                <strong>{s.label}</strong>
+                <em>{s.desc}</em>
+              </span>
+            </li>
+          );
+        })}
+      </ol>
 
       <main className={styles.card}>
         <div className={styles.cardHeader}>

@@ -4,6 +4,7 @@ import { getDatosEnvio } from "@/features/pedidos/api/comercial.api";
 import { getUsuarios } from "@/features/usuarios/api/usuarios.api";
 import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { PedidoHeader } from "@/features/pedidos/components/PedidoHeader";
+import { PedidoStepper } from "@/features/pedidos/components/PedidoStepper";
 import { PedidoIdentificacion } from "@/features/pedidos/components/PedidoIdentificacion";
 import { PedidoGrupos } from "@/features/pedidos/components/PedidoGrupos";
 import { PedidoEnvio } from "@/features/pedidos/components/PedidoEnvio";
@@ -11,7 +12,9 @@ import { PedidoDiseno } from "@/features/pedidos/components/PedidoDiseno";
 import { PedidoColores } from "@/features/pedidos/components/PedidoColores";
 import { PedidoRevision } from "@/features/pedidos/components/PedidoRevision";
 import styles from "@/features/pedidos/components/pedidos.module.css";
+import shared from "@/components/ui/table/tableShared.module.css";
 import { SipesApiError } from "@/lib/api/http";
+import { loadData } from "@/lib/api/loadData";
 
 export const dynamic = "force-dynamic";
 
@@ -22,31 +25,42 @@ interface PedidoPageProps {
 export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   const { id } = await params;
   let pedido;
-  let tiposProducto = [];
-  let datosEnvio;
-  let usuarios = [];
-  let atributosCatalogo = [];
-  let disenos = [];
+  let tiposProductoRes;
+  let envioRes;
+  let usuariosRes;
+  let atributosRes;
+  let disenosRes;
 
   try {
-    const [pedidoRes, tiposRes, envioRes, usuariosRes, atributosRes, disenosRes] = await Promise.all([
+    const [pedidoRes, tiposRes, envioResult, usuariosResult, atributosResult, disenosResult] = await Promise.all([
       getPedido(id),
-      getTiposProducto().catch(() => []),
-      getDatosEnvio(id).catch(() => null),
-      getUsuarios().catch(() => []),
-      getAtributosCatalogo().catch(() => []),
-      getDisenosPedido(id).catch(() => []),
+      loadData(() => getTiposProducto()),
+      loadData(() => getDatosEnvio(id)),
+      loadData(() => getUsuarios()),
+      loadData(() => getAtributosCatalogo()),
+      loadData(() => getDisenosPedido(id)),
     ]);
     pedido = pedidoRes;
-    tiposProducto = tiposRes;
-    datosEnvio = envioRes;
-    usuarios = usuariosRes;
-    atributosCatalogo = atributosRes;
-    disenos = disenosRes;
+    tiposProductoRes = tiposRes;
+    envioRes = envioResult;
+    usuariosRes = usuariosResult;
+    atributosRes = atributosResult;
+    disenosRes = disenosResult;
   } catch (error) {
     if (error instanceof SipesApiError && error.status === 404) notFound();
     throw error;
   }
+
+  const tiposProducto = tiposProductoRes.data ?? [];
+  const datosEnvio = envioRes.data;
+  const usuarios = usuariosRes.data ?? [];
+  const atributosCatalogo = atributosRes.data ?? [];
+  const disenos = disenosRes.data ?? [];
+
+  const avisosAuxiliares = [
+    tiposProductoRes.error ? `Tipos de producto: ${tiposProductoRes.error}` : null,
+    envioRes.error ? `Datos de envío: ${envioRes.error}` : null,
+  ].filter((mensaje): mensaje is string => mensaje !== null);
 
   let vendedoras = (usuarios ?? [])
     .filter((u) => u.activo && (u.rol === "VENDEDORA" || u.rol === "VENDEDOR"))
@@ -66,6 +80,14 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   return (
     <main>
       <PedidoHeader pedido={pedido} />
+      {avisosAuxiliares.length > 0 && (
+        <div className={shared.inlineWarning} role="alert">
+          {avisosAuxiliares.join(" · ")}
+        </div>
+      )}
+      <div style={{ margin: "0 0 var(--space-5)" }}>
+        <PedidoStepper estado={pedido.estado} />
+      </div>
       <div className={styles.sheetContainer}>
         <PedidoIdentificacion pedido={pedido} vendedoras={vendedoras} />
         <PedidoGrupos

@@ -1,10 +1,13 @@
 import { Suspense } from "react";
 import { PedidosTable } from "@/features/pedidos/components/PedidosTable";
+import { PedidosKpis } from "@/features/pedidos/components/PedidosKpis";
 import { PedidosFiltros } from "@/features/pedidos/components/PedidosFiltros";
 import { NuevoPedidoHeaderAction } from "@/features/pedidos/components/NuevoPedidoHeaderAction";
 import { getPedidos, getClientes } from "@/features/pedidos/api/pedidos.api";
 import { getUsuarios } from "@/features/usuarios/api/usuarios.api";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
+import shared from "@/components/ui/table/tableShared.module.css";
+import { loadData } from "@/lib/api/loadData";
 
 export const dynamic = "force-dynamic";
 
@@ -13,16 +16,18 @@ interface PedidosPageProps {
 }
 
 async function PedidosTableAsync({ estado }: { estado?: string }) {
-  const pedidos = await getPedidos({ estado }).catch(() => []);
-  return <PedidosTable pedidos={pedidos} />;
+  const { data, error } = await loadData(() => getPedidos({ estado }));
+  return <PedidosTable pedidos={data ?? []} error={error} />;
 }
 
 export default async function PedidosPage({ searchParams }: PedidosPageProps) {
   const params = await searchParams;
-  const [clientes, usuarios] = await Promise.all([
-    getClientes().catch(() => []),
-    getUsuarios().catch(() => []),
+  const [clientesResult, usuariosResult] = await Promise.all([
+    loadData(() => getClientes()),
+    loadData(() => getUsuarios()),
   ]);
+  const clientes = clientesResult.data ?? [];
+  const usuarios = usuariosResult.data ?? [];
 
   let vendedoras = (usuarios ?? [])
     .filter((u) => u.activo && (u.rol === "VENDEDORA" || u.rol === "VENDEDOR"))
@@ -47,6 +52,16 @@ export default async function PedidosPage({ searchParams }: PedidosPageProps) {
         <NuevoPedidoHeaderAction clientes={clientes} vendedoras={vendedoras} />
       </header>
 
+      {clientesResult.error && (
+        <div className={shared.inlineWarning} role="alert">
+          {`Clientes: ${clientesResult.error}`}
+        </div>
+      )}
+
+      <Suspense key={`kpis-${params.estado ?? "ALL"}`} fallback={<div className="kpiPlaceholder" aria-hidden="true" />}>
+        <PedidosKpisAsync estado={params.estado} />
+      </Suspense>
+
       <PedidosFiltros estadoActual={params.estado} />
 
       <Suspense key={params.estado ?? "ALL"} fallback={<TableSkeleton rows={6} />}>
@@ -54,4 +69,9 @@ export default async function PedidosPage({ searchParams }: PedidosPageProps) {
       </Suspense>
     </main>
   );
+}
+
+async function PedidosKpisAsync({ estado }: { estado?: string }) {
+  const { data } = await loadData(() => getPedidos({ estado }));
+  return <PedidosKpis pedidos={data ?? []} />;
 }

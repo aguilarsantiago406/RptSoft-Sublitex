@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import shared from "@/components/ui/table/tableShared.module.css";
 import type { AtributoCatalogoItem, TallaCatalogoItem } from "../api/pedidos.api";
 import type { GrupoPedido, PrendaDetalle } from "../types/pedido";
 import { PrendasTable } from "./PrendasTable";
@@ -13,6 +14,7 @@ interface PrendasViewProps {
   tallas: TallaCatalogoItem[];
   atributos: AtributoCatalogoItem[];
   colores?: Array<{ id: string; nombre: string; codigoHex: string }>;
+  errorGrupos?: string[];
 }
 
 export function PrendasView({
@@ -22,6 +24,7 @@ export function PrendasView({
   tallas,
   atributos,
   colores,
+  errorGrupos = [],
 }: PrendasViewProps) {
   const [grupoActivo, setGrupoActivo] = useState<string>("TODOS");
   const [busqueda, setBusqueda] = useState<string>("");
@@ -124,6 +127,14 @@ export function PrendasView({
           />
         </div>
       </div>
+
+      {errorGrupos.length > 0 && (
+        <div className={shared.inlineWarning} role="alert">
+          {`No se pudieron cargar ${errorGrupos.length} ${
+            errorGrupos.length === 1 ? "grupo" : "grupos"
+          }: ${errorGrupos.join(", ")}. Revisá la conexión o intentá recargar.`}
+        </div>
+      )}
 
       <PrendasTable
         prendas={prendasFiltradas}

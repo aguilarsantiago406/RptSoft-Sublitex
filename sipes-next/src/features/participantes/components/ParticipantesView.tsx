@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import shared from "@/components/ui/table/tableShared.module.css";
 import type { GrupoPedido } from "@/features/pedidos/types/pedido";
 import type { ParticipanteConPrendas } from "@/features/pedidos/api/pedidos.api";
 import { ParticipantesTable } from "./ParticipantesTable";
@@ -16,26 +17,18 @@ interface ParticipantesViewProps {
   participantes: ItemParticipante[];
   grupos: GrupoPedido[];
   pedidoId: string;
-  mapaTallasObj: Record<string, string>;
+  errorGrupos?: string[];
 }
 
 export function ParticipantesView({
   participantes,
   grupos,
   pedidoId,
-  mapaTallasObj,
+  errorGrupos = [],
 }: ParticipantesViewProps) {
   const [grupoActivo, setGrupoActivo] = useState<string>("TODOS");
   const [busqueda, setBusqueda] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const mapaTallas = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const [k, v] of Object.entries(mapaTallasObj)) {
-      map.set(k, v);
-    }
-    return map;
-  }, [mapaTallasObj]);
 
   // Conteo por grupo
   const conteoPorGrupo = useMemo(() => {
@@ -148,10 +141,17 @@ export function ParticipantesView({
         </button>
       </div>
 
+      {errorGrupos.length > 0 && (
+        <div className={shared.inlineWarning} role="alert">
+          {`No se pudieron cargar ${errorGrupos.length} ${
+            errorGrupos.length === 1 ? "grupo" : "grupos"
+          }: ${errorGrupos.join(", ")}. Revisá la conexión o intentá recargar.`}
+        </div>
+      )}
+
       <ParticipantesTable
         participantes={participantesFiltrados}
         pedidoId={pedidoId}
-        mapaTallas={mapaTallas}
       />
 
       <div className={styles.countSummary}>

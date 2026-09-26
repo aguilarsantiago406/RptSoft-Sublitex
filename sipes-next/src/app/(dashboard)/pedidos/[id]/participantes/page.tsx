@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getPedido, getParticipantesGrupo, getTallasCatalogo } from "@/features/pedidos/api/pedidos.api";
+import { getPedido, getParticipantesGrupo } from "@/features/pedidos/api/pedidos.api";
 import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
 import { ParticipantesView, type ItemParticipante } from "@/features/participantes/components/ParticipantesView";
 import styles from "@/features/pedidos/components/pedidos.module.css";
@@ -14,10 +14,9 @@ export default async function ParticipantesPage({ params }: ParticipantesPagePro
   const { id } = await params;
 
   let pedido;
-  let tallasCatalogo;
 
   try {
-    [pedido, tallasCatalogo] = await Promise.all([getPedido(id), getTallasCatalogo()]);
+    pedido = await getPedido(id);
   } catch {
     notFound();
   }
@@ -32,27 +31,29 @@ export default async function ParticipantesPage({ params }: ParticipantesPagePro
     mapaGrupos.set(g.id, g.nombre);
   }
 
-  // Mapa serializable de tallas para el cliente
-  const mapaTallasObj: Record<string, string> = {};
-  for (const t of tallasCatalogo ?? []) {
-    mapaTallasObj[t.id] = t.codigo;
-  }
-
   // Consultar los participantes de cada grupo
-  const participantesPorGrupo = await Promise.all(
-    pedido.grupos.map((g) => getParticipantesGrupo(g.id).catch(() => []))
+  // Un grupo que falla se reporta por nombre en lugar de confundirse con un grupo vacío.
+  const resultadosPorGrupo = await Promise.allSettled(
+    pedido.grupos.map((g) => getParticipantesGrupo(g.id))
   );
 
   // Aplanar la lista de participantes manteniendo el nombre del grupo
   const items: ItemParticipante[] = [];
-  for (const lista of participantesPorGrupo) {
-    for (const p of lista) {
+  const errorGrupos: string[] = [];
+
+  pedido.grupos.forEach((grupo, index) => {
+    const resultado = resultadosPorGrupo[index];
+    if (resultado.status === "rejected") {
+      errorGrupos.push(grupo.nombre);
+      return;
+    }
+    for (const p of resultado.value) {
       items.push({
         participante: p,
         nombreGrupo: mapaGrupos.get(p.grupoId) ?? "Sin grupo",
       });
     }
-  }
+  });
 
   return (
     <main>
@@ -72,7 +73,7 @@ export default async function ParticipantesPage({ params }: ParticipantesPagePro
         participantes={items}
         grupos={pedido.grupos}
         pedidoId={id}
-        mapaTallasObj={mapaTallasObj}
+        errorGrupos={errorGrupos}
       />
     </main>
   );

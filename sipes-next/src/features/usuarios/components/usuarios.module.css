@@ -1,4 +1,4 @@
-.container {
+﻿.container {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -58,18 +58,20 @@
   gap: 8px;
   height: 40px;
   padding: 0 18px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--navy);
   color: #ffffff;
   font-size: 0.88rem;
   font-weight: 600;
   border: none;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.05s ease;
+  transition: background-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .primaryButton:hover {
-  background: var(--navy-soft);
+  background: var(--navy-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .primaryButton:active {
@@ -79,9 +81,9 @@
 /* Tabla de Usuarios */
 .tableCard {
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
 }
 
@@ -115,8 +117,12 @@
   vertical-align: middle;
 }
 
+.table tbody tr {
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
 .table tbody tr:hover {
-  background: #f8fafc;
+  background: var(--sky-soft);
 }
 
 .userCell {
@@ -228,19 +234,40 @@
 
 .actionButton {
   padding: 5px 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.76rem;
   font-weight: 600;
   border: 1px solid var(--border);
   background: #ffffff;
   color: var(--navy);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
 }
 
 .actionButton:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--sky-soft);
+  border-color: rgba(2, 132, 199, 0.35);
+  color: var(--sky-dark);
+  transform: translateY(-1px);
+}
+
+.secondaryActionButton {
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: #f1f5f9;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+
+.secondaryActionButton:hover {
+  background: var(--navy-soft);
+  border-color: var(--border);
+  color: var(--navy);
 }
 
 .emptyState {
@@ -260,31 +287,31 @@
   display: grid;
   place-items: center;
   padding: 20px;
+  animation: backdropIn var(--duration-med) var(--ease-out);
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modalCard {
   width: 100%;
   max-width: 480px;
   background: var(--surface);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  animation: modalEnter 0.15s ease-out;
+  animation: modalIn var(--duration-med) var(--ease-out);
 }
 
-@keyframes modalEnter {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modalHeader {
@@ -393,33 +420,38 @@
 .secondaryButton {
   height: 38px;
   padding: 0 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: #f1f5f9;
   color: #475569;
   font-size: 0.84rem;
   font-weight: 600;
   border: 1px solid #e2e8f0;
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
 
 .secondaryButton:hover {
   background: #e2e8f0;
+  color: var(--navy);
 }
 
 .submitButton {
   height: 38px;
   padding: 0 18px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--navy);
   color: #ffffff;
   font-size: 0.84rem;
   font-weight: 600;
   border: none;
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .submitButton:hover:not(:disabled) {
-  background: var(--navy-soft);
+  background: var(--navy-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .submitButton:disabled {
