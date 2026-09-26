@@ -1,12 +1,15 @@
 import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../../../core/guards/roles.guard';
+import { Roles, ROLES_GESTION_LISTA } from '../../../core/decorators/roles.decorator';
 import { ParticipantesService } from './participantes.service';
 import { CreateParticipanteDto } from './dto/create-participante.dto';
 
 @ApiTags('Participantes')
 @Controller('api')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles(...ROLES_GESTION_LISTA)
 @ApiBearerAuth()
 export class ParticipantesController {
   constructor(private readonly service: ParticipantesService) {}

@@ -57,3 +57,7 @@ mio/
 docs_bk2/
 sipes-next/
 falta.md
+
+# Storage local efímero
+Backend/storage/
+storage/

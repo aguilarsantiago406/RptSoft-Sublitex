@@ -116,6 +116,62 @@ export class StorageService {
   }
 
   /**
+   * Sube un Buffer binario directamente a Supabase Storage y retorna su URL pública inmutable.
+   * Utilizado para archivos generados en memoria como PDFs de confirmación comercial (R-K06).
+   *
+   * @param buffer Buffer de datos en memoria
+   * @param nombreArchivo Nombre del archivo destino (ej: 'SUB-202609-0001-v1.pdf')
+   * @param mimetype Tipo MIME (default: 'application/pdf')
+   * @param carpeta Subcarpeta de destino en el bucket (default: 'confirmaciones')
+   */
+  async subirBuffer(
+    buffer: Buffer,
+    nombreArchivo: string,
+    mimetype: string = 'application/pdf',
+    carpeta: string = 'confirmaciones',
+  ): Promise<ArchivoSubidoResponse> {
+    if (!this.supabase) {
+      throw new ServiceUnavailableException(
+        'Supabase Storage no está configurado. Por favor define SUPABASE_URL y SUPABASE_KEY en el archivo .env del servidor.',
+      );
+    }
+
+    if (!buffer || buffer.length === 0) {
+      throw new BadRequestException('El buffer del archivo está vacío.');
+    }
+
+    const nombreLimpio = nombreArchivo
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9._-]/g, '_');
+
+    const subcarpetaLimpia = carpeta.replace(/[^a-zA-Z0-9_-]/g, '');
+    const path = `${subcarpetaLimpia}/${nombreLimpio}`;
+
+    const { error } = await this.supabase.storage
+      .from(this.bucket)
+      .upload(path, buffer, {
+        contentType: mimetype,
+        upsert: true,
+      });
+
+    if (error) {
+      this.logger.error(`Error al subir buffer a Supabase: ${error.message}`);
+      throw new BadRequestException(`Error al guardar archivo en Supabase Storage: ${error.message}`);
+    }
+
+    const { data: urlData } = this.supabase.storage.from(this.bucket).getPublicUrl(path);
+
+    return {
+      url: urlData.publicUrl,
+      path,
+      nombreOriginal: nombreArchivo,
+      mimetype,
+      tamanoBytes: buffer.length,
+    };
+  }
+
+  /**
    * Obtiene la URL pública de un archivo dado su path relativo en el bucket.
    */
   obtenerUrlPublica(path: string): string {

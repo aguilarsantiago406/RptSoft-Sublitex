@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as PDFDocument from 'pdfkit';
+import { StorageService } from '../storage/storage.service';
 
 export interface ConfirmacionPdfData {
   codigo: string;
@@ -29,9 +30,10 @@ export interface ConfirmacionPdfData {
 
 @Injectable()
 export class PdfService {
+  private readonly logger = new Logger(PdfService.name);
   private readonly outputDir: string;
 
-  constructor() {
+  constructor(@Optional() private readonly storageService?: StorageService) {
     this.outputDir = path.join(process.cwd(), 'storage', 'confirmaciones');
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
@@ -42,10 +44,12 @@ export class PdfService {
     const filename = `${data.codigo}-v${data.version}.pdf`;
     const filepath = path.join(this.outputDir, filename);
 
-    await new Promise<void>((resolve, reject) => {
+    const buffer = await new Promise<Buffer>((resolve, reject) => {
       const doc = new (PDFDocument as any)({ margin: 50, size: 'A4' });
       const stream = fs.createWriteStream(filepath);
+      const chunks: Buffer[] = [];
 
+      doc.on('data', (chunk: Buffer) => chunks.push(chunk));
       doc.pipe(stream);
 
       doc.fontSize(20).font('Helvetica-Bold').text('SUBLITEX', { align: 'center' });
@@ -129,10 +133,29 @@ export class PdfService {
       doc.text(`Generado el ${new Date().toLocaleString('es-PE', { timeZone: 'America/Lima' })}`, { align: 'center' });
 
       doc.end();
-      stream.on('finish', resolve);
+      stream.on('finish', () => resolve(Buffer.concat(chunks)));
       stream.on('error', reject);
     });
 
+    // 1. Si Supabase Storage está configurado, subir directamente a Supabase
+    if (this.storageService && this.storageService.estaConfigurado()) {
+      try {
+        const subida = await this.storageService.subirBuffer(
+          buffer,
+          filename,
+          'application/pdf',
+          'confirmaciones',
+        );
+        this.logger.log(`✅ PDF de confirmación ${filename} persistido en Supabase: ${subida.url}`);
+        return subida.url;
+      } catch (err: any) {
+        this.logger.warn(
+          `⚠️ No se pudo subir el PDF a Supabase (${err?.message}). Usando almacenamiento local como fallback.`,
+        );
+      }
+    }
+
+    // 2. Fallback a almacenamiento local
     return `/storage/confirmaciones/${filename}`;
   }
 }

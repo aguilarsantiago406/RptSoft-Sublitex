@@ -1,12 +1,15 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../../../core/guards/roles.guard';
+import { Roles, ROLES_TODOS } from '../../../core/decorators/roles.decorator';
 import { AuditoriaService } from './auditoria.service';
 import { ListarRegistrosCambioDto } from './dto/listar-registros-cambio.dto';
 
 @ApiTags('Auditoría')
 @Controller('api')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles(...ROLES_TODOS)
 @ApiBearerAuth()
 export class AuditoriaController {
   constructor(private readonly auditoriaService: AuditoriaService) {}
