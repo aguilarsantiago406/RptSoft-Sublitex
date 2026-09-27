@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useTableState } from "@/lib/useTableState";
 import { Pagination } from "@/components/ui/table/Pagination";
 import { SortableTh } from "@/components/ui/table/SortableTh";
+import type { GrupoPedido } from "@/features/pedidos/types/pedido";
 import type { ParticipanteConPrendas } from "@/features/pedidos/api/pedidos.api";
 import { ParticipantesRow } from "./ParticipantesRow";
+import { AgregarPrendaModal } from "./AgregarPrendaModal";
 import styles from "./participantes.module.css";
 
 interface FilaParticipante {
@@ -15,11 +18,21 @@ interface FilaParticipante {
 interface ParticipantesTableProps {
   participantes: FilaParticipante[];
   pedidoId: string;
+  grupos: GrupoPedido[];
+  tiposProducto?: Array<{ id: string; nombre: string; codigo: string }>;
+  colores?: Array<{ id: string; nombre: string; codigoHex: string }>;
 }
 
-export function ParticipantesTable({ participantes, pedidoId }: ParticipantesTableProps) {
+export function ParticipantesTable({
+  participantes,
+  pedidoId,
+  grupos,
+  tiposProducto = [],
+  colores = [],
+}: ParticipantesTableProps) {
   const table = useTableState<FilaParticipante>(participantes);
   const offset = (table.page - 1) * table.pageSize;
+  const [partParaPrenda, setPartParaPrenda] = useState<ParticipanteConPrendas | null>(null);
 
   if (participantes.length === 0) {
     return (
@@ -36,10 +49,11 @@ export function ParticipantesTable({ participantes, pedidoId }: ParticipantesTab
       <div className={styles.tableScroll}>
         <table className={styles.table}>
           <colgroup>
-            <col style={{ width: "48px" }} />
-            <col style={{ width: "320px" }} />
+            <col style={{ width: "44px" }} />
+            <col style={{ width: "260px" }} />
+            <col style={{ width: "110px" }} />
             <col style={{ width: "130px" }} />
-            <col style={{ width: "320px" }} />
+            <col style={{ width: "270px" }} />
           </colgroup>
           <thead>
             <tr>
@@ -58,7 +72,8 @@ export function ParticipantesTable({ participantes, pedidoId }: ParticipantesTab
                 dir={table.sortDir}
                 onSort={table.toggleSort}
               />
-              <th>Enlace WhatsApp</th>
+              <th>Prendas</th>
+              <th>Enlace</th>
             </tr>
           </thead>
           <tbody>
@@ -69,6 +84,7 @@ export function ParticipantesTable({ participantes, pedidoId }: ParticipantesTab
                 participante={item.participante}
                 nombreGrupo={item.nombreGrupo}
                 pedidoId={pedidoId}
+                onAgregarPrenda={setPartParaPrenda}
               />
             ))}
           </tbody>
@@ -82,6 +98,16 @@ export function ParticipantesTable({ participantes, pedidoId }: ParticipantesTab
         firstRow={table.firstRow}
         lastRow={table.lastRow}
         onPage={table.setPage}
+      />
+
+      <AgregarPrendaModal
+        isOpen={Boolean(partParaPrenda)}
+        onClose={() => setPartParaPrenda(null)}
+        participante={partParaPrenda}
+        pedidoId={pedidoId}
+        grupos={grupos}
+        tiposProducto={tiposProducto}
+        colores={colores}
       />
     </div>
   );

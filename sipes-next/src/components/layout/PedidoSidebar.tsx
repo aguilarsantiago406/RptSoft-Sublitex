@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ClipboardList, Users, Shirt, FileText } from "lucide-react";
+import { ClipboardList, Palette, Users, Shirt, FileText } from "lucide-react";
 import { actionLogout } from "@/features/auth/actions/auth.actions";
 import styles from "./layout.module.css";
 
@@ -24,6 +24,12 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
       href: basePath,
       icon: ClipboardList,
       isActive: pathname === basePath,
+    },
+    {
+      label: "Diseño y Mockups",
+      href: `${basePath}/diseno`,
+      icon: Palette,
+      isActive: pathname.startsWith(`${basePath}/diseno`),
     },
     {
       label: "Participantes",

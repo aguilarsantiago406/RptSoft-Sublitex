@@ -13,6 +13,7 @@ interface ParticipantesRowProps {
   participante: ParticipanteConPrendas & { enlaceRevocado?: boolean };
   nombreGrupo: string;
   pedidoId: string;
+  onAgregarPrenda?: (participante: ParticipanteConPrendas) => void;
 }
 
 function getGroupBadgeClass(nombreGrupo: string): string {
@@ -27,6 +28,7 @@ export function ParticipantesRow({
   participante,
   nombreGrupo,
   pedidoId,
+  onAgregarPrenda,
 }: ParticipantesRowProps) {
   const [token, setToken] = useState(participante.enlaceToken);
   const estado = participante.estado;
@@ -42,15 +44,6 @@ export function ParticipantesRow({
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }
-
-  function handleOpenWhatsApp() {
-    if (!token) return;
-    const url = `${window.location.origin}/participante/${token}`;
-    const wa = `https://wa.me/?text=${encodeURIComponent(
-      `Hola ${participante.nombrePersona}, completa tus datos para tu prenda de Sublitex: ${url}`
-    )}`;
-    window.open(wa, "_blank", "noreferrer");
   }
 
   async function handleRegenerate() {
@@ -114,6 +107,28 @@ export function ParticipantesRow({
         </span>
       </td>
       <td>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <span
+            className={styles.tabBadge}
+            title={`${participante.prendas?.length ?? 0} prendas asignadas`}
+            style={{ fontWeight: 600 }}
+          >
+            {participante.prendas?.length ?? 0}
+          </span>
+          {onAgregarPrenda && (
+            <button
+              type="button"
+              className={styles.copyButton}
+              onClick={() => onAgregarPrenda(participante)}
+              title="Sumar una prenda adicional a este participante"
+              style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600 }}
+            >
+              + Prenda
+            </button>
+          )}
+        </div>
+      </td>
+      <td>
         {token ? (
           <div className={styles.linkCell}>
             <div className={styles.linkActions}>
@@ -121,17 +136,9 @@ export function ParticipantesRow({
                 type="button"
                 className={styles.copyButton}
                 onClick={handleCopy}
-                title="Copiar enlace público para WhatsApp"
+                title="Copiar enlace público del participante"
               >
                 {copied ? "Copiado" : "Copiar enlace"}
-              </button>
-              <button
-                type="button"
-                onClick={handleOpenWhatsApp}
-                className={styles.whatsappButton}
-                title="Abrir chat de WhatsApp con el mensaje"
-              >
-                WhatsApp
               </button>
               <button
                 type="button"

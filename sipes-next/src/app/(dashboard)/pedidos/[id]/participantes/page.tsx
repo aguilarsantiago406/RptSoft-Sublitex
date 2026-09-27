@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getPedido, getParticipantesGrupo } from "@/features/pedidos/api/pedidos.api";
+import { getTiposProducto } from "@/features/catalogos/api/catalogos.api";
 import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
 import { ParticipantesView, type ItemParticipante } from "@/features/participantes/components/ParticipantesView";
 import styles from "@/features/pedidos/components/pedidos.module.css";
@@ -14,9 +15,15 @@ export default async function ParticipantesPage({ params }: ParticipantesPagePro
   const { id } = await params;
 
   let pedido;
+  let tiposProducto: Array<{ id: string; nombre: string; codigo: string }> = [];
 
   try {
-    pedido = await getPedido(id);
+    const [p, tp] = await Promise.all([
+      getPedido(id),
+      getTiposProducto().catch(() => []),
+    ]);
+    pedido = p;
+    tiposProducto = tp;
   } catch {
     notFound();
   }
@@ -74,6 +81,8 @@ export default async function ParticipantesPage({ params }: ParticipantesPagePro
         grupos={pedido.grupos}
         pedidoId={id}
         errorGrupos={errorGrupos}
+        tiposProducto={tiposProducto}
+        colores={pedido.colores}
       />
     </main>
   );

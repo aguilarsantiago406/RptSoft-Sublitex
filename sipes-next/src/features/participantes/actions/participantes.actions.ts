@@ -128,3 +128,28 @@ export async function actionRevocarEnlace(
     return { ok: false, error: "No se pudo revocar el enlace del participante." };
   }
 }
+
+export interface EnlacesGrupoResult {
+  ok: boolean;
+  error?: string;
+  mensajeGrupal?: string;
+  total?: number;
+}
+
+export async function actionObtenerEnlacesGrupo(
+  grupoId: string,
+  soloPendientes = false
+): Promise<EnlacesGrupoResult> {
+  try {
+    const q = soloPendientes ? "?soloPendientes=true" : "";
+    const res = await apiGet<{ mensajeGrupal: string; total: number }>(
+      `/api/grupos/${encodeURIComponent(grupoId)}/enlaces-whatsapp${q}`
+    );
+    return { ok: true, mensajeGrupal: res.mensajeGrupal, total: res.total };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudieron obtener los enlaces del grupo." };
+  }
+}

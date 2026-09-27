@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getPedido, getTiposProducto, getAtributosCatalogo } from "@/features/pedidos/api/pedidos.api";
-import { getDatosEnvio } from "@/features/pedidos/api/comercial.api";
+import { getDatosEnvio, getResumenProduccion } from "@/features/pedidos/api/comercial.api";
 import { getUsuarios } from "@/features/usuarios/api/usuarios.api";
 import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { PedidoHeader } from "@/features/pedidos/components/PedidoHeader";
@@ -8,9 +8,12 @@ import { PedidoStepper } from "@/features/pedidos/components/PedidoStepper";
 import { PedidoIdentificacion } from "@/features/pedidos/components/PedidoIdentificacion";
 import { PedidoGrupos } from "@/features/pedidos/components/PedidoGrupos";
 import { PedidoEnvio } from "@/features/pedidos/components/PedidoEnvio";
-import { PedidoDiseno } from "@/features/pedidos/components/PedidoDiseno";
+import { PedidoDisenoCard } from "@/features/pedidos/components/PedidoDisenoCard";
 import { PedidoColores } from "@/features/pedidos/components/PedidoColores";
+import { PedidoRecoleccionCard } from "@/features/pedidos/components/PedidoRecoleccionCard";
 import { PedidoRevision } from "@/features/pedidos/components/PedidoRevision";
+import { PedidoGuiaEtapa } from "@/features/pedidos/components/PedidoGuiaEtapa";
+import guiaStyles from "@/features/pedidos/components/pedidoGuiaEtapa.module.css";
 import styles from "@/features/pedidos/components/pedidos.module.css";
 import shared from "@/components/ui/table/tableShared.module.css";
 import { SipesApiError } from "@/lib/api/http";
@@ -30,15 +33,17 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   let usuariosRes;
   let atributosRes;
   let disenosRes;
+  let resumenRes;
 
   try {
-    const [pedidoRes, tiposRes, envioResult, usuariosResult, atributosResult, disenosResult] = await Promise.all([
+    const [pedidoRes, tiposRes, envioResult, usuariosResult, atributosResult, disenosResult, resumenResult] = await Promise.all([
       getPedido(id),
       loadData(() => getTiposProducto()),
       loadData(() => getDatosEnvio(id)),
       loadData(() => getUsuarios()),
       loadData(() => getAtributosCatalogo()),
       loadData(() => getDisenosPedido(id)),
+      loadData(() => getResumenProduccion(id)),
     ]);
     pedido = pedidoRes;
     tiposProductoRes = tiposRes;
@@ -46,6 +51,7 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
     usuariosRes = usuariosResult;
     atributosRes = atributosResult;
     disenosRes = disenosResult;
+    resumenRes = resumenResult;
   } catch (error) {
     if (error instanceof SipesApiError && error.status === 404) notFound();
     throw error;
@@ -56,6 +62,7 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   const usuarios = usuariosRes.data ?? [];
   const atributosCatalogo = atributosRes.data ?? [];
   const disenos = disenosRes.data ?? [];
+  const resumenProduccion = resumenRes.data;
 
   const avisosAuxiliares = [
     tiposProductoRes.error ? `Tipos de producto: ${tiposProductoRes.error}` : null,
@@ -76,6 +83,7 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   }
 
   const totalPrendas = pedido.grupos.reduce((acc, g) => acc + g.cantidadContratada, 0);
+  const etapa = pedido.estado;
 
   return (
     <main>
@@ -85,23 +93,68 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
           {avisosAuxiliares.join(" · ")}
         </div>
       )}
-      <div style={{ margin: "0 0 var(--space-5)" }}>
+      <div style={{ margin: "0 0 var(--space-4)" }}>
         <PedidoStepper estado={pedido.estado} />
       </div>
+
+      <PedidoGuiaEtapa
+        pedido={pedido}
+        disenos={disenos}
+        datosEnvio={datosEnvio}
+        totalPrendas={totalPrendas}
+      />
+
       <div className={styles.sheetContainer}>
-        <PedidoIdentificacion pedido={pedido} vendedoras={vendedoras} />
-        <PedidoGrupos
-          grupos={pedido.grupos}
-          pedidoId={pedido.id}
-          totalPrendas={totalPrendas}
-          tiposProducto={tiposProducto}
-          atributosCatalogo={atributosCatalogo}
-        />
-        <PedidoEnvio pedidoId={pedido.id} datosEnvio={datosEnvio} />
-        <PedidoDiseno pedidoId={pedido.id} disenos={disenos} />
+        {/* BLOQUE 1: IDENTIFICACIÓN Y LOGÍSTICA COMERCIAL */}
         <div className={styles.twoColsLayout}>
-          <PedidoColores colores={pedido.colores} pedidoId={pedido.id} />
-          <PedidoRevision pedido={pedido} totalPrendas={totalPrendas} />
+          <div style={{ position: "relative", borderRadius: "18px" }} className={etapa === "BORRADOR" ? guiaStyles.activeSectionHighlight : undefined}>
+            {etapa === "BORRADOR" && <span className={guiaStyles.activeSectionBadge}>Etapa activa · Datos Iniciales</span>}
+            <PedidoIdentificacion pedido={pedido} vendedoras={vendedoras} />
+          </div>
+
+          <div style={{ position: "relative", borderRadius: "18px" }} className={etapa === "EN_PRODUCCION" ? guiaStyles.activeSectionHighlight : undefined}>
+            {etapa === "EN_PRODUCCION" && <span className={guiaStyles.activeSectionBadge}>Etapa activa · Logística de Despacho</span>}
+            <PedidoEnvio pedidoId={pedido.id} datosEnvio={datosEnvio} />
+          </div>
+        </div>
+
+        {/* BLOQUE 2: ESPECIFICACIÓN TEXTIL (GRUPOS + COLORES JUNTOS) */}
+        <div style={{ position: "relative", borderRadius: "18px" }} className={etapa === "EN_CONFIGURACION" ? guiaStyles.activeSectionHighlight : undefined}>
+          {etapa === "EN_CONFIGURACION" && <span className={guiaStyles.activeSectionBadge}>Etapa activa · Grupos y Colores</span>}
+          <div style={{ display: "grid", gap: "16px" }}>
+            <PedidoGrupos
+              grupos={pedido.grupos}
+              pedidoId={pedido.id}
+              totalPrendas={totalPrendas}
+              tiposProducto={tiposProducto}
+              atributosCatalogo={atributosCatalogo}
+            />
+            <PedidoColores colores={pedido.colores} pedidoId={pedido.id} />
+          </div>
+        </div>
+
+        {/* BLOQUE 3: RECOLECCIÓN DE DATOS (TALLAS Y PARTICIPANTES) */}
+        <div style={{ position: "relative", borderRadius: "18px" }} className={etapa === "EN_RECOLECCION" ? guiaStyles.activeSectionHighlight : undefined}>
+          {etapa === "EN_RECOLECCION" && (
+            <span className={guiaStyles.activeSectionBadge}>Etapa activa · Recolección de Tallas</span>
+          )}
+          <PedidoRecoleccionCard pedido={pedido} totalPrendas={totalPrendas} resumen={resumenProduccion} />
+        </div>
+
+        {/* BLOQUE 4: DISEÑO Y MOCKUPS */}
+        <div style={{ position: "relative", borderRadius: "18px" }}>
+          <PedidoDisenoCard pedidoId={pedido.id} disenos={disenos} />
+        </div>
+
+        {/* BLOQUE 5: REVISIÓN Y CONTROL DE CALIDAD (AUDITORÍA PRE-TALLER) */}
+        <div style={{ position: "relative", borderRadius: "18px" }} className={etapa === "EN_REVISION" ? guiaStyles.activeSectionHighlight : undefined}>
+          {etapa === "EN_REVISION" && <span className={guiaStyles.activeSectionBadge}>Etapa activa · Auditoría de Calidad</span>}
+          <PedidoRevision
+            pedido={pedido}
+            totalPrendas={totalPrendas}
+            disenoAprobado={disenos.some((d) => d.estado === "APROBADO")}
+            datosEnvio={datosEnvio}
+          />
         </div>
       </div>
     </main>

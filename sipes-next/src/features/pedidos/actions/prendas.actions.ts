@@ -109,3 +109,46 @@ export async function actionEliminarExcepcionPrenda(
     return { ok: false, error: "No se pudo eliminar la excepción." };
   }
 }
+
+export interface CreatePrendaParams {
+  participanteId: string;
+  grupoId: string;
+  tipoProductoId: string;
+  tipoPrenda?: "VENTA" | "OBSEQUIO" | "MUESTRA";
+  esArquero?: boolean;
+  colorId?: string;
+  nombreEnPrenda?: string;
+  numero?: string;
+  tallaId?: string;
+  genero?: "HOMBRE" | "MUJER" | "NINO" | "NINA" | "SIN_ESPECIFICAR";
+}
+
+export async function actionCrearPrenda(
+  pedidoId: string,
+  data: CreatePrendaParams
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await apiPost("/api/prendas", {
+      participanteId: data.participanteId,
+      grupoId: data.grupoId,
+      tipoProductoId: data.tipoProductoId,
+      tipoPrenda: data.tipoPrenda || "VENTA",
+      esArquero: Boolean(data.esArquero),
+      colorId: data.colorId || undefined,
+      nombreEnPrenda: data.nombreEnPrenda?.trim() || undefined,
+      numero: data.numero?.trim() || undefined,
+      tallaId: data.tallaId || undefined,
+      genero: data.genero || undefined,
+    });
+
+    revalidatePath(`/pedidos/${pedidoId}/prendas`);
+    revalidatePath(`/pedidos/${pedidoId}/participantes`);
+    revalidatePath(`/pedidos/${pedidoId}`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo registrar la prenda." };
+  }
+}

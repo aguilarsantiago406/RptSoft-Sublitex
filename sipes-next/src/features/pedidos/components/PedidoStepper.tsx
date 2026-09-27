@@ -13,9 +13,9 @@ const MAIN_PATH: StepperStep[] = [
   { estado: "EN_CONFIGURACION", label: "Configuración", icon: SlidersHorizontal },
   { estado: "EN_RECOLECCION", label: "Recolección", icon: Inbox },
   { estado: "EN_REVISION", label: "Revisión", icon: ScanSearch },
-  { estado: "CERRADO", label: "Cerrado", icon: ClipboardCheck },
   { estado: "EN_PRODUCCION", label: "Producción", icon: Factory },
   { estado: "ENTREGADO", label: "Entregado", icon: PackageCheck },
+  { estado: "CERRADO", label: "Cerrado", icon: ClipboardCheck },
 ];
 
 const pathIndex = new Map(MAIN_PATH.map((step, index) => [step.estado, index]));

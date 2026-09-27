@@ -24,7 +24,7 @@ function toCrumb(pathname: string): { root: string; page: string } {
   if (parts[0] === "pedidos" && parts.length >= 3) {
     const section = parts[2];
     const sectionLabel =
-      section === "prendas" ? "Prendas" : section === "participantes" ? "Participantes" : section === "proforma" ? "Proforma" : section;
+      section === "diseno" ? "Diseño y Mockups" : section === "prendas" ? "Prendas" : section === "participantes" ? "Participantes" : section === "proforma" ? "Proforma" : section;
     return { root: "Pedidos", page: sectionLabel };
   }
   return { root: rootLabel, page: parts.slice(1).join(" / ") };
