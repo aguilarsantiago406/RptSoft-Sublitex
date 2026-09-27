@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { actionSubirYCrearDiseno, actionActualizarArtefactos } from "../actions/disenos.actions";
 import styles from "./pedidos.module.css";
@@ -26,7 +27,13 @@ export function ModalSubirDiseno({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const isReemplazo = Boolean(disenoId);
 
@@ -61,7 +68,7 @@ export function ModalSubirDiseno({
     });
   }
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
@@ -124,6 +131,7 @@ export function ModalSubirDiseno({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

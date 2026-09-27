@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import type { TarifaCatalogo } from "../types/catalogo";
 import { TIPOS_TARIFA } from "../types/catalogo";
 import {
@@ -34,6 +35,12 @@ export function ModalTarifaForm({ isOpen, onClose, initial }: ModalTarifaFormPro
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!isOpen) return;
     setTipo(initial?.tipo ?? "PRODUCTO");
@@ -45,7 +52,7 @@ export function ModalTarifaForm({ isOpen, onClose, initial }: ModalTarifaFormPro
     setError(null);
   }, [isOpen, initial]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   function handleReset() {
     setError(null);
@@ -79,7 +86,7 @@ export function ModalTarifaForm({ isOpen, onClose, initial }: ModalTarifaFormPro
     });
   }
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={handleReset}>
       <div className={styles.modalCardWide} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
@@ -208,6 +215,7 @@ export function ModalTarifaForm({ isOpen, onClose, initial }: ModalTarifaFormPro
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

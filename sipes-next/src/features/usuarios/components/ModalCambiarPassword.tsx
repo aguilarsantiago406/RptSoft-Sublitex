@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { actionCambiarPassword } from "../actions/usuarios.actions";
 import type { UsuarioItem } from "../types/usuario";
 import styles from "./usuarios.module.css";
@@ -22,7 +23,13 @@ export function ModalCambiarPassword({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  if (!isOpen || !usuario) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !usuario || !mounted) return null;
 
   function handleReset() {
     setCurrentPassword("");
@@ -70,7 +77,7 @@ export function ModalCambiarPassword({
     });
   }
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={handleClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         <header className={styles.modalHeader}>
@@ -169,6 +176,7 @@ export function ModalCambiarPassword({
           </footer>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

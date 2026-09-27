@@ -6,6 +6,7 @@ import type { DisenoItem, EstadoDiseno } from "../types/diseno";
 import { actionProponerDiseno, actionAprobarDiseno } from "../actions/disenos.actions";
 import { ModalSubirDiseno } from "./ModalSubirDiseno";
 import { ModalRechazarDiseno } from "./ModalRechazarDiseno";
+import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import { DisenoHistorial } from "./DisenoHistorial";
 import { DisenoDetallesCard } from "./DisenoDetallesCard";
 import styles from "./pedidos.module.css";
@@ -26,6 +27,7 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
   const router = useRouter();
   const [modalUploadOpen, setModalUploadOpen] = useState(false);
   const [modalRechazoOpen, setModalRechazoOpen] = useState(false);
+  const [modalAprobarOpen, setModalAprobarOpen] = useState(false);
   const [isReemplazo, setIsReemplazo] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -44,12 +46,15 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
 
   function handleAprobar() {
     if (!disenoActivo) return;
-    const ok = window.confirm("¿Confirmas la aprobación del diseño? Esto cerrará formalmente el bloque DISENO.");
-    if (!ok) return;
+    setModalAprobarOpen(true);
+  }
 
+  function confirmarAprobacion() {
+    if (!disenoActivo) return;
     setErrorMsg(null);
     startTransition(async () => {
       const res = await actionAprobarDiseno(disenoActivo.id, pedidoId);
+      setModalAprobarOpen(false);
       if (!res.ok) setErrorMsg(res.error || "No se pudo aprobar el diseño.");
       else router.refresh();
     });
@@ -141,7 +146,7 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
                   onClick={handleProponer}
                   disabled={isPending}
                 >
-                  {isPending ? "Procesando..." : "📤 Proponer al cliente"}
+                  {isPending ? "Procesando..." : "Proponer al cliente"}
                 </button>
               )}
               {disenoActivo.estado === "PROPUESTO" && (
@@ -187,6 +192,18 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
           pedidoId={pedidoId}
         />
       )}
+
+      <ModalConfirmacion
+        isOpen={modalAprobarOpen}
+        onClose={() => setModalAprobarOpen(false)}
+        onConfirm={confirmarAprobacion}
+        title="Aprobar Diseño Textil"
+        description="¿Confirmas la aprobación del diseño? Esto cerrará formalmente el bloque DISENO (R-H01) y congelará la versión gráfica para confección en taller."
+        confirmText="Aprobar y Cerrar Bloque"
+        cancelText="Volver"
+        variant="primary"
+        isPending={isPending}
+      />
     </section>
   );
 }

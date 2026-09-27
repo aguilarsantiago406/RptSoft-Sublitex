@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { actionCrearUsuario } from "../actions/usuarios.actions";
 import { ROLES_DISPONIBLES, type RolUsuario } from "../types/usuario";
 import styles from "./usuarios.module.css";
@@ -19,7 +20,13 @@ export function ModalNuevoUsuario({ isOpen, onClose }: ModalNuevoUsuarioProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   function handleReset() {
     setNombre("");
@@ -65,7 +72,7 @@ export function ModalNuevoUsuario({ isOpen, onClose }: ModalNuevoUsuarioProps) {
     });
   }
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={handleReset}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         <header className={styles.modalHeader}>
@@ -189,6 +196,7 @@ export function ModalNuevoUsuario({ isOpen, onClose }: ModalNuevoUsuarioProps) {
           </footer>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

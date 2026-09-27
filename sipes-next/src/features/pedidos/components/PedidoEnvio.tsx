@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import type { DatosEnvioItem } from "../api/comercial.api";
 import { actionEliminarDatosEnvio } from "../actions/envio.actions";
 import { ModalEnvioForm } from "./ModalEnvioForm";
+import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import styles from "./pedidos.module.css";
 
 interface PedidoEnvioProps {
@@ -13,19 +14,22 @@ interface PedidoEnvioProps {
 
 export function PedidoEnvio({ pedidoId, datosEnvio }: PedidoEnvioProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   const handleEliminar = () => {
-    const confirmar = window.confirm("¿Eliminar los datos de envío de este pedido?");
-    if (!confirmar) return;
+    setConfirmDeleteOpen(true);
+  };
 
+  const ejecutarEliminar = () => {
     setErrorMsg(null);
     setIsDeleting(true);
     startTransition(async () => {
       const res = await actionEliminarDatosEnvio(pedidoId);
       setIsDeleting(false);
+      setConfirmDeleteOpen(false);
       if (!res.ok) {
         setErrorMsg(res.error || "No se pudo eliminar los datos de envío.");
       }
@@ -121,6 +125,18 @@ export function PedidoEnvio({ pedidoId, datosEnvio }: PedidoEnvioProps) {
         onClose={() => setIsModalOpen(false)}
         pedidoId={pedidoId}
         initial={datosEnvio}
+      />
+
+      <ModalConfirmacion
+        isOpen={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+        onConfirm={ejecutarEliminar}
+        title="Eliminar Datos de Envío"
+        description="¿Confirmas que deseas eliminar los datos de rotulado para despacho de este pedido? Tendrás que registrarlos nuevamente antes del despacho."
+        confirmText="Eliminar Datos"
+        cancelText="Volver"
+        variant="danger"
+        isPending={isDeleting}
       />
     </section>
   );

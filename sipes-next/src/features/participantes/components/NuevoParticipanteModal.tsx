@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { GrupoPedido } from "@/features/pedidos/types/pedido";
 import { actionCrearParticipante } from "../actions/participantes.actions";
 import styles from "./participantes.module.css";
@@ -18,6 +19,7 @@ export function NuevoParticipanteModal({
   grupos,
   pedidoId,
 }: NuevoParticipanteModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [nombrePersona, setNombrePersona] = useState("");
   const [grupoId, setGrupoId] = useState(grupos[0]?.id ?? "");
   const [loading, setLoading] = useState(false);
@@ -25,7 +27,17 @@ export function NuevoParticipanteModal({
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (grupos.length > 0 && (!grupoId || !grupos.some((g) => g.id === grupoId))) {
+      setGrupoId(grupos[0].id);
+    }
+  }, [grupos, grupoId]);
+
+  if (!isOpen || !mounted) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -78,7 +90,9 @@ export function NuevoParticipanteModal({
     onClose();
   }
 
-  return (
+  const sinGrupos = grupos.length === 0;
+
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={handleResetAndClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
@@ -140,6 +154,15 @@ export function NuevoParticipanteModal({
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
+            {sinGrupos && (
+              <div className={styles.noGroupsAlert} role="alert">
+                <h4 className={styles.noGroupsAlertTitle}>Este pedido aún no tiene grupos técnicos</h4>
+                <p className={styles.noGroupsAlertText}>
+                  Cada participante debe estar asignado a un grupo de confección (ej: Polos, Casacas). Primero agrega al menos un grupo en la sección 2 del pedido para poder registrar participantes.
+                </p>
+              </div>
+            )}
+
             <div className={styles.formGroup}>
               <label className={styles.formLabel} htmlFor="nombrePersona">
                 Nombre de la persona
@@ -152,7 +175,8 @@ export function NuevoParticipanteModal({
                 value={nombrePersona}
                 onChange={(e) => setNombrePersona(e.target.value)}
                 required
-                autoFocus
+                autoFocus={!sinGrupos}
+                disabled={sinGrupos}
               />
             </div>
 
@@ -160,18 +184,25 @@ export function NuevoParticipanteModal({
               <label className={styles.formLabel} htmlFor="grupoId">
                 Grupo técnico
               </label>
-              <select
-                id="grupoId"
-                className={styles.formSelect}
-                value={grupoId}
-                onChange={(e) => setGrupoId(e.target.value)}
-              >
-                {grupos.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.nombre} ({g.tipoProducto?.nombre ?? "Producto"})
-                  </option>
-                ))}
-              </select>
+              {sinGrupos ? (
+                <select id="grupoId" className={styles.formSelect} disabled value="">
+                  <option value="">Sin grupos técnicos configurados en este pedido</option>
+                </select>
+              ) : (
+                <select
+                  id="grupoId"
+                  className={styles.formSelect}
+                  value={grupoId}
+                  onChange={(e) => setGrupoId(e.target.value)}
+                  required
+                >
+                  {grupos.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.nombre} ({g.tipoProducto?.nombre ?? "Producto"})
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             {error && (
@@ -192,14 +223,15 @@ export function NuevoParticipanteModal({
               <button
                 type="submit"
                 className={styles.primaryButton}
-                disabled={loading || !nombrePersona.trim()}
+                disabled={loading || sinGrupos || !nombrePersona.trim()}
               >
-                {loading ? "Generando…" : "Generar Enlace"}
+                {loading ? "Generando…" : sinGrupos ? "Requiere Grupo Técnico" : "Generar Enlace"}
               </button>
             </div>
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { ClienteListItem } from "../api/pedidos.api";
 import { actionCrearPedido } from "../actions/pedidos.actions";
@@ -36,7 +37,13 @@ export function ModalNuevoPedido({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   function handleReset() {
     setClienteId(clientesIniciales[0]?.id ?? "");
@@ -71,7 +78,7 @@ export function ModalNuevoPedido({
     });
   }
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={handleReset}>
       <div className={styles.modalCardWide} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
@@ -103,6 +110,7 @@ export function ModalNuevoPedido({
                 </option>
               ))}
             </select>
+            <small className={styles.formHint}>Para pedidos con otras instituciones o promociones, regístralas en el módulo Clientes.</small>
           </div>
 
           <div className={styles.formField}>
@@ -120,6 +128,7 @@ export function ModalNuevoPedido({
                 <option key={v.id} value={v.id}>{v.nombre}</option>
               ))}
             </select>
+            <small className={styles.formHint}>Personal comercial habilitado en el sistema (módulo Usuarios).</small>
           </div>
 
           <div className={styles.formField}>
@@ -157,6 +166,7 @@ export function ModalNuevoPedido({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

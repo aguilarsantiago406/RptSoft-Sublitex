@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { actionAgregarColorPedido } from "../actions/pedidos.actions";
 import styles from "./pedidos.module.css";
 
@@ -17,7 +18,13 @@ export function ModalColorForm({ isOpen, onClose, pedidoId }: ModalColorFormProp
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   function handleReset() {
     setNombre("");
@@ -65,7 +72,7 @@ export function ModalColorForm({ isOpen, onClose, pedidoId }: ModalColorFormProp
     });
   }
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={handleReset}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
@@ -164,6 +171,7 @@ export function ModalColorForm({ isOpen, onClose, pedidoId }: ModalColorFormProp
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

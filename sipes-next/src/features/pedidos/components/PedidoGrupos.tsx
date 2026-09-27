@@ -6,6 +6,7 @@ import type { TipoProductoCatalogoItem, AtributoCatalogoItem } from "../api/pedi
 import { actionEliminarGrupo } from "../actions/grupos.actions";
 import { ModalGrupoForm } from "./ModalGrupoForm";
 import { ModalEditarGrupo } from "./ModalEditarGrupo";
+import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import { GrupoCard } from "./GrupoCard";
 import styles from "./pedidos.module.css";
 
@@ -28,21 +29,21 @@ export function PedidoGrupos({
 }: PedidoGruposProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingGrupo, setEditingGrupo] = useState<GrupoPedido | null>(null);
+  const [grupoAEliminar, setGrupoAEliminar] = useState<{ id: string; nombre: string } | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  const handleEliminar = (grupoId: string, nombreGrupo: string) => {
-    const confirmar = window.confirm(
-      `¿Deseas eliminar el grupo "${nombreGrupo}"?\n\nSolo se podrá eliminar si no tiene participantes ni prendas asociadas.`
-    );
-    if (!confirmar) return;
+  const handleConfirmEliminar = () => {
+    if (!grupoAEliminar) return;
+    const { id: grupoId } = grupoAEliminar;
 
     setErrorMsg(null);
     setIsDeletingId(grupoId);
     startTransition(async () => {
       const res = await actionEliminarGrupo(grupoId, pedidoId);
       setIsDeletingId(null);
+      setGrupoAEliminar(null);
       if (!res.ok) {
         setErrorMsg(res.error || "No se pudo eliminar el grupo.");
       }
@@ -95,7 +96,7 @@ export function PedidoGrupos({
             pedidoId={pedidoId}
             pedidoCodigo={pedidoCodigo}
             onEdit={(g) => setEditingGrupo(g)}
-            onDelete={handleEliminar}
+            onDelete={(id, nombre) => setGrupoAEliminar({ id, nombre })}
             isDeleting={isDeletingId === grupo.id}
           />
         ))}
@@ -117,6 +118,26 @@ export function PedidoGrupos({
           atributosCatalogo={atributosCatalogo}
         />
       )}
+
+      <ModalConfirmacion
+        isOpen={Boolean(grupoAEliminar)}
+        onClose={() => setGrupoAEliminar(null)}
+        onConfirm={handleConfirmEliminar}
+        title="Eliminar Grupo"
+        description={
+          grupoAEliminar ? (
+            <>
+              ¿Deseas eliminar el grupo <strong>{grupoAEliminar.nombre}</strong>?
+              <br />
+              <br />
+              Solo se podrá eliminar si no tiene participantes ni prendas asociadas.
+            </>
+          ) : ""
+        }
+        confirmText="Eliminar Grupo"
+        variant="danger"
+        isPending={Boolean(isDeletingId)}
+      />
     </section>
   );
 }

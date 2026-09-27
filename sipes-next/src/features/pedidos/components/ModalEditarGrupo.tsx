@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { GrupoPedido } from "../types/pedido";
 import type { AtributoCatalogoItem } from "../api/pedidos.api";
@@ -46,7 +47,13 @@ export function ModalEditarGrupo({
     getInitialConfig(grupo.configuracion, atributosCatalogo)
   );
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -75,7 +82,7 @@ export function ModalEditarGrupo({
     });
   }
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.modalCardWide} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
@@ -163,6 +170,7 @@ export function ModalEditarGrupo({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

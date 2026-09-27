@@ -9,6 +9,7 @@ import type { TarifaCatalogo } from "../types/catalogo";
 import { ETIQUETA_TIPO_TARIFA } from "../types/catalogo";
 import { actionEliminarTarifa } from "../actions/tarifas.actions";
 import { ModalTarifaForm } from "./ModalTarifaForm";
+import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import styles from "./catalogos.module.css";
 
 interface TarifasViewProps {
@@ -49,17 +50,18 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
     setIsModalOpen(true);
   };
 
-  const handleEliminar = (tarifa: TarifaCatalogo) => {
-    const confirmar = window.confirm(
-      `¿Eliminar la tarifa "${tarifa.concepto}"? Esta acción borra el registro asociado.`
-    );
-    if (!confirmar) return;
+  const [tarifaAEliminar, setTarifaAEliminar] = useState<TarifaCatalogo | null>(null);
+
+  const handleConfirmEliminar = () => {
+    if (!tarifaAEliminar) return;
+    const { id: tarifaId } = tarifaAEliminar;
 
     setErrorMsg(null);
-    setDeletingId(tarifa.id);
+    setDeletingId(tarifaId);
     startTransition(async () => {
-      const res = await actionEliminarTarifa(tarifa.id);
+      const res = await actionEliminarTarifa(tarifaId);
       setDeletingId(null);
+      setTarifaAEliminar(null);
       if (!res.ok) {
         setErrorMsg(res.error || "No se pudo eliminar la tarifa.");
       }
@@ -171,7 +173,7 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
                           <button
                             type="button"
                             className={styles.tarifaDeleteButton}
-                            onClick={() => handleEliminar(t)}
+                            onClick={() => setTarifaAEliminar(t)}
                             disabled={deletingId === t.id}
                           >
                             {deletingId === t.id ? "Eliminando…" : "Eliminar"}
@@ -200,6 +202,26 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         initial={editing}
+      />
+
+      <ModalConfirmacion
+        isOpen={Boolean(tarifaAEliminar)}
+        onClose={() => setTarifaAEliminar(null)}
+        onConfirm={handleConfirmEliminar}
+        title="Eliminar Tarifa"
+        description={
+          tarifaAEliminar ? (
+            <>
+              ¿Eliminar la tarifa <strong>{tarifaAEliminar.concepto}</strong>?
+              <br />
+              <br />
+              Esta acción borra el registro de tarifa asociado del catálogo (R-K10).
+            </>
+          ) : ""
+        }
+        confirmText="Eliminar Tarifa"
+        variant="danger"
+        isPending={Boolean(deletingId)}
       />
     </section>
   );

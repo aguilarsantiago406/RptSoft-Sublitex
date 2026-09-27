@@ -5,6 +5,7 @@ import type { AtributoCatalogoItem } from "../api/pedidos.api";
 import type { PrendaDetalle } from "../types/pedido";
 import { actionEliminarPrenda } from "../actions/prendas.actions";
 import { ModalEditarPrenda } from "./ModalEditarPrenda";
+import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import styles from "./prendas.module.css";
 
 interface PrendaRowProps {
@@ -48,28 +49,25 @@ export function PrendaRow({
   coloresDisponibles,
 }: PrendaRowProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const nombreGrupo = prenda.grupo?.nombre ?? "Sin grupo";
   const badgeClass = getGroupBadgeClass(nombreGrupo);
   const esSinNumero = !prenda.numero || prenda.numero === "S/N";
+  const etiqueta = prenda.participante?.nombrePersona || prenda.nombreEnPrenda || "la prenda";
+  const detalleNumero = esSinNumero ? "" : ` (N° ${prenda.numero})`;
 
-  function handleEliminar() {
+  function handleConfirmEliminar() {
     if (isDeleting) return;
-
-    const etiqueta = prenda.participante?.nombrePersona || prenda.nombreEnPrenda || "la prenda";
-    const detalleNumero = esSinNumero ? "" : ` (N° ${prenda.numero})`;
-    const confirmar = window.confirm(
-      `¿Eliminar la prenda de ${etiqueta}${detalleNumero}?\n\nLa prenda se quitará del pedido de forma permanente.`
-    );
-    if (!confirmar) return;
 
     setErrorMsg(null);
     setIsDeleting(true);
     startTransition(async () => {
       const res = await actionEliminarPrenda(prenda.id, pedidoId);
       setIsDeleting(false);
+      setIsConfirmOpen(false);
       if (!res.ok) {
         setErrorMsg(res.error || "No se pudo eliminar la prenda.");
       }
@@ -144,7 +142,7 @@ export function PrendaRow({
           <button
             type="button"
             className={styles.deleteButton}
-            onClick={handleEliminar}
+            onClick={() => setIsConfirmOpen(true)}
             disabled={isDeleting}
             title="Eliminar prenda"
           >
@@ -169,6 +167,24 @@ export function PrendaRow({
             coloresDisponibles={coloresDisponibles}
           />
         )}
+
+        <ModalConfirmacion
+          isOpen={isConfirmOpen}
+          onClose={() => setIsConfirmOpen(false)}
+          onConfirm={handleConfirmEliminar}
+          title="Eliminar Prenda"
+          description={
+            <>
+              ¿Eliminar la prenda de <strong>{etiqueta}</strong>{detalleNumero}?
+              <br />
+              <br />
+              La prenda se quitará del pedido de forma permanente.
+            </>
+          }
+          confirmText="Eliminar Prenda"
+          variant="danger"
+          isPending={isDeleting}
+        />
       </td>
     </tr>
   );

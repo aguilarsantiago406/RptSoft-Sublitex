@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { actionActualizarUsuario, actionCambiarPasswordUsuario } from "../actions/usuarios.actions";
 import { ROLES_DISPONIBLES, type UsuarioItem, type RolUsuario } from "../types/usuario";
 import styles from "./usuarios.module.css";
@@ -33,7 +34,13 @@ export function ModalEditarUsuario({
     }
   }, [usuario]);
 
-  if (!isOpen || !usuario) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !usuario || !mounted) return null;
 
   function handleClose() {
     setNewPassword("");
@@ -68,7 +75,7 @@ export function ModalEditarUsuario({
     });
   }
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={handleClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         <header className={styles.modalHeader}>
@@ -147,6 +154,7 @@ export function ModalEditarUsuario({
           </footer>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

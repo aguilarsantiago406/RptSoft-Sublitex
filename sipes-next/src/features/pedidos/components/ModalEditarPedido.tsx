@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { PedidoDetalle } from "../types/pedido";
 import { actionActualizarCabeceraPedido } from "../actions/pedidos.actions";
@@ -28,7 +29,13 @@ export function ModalEditarPedido({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,7 +62,7 @@ export function ModalEditarPedido({
     });
   }
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.modalCardWide} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
@@ -118,6 +125,7 @@ export function ModalEditarPedido({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

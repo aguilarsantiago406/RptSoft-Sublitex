@@ -6,6 +6,7 @@ import {
   actionRegenerarEnlace,
   actionRevocarEnlace,
 } from "../actions/participantes.actions";
+import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import styles from "./participantes.module.css";
 
 interface ParticipantesRowProps {
@@ -57,19 +58,17 @@ export function ParticipantesRow({
     }
   }
 
-  function handleRevocar() {
-    if (isRevoking) return;
+  const [isConfirmRevocarOpen, setIsConfirmRevocarOpen] = useState(false);
 
-    const confirmar = window.confirm(
-      `¿Revocar el enlace público de ${participante.nombrePersona}?\n\nEl enlace dejará de funcionar y el participante deberá solicitar un nuevo token.`
-    );
-    if (!confirmar) return;
+  function handleConfirmRevocar() {
+    if (isRevoking) return;
 
     setErrorMsg(null);
     setIsRevoking(true);
     startTransition(async () => {
       const res = await actionRevocarEnlace(participante.id, pedidoId);
       setIsRevoking(false);
+      setIsConfirmRevocarOpen(false);
       if (!res.ok) {
         setErrorMsg(res.error || "No se pudo revocar el enlace del participante.");
       }
@@ -153,7 +152,7 @@ export function ParticipantesRow({
                 <button
                   type="button"
                   className={styles.revokeButton}
-                  onClick={handleRevocar}
+                  onClick={() => setIsConfirmRevocarOpen(true)}
                   disabled={isRevoking}
                   title="Revocar el enlace público de forma permanente"
                 >
@@ -178,6 +177,24 @@ export function ParticipantesRow({
             {regenerating ? "Generando…" : "+ Generar link"}
           </button>
         )}
+
+        <ModalConfirmacion
+          isOpen={isConfirmRevocarOpen}
+          onClose={() => setIsConfirmRevocarOpen(false)}
+          onConfirm={handleConfirmRevocar}
+          title="Revocar Enlace"
+          description={
+            <>
+              ¿Revocar el enlace público de <strong>{participante.nombrePersona}</strong>?
+              <br />
+              <br />
+              El enlace dejará de funcionar y el participante deberá solicitar un nuevo token.
+            </>
+          }
+          confirmText="Revocar Enlace"
+          variant="danger"
+          isPending={isRevoking}
+        />
       </td>
     </tr>
   );
