@@ -14,19 +14,18 @@ interface ProformaPageProps {
 export default async function ProformaPage({ params }: ProformaPageProps) {
   const { id } = await params;
 
-  let pedido;
+  let pedido: Awaited<ReturnType<typeof getPedido>>;
   let tarifas = [];
   let datosEnvio = null;
   let resumenProduccion = null;
 
   try {
-    const [pedidoRes, tarifasRes, envioRes, resumenRes] = await Promise.all([
-      getPedido(id),
+    pedido = await getPedido(id);
+    const [tarifasRes, envioRes, resumenRes] = await Promise.all([
       getTarifasVigentes(),
-      getDatosEnvio(id),
-      getResumenProduccion(id),
+      getDatosEnvio(pedido.id),
+      getResumenProduccion(pedido.id),
     ]);
-    pedido = pedidoRes;
     tarifas = tarifasRes;
     datosEnvio = envioRes;
     resumenProduccion = resumenRes;

@@ -6,6 +6,7 @@ import styles from "./pedidos.module.css";
 interface GrupoCardProps {
   grupo: GrupoPedido;
   pedidoId: string;
+  pedidoCodigo?: string;
   onEdit: (grupo: GrupoPedido) => void;
   onDelete: (grupoId: string, nombre: string) => void;
   isDeleting: boolean;
@@ -14,6 +15,7 @@ interface GrupoCardProps {
 export function GrupoCard({
   grupo,
   pedidoId,
+  pedidoCodigo,
   onEdit,
   onDelete,
   isDeleting,
@@ -108,7 +110,7 @@ export function GrupoCard({
       </div>
 
       <div className={styles.groupCardFooter}>
-        <Link className={styles.secondaryButton} href={`/pedidos/${pedidoId}/prendas`}>
+        <Link className={styles.secondaryButton} href={`/pedidos/${pedidoCodigo ?? pedidoId}/prendas`}>
           Ver prendas de {grupo.nombre} ({grupo.cantidadContratada}) →
         </Link>
       </div>

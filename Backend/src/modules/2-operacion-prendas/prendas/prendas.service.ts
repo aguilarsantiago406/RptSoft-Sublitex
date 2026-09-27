@@ -30,12 +30,13 @@ export class PrendasService {
     }
   }
 
-  async crear(dto: CreatePrendaDto) {
+  async crear(dto: CreatePrendaDto, autor?: { id?: string; rol?: any }) {
+    let pedidoId: string | undefined = undefined;
     if (dto.grupoId) {
       const grupo = await this.prisma.grupo?.findUnique?.({ where: { id: dto.grupoId } });
       await this.validarListaAbiertaPorPedidoId(grupo?.pedidoId);
+      if (grupo?.pedidoId) pedidoId = grupo.pedidoId;
 
-      // R-K05: Validación de color dentro de la paleta oficial en creación
       if (dto.colorId && grupo?.pedidoId) {
         const colorValido = await this.prisma.colorPedido?.findFirst?.({
           where: { id: dto.colorId, pedidoId: grupo.pedidoId },
@@ -61,7 +62,22 @@ export class PrendasService {
       },
     });
 
-    // En R-K02, las de OBSEQUIO o MUESTRA tienen precio 0.00
+    if (pedidoId) {
+      await this.prisma.registroCambio?.create?.({
+        data: {
+          pedidoId,
+          entidad: 'Prenda',
+          entidadId: prenda.id,
+          campo: 'creacion',
+          valorAnterior: null,
+          valorNuevo: prenda.tipoPrenda || 'VENTA',
+          origen: 'USUARIO',
+          autorUsuarioId: autor?.id ?? null,
+          autorRol: autor?.rol ?? null,
+        },
+      });
+    }
+
     const precioCalculado = await this.obtenerPrecioBase(prenda.tipoPrenda);
     return { ...prenda, precioCalculado };
   }
@@ -86,8 +102,7 @@ export class PrendasService {
       }
     }
 
-    // R-I01 / R-I04: Si el participante ya estaba CONFIRMADO, auditar los cambios en RegistroCambio
-    if (prendaExiste.participante?.estado === 'CONFIRMADO' && prendaExiste.grupo?.pedidoId) {
+    if (prendaExiste.grupo?.pedidoId) {
       const camposAuditables: Array<keyof UpdateFichaMinimaDto> = ['tallaId', 'numero', 'genero', 'nombreEnPrenda', 'colorId'];
       for (const campo of camposAuditables) {
         const valorNuevo = dto[campo];
@@ -100,7 +115,7 @@ export class PrendasService {
               entidadId: prendaExiste.id,
               campo: String(campo),
               valorAnterior: valorAnterior !== null && valorAnterior !== undefined ? String(valorAnterior) : null,
-              valorNuevo: String(valorNuevo),
+              valorNuevo: valorNuevo !== null && valorNuevo !== undefined ? String(valorNuevo) : null,
               origen: 'USUARIO',
               autorUsuarioId: autor?.id ?? null,
               autorRol: autor?.rol ?? null,
@@ -125,15 +140,30 @@ export class PrendasService {
     return { ...prenda, precioCalculado };
   }
 
-  async eliminar(id: string) {
+  async eliminar(id: string, autor?: { id?: string; rol?: any }) {
     const prendaExiste = await this.prisma.prenda.findUnique({
       where: { id },
       include: { grupo: true },
     });
     if (!prendaExiste) throw new NotFoundException('Prenda no encontrada.');
 
-    // R-H03: Candado de lista cerrada
     await this.validarListaAbiertaPorPedidoId(prendaExiste.grupo?.pedidoId);
+
+    if (prendaExiste.grupo?.pedidoId) {
+      await this.prisma.registroCambio?.create?.({
+        data: {
+          pedidoId: prendaExiste.grupo.pedidoId,
+          entidad: 'Prenda',
+          entidadId: prendaExiste.id,
+          campo: 'eliminacion',
+          valorAnterior: prendaExiste.tipoPrenda || 'VENTA',
+          valorNuevo: null,
+          origen: 'USUARIO',
+          autorUsuarioId: autor?.id ?? null,
+          autorRol: autor?.rol ?? null,
+        },
+      });
+    }
 
     await this.prisma.prenda.delete({ where: { id } });
     return {};

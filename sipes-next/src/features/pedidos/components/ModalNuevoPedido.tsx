@@ -67,7 +67,7 @@ export function ModalNuevoPedido({
       }
 
       handleReset();
-      router.push(`/pedidos/${res.pedido.id}`);
+      router.push(`/pedidos/${res.pedido.codigo ?? res.pedido.id}`);
     });
   }
 

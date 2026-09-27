@@ -115,7 +115,7 @@ export function PedidosTable({ pedidos, error }: PedidosTableProps) {
                       )}
                     </td>
                     <td className={styles.actionCell}>
-                      <Link className={styles.linkButton} href={`/pedidos/${pedido.id}`}>
+                      <Link className={styles.linkButton} href={`/pedidos/${pedido.codigo}`}>
                         Ver detalle
                       </Link>
                     </td>

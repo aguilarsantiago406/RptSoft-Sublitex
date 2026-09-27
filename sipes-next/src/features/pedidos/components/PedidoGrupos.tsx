@@ -12,6 +12,7 @@ import styles from "./pedidos.module.css";
 interface PedidoGruposProps {
   grupos: GrupoPedido[];
   pedidoId: string;
+  pedidoCodigo?: string;
   totalPrendas: number;
   tiposProducto: TipoProductoCatalogoItem[];
   atributosCatalogo?: AtributoCatalogoItem[];
@@ -20,6 +21,7 @@ interface PedidoGruposProps {
 export function PedidoGrupos({
   grupos,
   pedidoId,
+  pedidoCodigo,
   totalPrendas,
   tiposProducto,
   atributosCatalogo = [],
@@ -91,6 +93,7 @@ export function PedidoGrupos({
             key={grupo.id}
             grupo={grupo}
             pedidoId={pedidoId}
+            pedidoCodigo={pedidoCodigo}
             onEdit={(g) => setEditingGrupo(g)}
             onDelete={handleEliminar}
             isDeleting={isDeletingId === grupo.id}

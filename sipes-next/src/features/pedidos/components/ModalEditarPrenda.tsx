@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { AtributoCatalogoItem } from "../api/pedidos.api";
 import type { PrendaDetalle } from "../types/pedido";
@@ -36,6 +37,7 @@ export function ModalEditarPrenda({
   coloresDisponibles = [],
 }: ModalEditarPrendaProps) {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [nombreEnPrenda, setNombreEnPrenda] = useState(prenda.nombreEnPrenda ?? "");
   const [numero, setNumero] = useState(prenda.numero ?? "");
   const [tallaId, setTallaId] = useState(prenda.tallaId ?? "");
@@ -46,7 +48,11 @@ export function ModalEditarPrenda({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -72,7 +78,7 @@ export function ModalEditarPrenda({
   const nombrePersona = prenda.participante?.nombrePersona || "Sin asignar";
   const grupoNombre = prenda.grupo?.nombre || "General";
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.modalCardWide} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
@@ -157,6 +163,7 @@ export function ModalEditarPrenda({
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -14,8 +14,8 @@ export class PrendasController {
 
   @Post('prendas')
   @ApiOperation({ summary: 'Crea una prenda asignada a un participante' })
-  crear(@Body() dto: CreatePrendaDto) {
-    return this.service.crear(dto);
+  crear(@Body() dto: CreatePrendaDto, @Request() req?: any) {
+    return this.service.crear(dto, req?.user);
   }
 
   @Patch('prendas/:id')
@@ -26,8 +26,8 @@ export class PrendasController {
 
   @Delete('prendas/:id')
   @ApiOperation({ summary: 'Elimina una prenda de la lista' })
-  eliminar(@Param('id') id: string) {
-    return this.service.eliminar(id);
+  eliminar(@Param('id') id: string, @Request() req?: any) {
+    return this.service.eliminar(id, req?.user);
   }
 
   @Get('pedidos/:pedidoId/resumen-produccion')

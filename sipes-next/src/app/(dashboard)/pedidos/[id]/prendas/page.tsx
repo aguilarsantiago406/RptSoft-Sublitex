@@ -145,7 +145,7 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
       <PrendasView
         prendas={prendas}
         grupos={pedido.grupos}
-        pedidoId={id}
+        pedidoId={pedido.id}
         tallas={tallasCatalogo ?? []}
         atributos={atributosCatalogo ?? []}
         colores={pedido.colores}

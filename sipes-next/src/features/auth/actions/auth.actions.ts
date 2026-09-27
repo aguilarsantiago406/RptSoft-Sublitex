@@ -10,12 +10,9 @@ export interface ActionResult<T = unknown> {
   error?: string;
 }
 
-export async function actionLogin(formData: {
-  email: string;
-  password: string;
-}): Promise<ActionResult> {
-  const email = formData.email?.trim() ?? "";
-  const password = formData.password ?? "";
+export async function actionLogin(formData: FormData): Promise<ActionResult> {
+  const email = (formData.get("email") as string)?.trim() ?? "";
+  const password = (formData.get("password") as string) ?? "";
 
   if (!email || !password) {
     return { ok: false, error: "Correo y contraseña son obligatorios." };

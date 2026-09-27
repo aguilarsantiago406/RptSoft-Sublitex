@@ -11,6 +11,7 @@ const routeLabels: Record<string, string> = {
   "/clientes": "Clientes",
   "/catalogos": "Catálogos",
   "/usuarios": "Usuarios",
+  "/auditoria": "Auditoría",
 };
 
 function toCrumb(pathname: string): { root: string; page: string } {

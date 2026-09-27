@@ -14,6 +14,7 @@ import { PedidoRecoleccionCard } from "@/features/pedidos/components/PedidoRecol
 import { PedidoRevision } from "@/features/pedidos/components/PedidoRevision";
 import { PedidoGuiaEtapa } from "@/features/pedidos/components/PedidoGuiaEtapa";
 import guiaStyles from "@/features/pedidos/components/pedidoGuiaEtapa.module.css";
+import { BarraAuditoriaPedido } from "@/features/pedidos/components/BarraAuditoriaPedido";
 import styles from "@/features/pedidos/components/pedidos.module.css";
 import shared from "@/components/ui/table/tableShared.module.css";
 import { SipesApiError } from "@/lib/api/http";
@@ -27,7 +28,7 @@ interface PedidoPageProps {
 
 export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   const { id } = await params;
-  let pedido;
+  let pedido: Awaited<ReturnType<typeof getPedido>>;
   let tiposProductoRes;
   let envioRes;
   let usuariosRes;
@@ -36,16 +37,17 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   let resumenRes;
 
   try {
-    const [pedidoRes, tiposRes, envioResult, usuariosResult, atributosResult, disenosResult, resumenResult] = await Promise.all([
-      getPedido(id),
+    pedido = await getPedido(id);
+    const pedidoRealId = pedido.id;
+
+    const [tiposRes, envioResult, usuariosResult, atributosResult, disenosResult, resumenResult] = await Promise.all([
       loadData(() => getTiposProducto()),
-      loadData(() => getDatosEnvio(id)),
+      loadData(() => getDatosEnvio(pedidoRealId)),
       loadData(() => getUsuarios()),
       loadData(() => getAtributosCatalogo()),
-      loadData(() => getDisenosPedido(id)),
-      loadData(() => getResumenProduccion(id)),
+      loadData(() => getDisenosPedido(pedidoRealId)),
+      loadData(() => getResumenProduccion(pedidoRealId)),
     ]);
-    pedido = pedidoRes;
     tiposProductoRes = tiposRes;
     envioRes = envioResult;
     usuariosRes = usuariosResult;
@@ -88,6 +90,7 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   return (
     <main>
       <PedidoHeader pedido={pedido} />
+      <BarraAuditoriaPedido pedidoId={pedido.id} codigo={pedido.codigo} />
       {avisosAuxiliares.length > 0 && (
         <div className={shared.inlineWarning} role="alert">
           {avisosAuxiliares.join(" · ")}
@@ -105,11 +108,10 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
       />
 
       <div className={styles.sheetContainer}>
-        {/* BLOQUE 1: IDENTIFICACIÓN Y LOGÍSTICA COMERCIAL */}
         <div className={styles.twoColsLayout}>
           <div style={{ position: "relative", borderRadius: "18px" }} className={etapa === "BORRADOR" ? guiaStyles.activeSectionHighlight : undefined}>
             {etapa === "BORRADOR" && <span className={guiaStyles.activeSectionBadge}>Etapa activa · Datos Iniciales</span>}
-            <PedidoIdentificacion pedido={pedido} vendedoras={vendedoras} />
+            <PedidoIdentificacion pedido={pedido} vendedoras={vendedoras} disenos={disenos} />
           </div>
 
           <div style={{ position: "relative", borderRadius: "18px" }} className={etapa === "EN_PRODUCCION" ? guiaStyles.activeSectionHighlight : undefined}>
@@ -125,6 +127,7 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
             <PedidoGrupos
               grupos={pedido.grupos}
               pedidoId={pedido.id}
+              pedidoCodigo={pedido.codigo}
               totalPrendas={totalPrendas}
               tiposProducto={tiposProducto}
               atributosCatalogo={atributosCatalogo}
@@ -143,7 +146,7 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
 
         {/* BLOQUE 4: DISEÑO Y MOCKUPS */}
         <div style={{ position: "relative", borderRadius: "18px" }}>
-          <PedidoDisenoCard pedidoId={pedido.id} disenos={disenos} />
+          <PedidoDisenoCard pedidoId={pedido.id} pedidoCodigo={pedido.codigo} disenos={disenos} />
         </div>
 
         {/* BLOQUE 5: REVISIÓN Y CONTROL DE CALIDAD (AUDITORÍA PRE-TALLER) */}

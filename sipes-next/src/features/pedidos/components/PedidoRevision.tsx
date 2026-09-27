@@ -33,7 +33,7 @@ export function PedidoRevision({
           </p>
         </div>
         <Link
-          href={`/pedidos/${pedido.id}/proforma`}
+          href={`/pedidos/${pedido.codigo}/proforma`}
           className={styles.linkButton}
           style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
         >

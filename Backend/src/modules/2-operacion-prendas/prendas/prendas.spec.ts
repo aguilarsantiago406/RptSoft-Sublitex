@@ -274,5 +274,38 @@ describe('🔴 TDD BK2: PrendasService (Bloque E y K)', () => {
         }),
       );
     });
+
+    it('debe registrar en RegistroCambio cuando se altera una prenda de un participante PENDIENTE', async () => {
+      mockPrisma.prenda.findUnique.mockResolvedValue({
+        id: 'pre_2',
+        numero: '80',
+        tallaId: 'talla_M',
+        grupo: { pedidoId: 'ped_1' },
+        participante: { estado: 'PENDIENTE' },
+      });
+      mockPrisma.bloquePedido.findFirst.mockResolvedValue(null);
+      mockPrisma.prenda.update.mockResolvedValue({ id: 'pre_2', tipoPrenda: 'VENTA', numero: '81' });
+
+      await service.actualizarFichaMinima(
+        'pre_2',
+        { numero: '81' },
+        { id: 'usr_coord_1', rol: 'COORDINADOR_OPERATIVO' },
+      );
+
+      expect(mockPrisma.registroCambio.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            pedidoId: 'ped_1',
+            entidad: 'Prenda',
+            entidadId: 'pre_2',
+            campo: 'numero',
+            valorAnterior: '80',
+            valorNuevo: '81',
+            origen: 'USUARIO',
+            autorUsuarioId: 'usr_coord_1',
+          }),
+        }),
+      );
+    });
   });
 });

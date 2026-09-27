@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ShoppingBag, Users, Layers, BookOpen, UserCheck, type LucideIcon } from "lucide-react";
+import { ShoppingBag, Users, Layers, BookOpen, UserCheck, History, type LucideIcon } from "lucide-react";
 import { actionLogout } from "@/features/auth/actions/auth.actions";
 import styles from "./layout.module.css";
 
@@ -33,6 +33,7 @@ const sections: NavSectionData[] = [
     items: [
       { label: "Catálogos", href: "/catalogos", icon: BookOpen },
       { label: "Usuarios", href: "/usuarios", icon: UserCheck },
+      { label: "Auditoría", href: "/auditoria", icon: History },
     ],
   },
 ];

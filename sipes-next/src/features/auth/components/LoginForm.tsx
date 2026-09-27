@@ -17,7 +17,8 @@ export function LoginForm() {
     setPending(true);
 
     try {
-      const res = await actionLogin({ email, password });
+      const formData = new FormData(event.currentTarget);
+      const res = await actionLogin(formData);
       if (!res.ok) {
         setError(res.error ?? "Correo o contraseña incorrectos.");
         return;

@@ -34,7 +34,7 @@ export function PedidoRecoleccionCard({
           </p>
         </div>
         <Link
-          href={`/pedidos/${pedido.id}/prendas`}
+          href={`/pedidos/${pedido.codigo}/prendas`}
           className={styles.linkButton}
           style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
         >

@@ -18,16 +18,13 @@ interface DisenoPageProps {
 export default async function DisenoPage({ params }: DisenoPageProps) {
   const { id } = await params;
 
-  let pedido;
+  let pedido: Awaited<ReturnType<typeof getPedido>>;
   let disenosRes;
 
   try {
-    const [pedidoRes, disenosResult] = await Promise.all([
-      getPedido(id),
-      loadData(() => getDisenosPedido(id)),
-    ]);
-    pedido = pedidoRes;
-    disenosRes = disenosResult;
+    pedido = await getPedido(id);
+    const pedidoRealId = pedido.id;
+    disenosRes = await loadData(() => getDisenosPedido(pedidoRealId));
   } catch (error) {
     if (error instanceof SipesApiError && error.status === 404) notFound();
     throw error;
@@ -45,7 +42,7 @@ export default async function DisenoPage({ params }: DisenoPageProps) {
         <div className={styles.detailHeaderMain}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
             <Link
-              href={`/pedidos/${pedido.id}`}
+              href={`/pedidos/${pedido.codigo}`}
               style={{
                 display: "inline-flex",
                 alignItems: "center",

@@ -145,8 +145,9 @@ export class PedidoService {
   }
 
   async findOne(id: string) {
-    const pedido = await this.prisma.pedido.findUnique({
-      where: { id },
+    const where = id.startsWith('SUB-') ? { codigo: id } : { id };
+    let pedido = await this.prisma.pedido.findUnique({
+      where,
       include: {
         cliente: true,
         vendedora: true,
@@ -162,6 +163,25 @@ export class PedidoService {
         colores: true,
       },
     });
+    if (!pedido && !id.startsWith('SUB-')) {
+      pedido = await this.prisma.pedido.findUnique({
+        where: { codigo: id },
+        include: {
+          cliente: true,
+          vendedora: true,
+          grupos: {
+            include: {
+              tipoProducto: true,
+              configuracion: {
+                include: { atributo: true, valor: true },
+                orderBy: { atributo: { orden: 'asc' } },
+              },
+            },
+          },
+          colores: true,
+        },
+      });
+    }
     if (!pedido) throw new NotFoundException('Pedido no encontrado: ' + id);
     return {
       ...pedido,
@@ -191,41 +211,49 @@ export class PedidoService {
   }
 
   async resumenProduccion(id: string) {
-    const pedido = await this.prisma.pedido.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        codigo: true,
-        grupos: {
-          include: {
-            tipoProducto: {
-              select: {
-                id: true,
-                codigo: true,
-                nombre: true,
-                camisetas: true,
-                shorts: true,
-                medias: true,
-              },
+    const where = id.startsWith('SUB-') ? { codigo: id } : { id };
+    const selectConfig = {
+      id: true,
+      codigo: true,
+      grupos: {
+        include: {
+          tipoProducto: {
+            select: {
+              id: true,
+              codigo: true,
+              nombre: true,
+              camisetas: true,
+              shorts: true,
+              medias: true,
             },
-            prendas: {
-              select: {
-                id: true,
-                tipoProducto: {
-                  select: {
-                    codigo: true,
-                    camisetas: true,
-                    shorts: true,
-                    medias: true,
-                  },
+          },
+          prendas: {
+            select: {
+              id: true,
+              tipoProducto: {
+                select: {
+                  codigo: true,
+                  camisetas: true,
+                  shorts: true,
+                  medias: true,
                 },
               },
             },
           },
-          orderBy: { nombre: 'asc' },
         },
+        orderBy: { nombre: 'asc' as const },
       },
+    };
+    let pedido = await this.prisma.pedido.findUnique({
+      where,
+      select: selectConfig,
     });
+    if (!pedido && !id.startsWith('SUB-')) {
+      pedido = await this.prisma.pedido.findUnique({
+        where: { codigo: id },
+        select: selectConfig,
+      });
+    }
     if (!pedido) throw new NotFoundException('Pedido no encontrado: ' + id);
 
     const grupos = pedido.grupos.map((grupo) => {

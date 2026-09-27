@@ -5,6 +5,7 @@ import styles from "./pedidos.module.css";
 
 interface PedidoDisenoCardProps {
   pedidoId: string;
+  pedidoCodigo?: string;
   disenos: DisenoItem[];
 }
 
@@ -15,10 +16,11 @@ const ESTADO_INFO: Record<EstadoDiseno, { label: string; color: string; bg: stri
   RECHAZADO: { label: "Rechazado", color: "#e11d48", bg: "#ffe4e6", icon: AlertCircle },
 };
 
-export function PedidoDisenoCard({ pedidoId, disenos }: PedidoDisenoCardProps) {
+export function PedidoDisenoCard({ pedidoId, pedidoCodigo, disenos }: PedidoDisenoCardProps) {
   const activo = disenos[0] ?? null;
   const info = activo ? ESTADO_INFO[activo.estado] : null;
   const Icon = info?.icon ?? Clock;
+  const targetId = pedidoCodigo ?? pedidoId;
 
   return (
     <section className={styles.sectionBlock}>
@@ -33,7 +35,7 @@ export function PedidoDisenoCard({ pedidoId, disenos }: PedidoDisenoCardProps) {
           </p>
         </div>
         <Link
-          href={`/pedidos/${pedidoId}/diseno`}
+          href={`/pedidos/${targetId}/diseno`}
           className={styles.envioEditButton}
           style={{ textDecoration: "none" }}
         >
@@ -124,7 +126,7 @@ export function PedidoDisenoCard({ pedidoId, disenos }: PedidoDisenoCardProps) {
           <p style={{ margin: "4px 0 12px", fontSize: "0.8rem", color: "var(--muted)" }}>
             El diseñador asignado debe subir el arte y el mockup en el taller de diseño antes de enviar a producción.
           </p>
-          <Link href={`/pedidos/${pedidoId}/diseno`} className={styles.linkButton} style={{ textDecoration: "none" }}>
+          <Link href={`/pedidos/${targetId}/diseno`} className={styles.linkButton} style={{ textDecoration: "none" }}>
             Ir al Taller de Diseño para subir arte
           </Link>
         </div>
