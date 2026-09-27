@@ -1,14 +1,21 @@
-import { Body, Controller, ForbiddenException, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolUsuario, TipoBloque } from '@prisma/client';
 import { BloqueService } from './bloque.service';
 import { ReabrirBloqueDto } from './dto/reabrir-bloque.dto';
+import { AcusarReciboDto } from './dto/acusar-recibo.dto';
 import { RolesGuard } from '../../../core/guards/roles.guard';
 import { Roles } from '../../../core/decorators/roles.decorator';
 
 const TODOS = Object.values(RolUsuario) as RolUsuario[];
 const REABRIR_ROLES = [RolUsuario.ADMINISTRADOR, RolUsuario.COORDINADOR_OPERATIVO];
+const ACUSAR_ROLES = [
+  RolUsuario.ADMINISTRADOR,
+  RolUsuario.COORDINADOR_OPERATIVO,
+  RolUsuario.DISENO,
+  RolUsuario.PRODUCCION,
+];
 
 const CERRAR_ROLES: Record<TipoBloque, RolUsuario[]> = {
   [TipoBloque.DISENO]: [RolUsuario.ADMINISTRADOR, RolUsuario.DISENO],
@@ -73,5 +80,53 @@ export class BloqueController {
     @Request() req: { user: { id: string } },
   ) {
     return this.bloqueService.reabrirBloque(id, tipo, dto, req.user.id);
+  }
+
+  @Patch(':id/bloques/versiones/:versionId/acusar')
+  @Roles(...ACUSAR_ROLES)
+  @ApiOperation({
+    summary: 'Registrar acuse de recibo formal en taller o diseno tras reapertura (R-H14)',
+  })
+  @ApiParam({ name: 'id', description: 'ID unico del pedido (CUID)' })
+  @ApiParam({ name: 'versionId', description: 'ID unico de la VersionBloque' })
+  @ApiResponse({ status: 200, description: 'Acuse de recibo registrado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Version no corresponde al pedido' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Requiere JWT' })
+  @ApiResponse({ status: 403, description: 'Solo DISENO, PRODUCCION, ADMIN o COORDINADOR pueden acusar recibo' })
+  @ApiResponse({ status: 404, description: 'Pedido o version no encontrado' })
+  acusarRecibo(
+    @Param('id') id: string,
+    @Param('versionId') versionId: string,
+    @Body() dto: AcusarReciboDto,
+    @Request() req: { user: { id: string; rol: RolUsuario } },
+  ) {
+    return this.bloqueService.acusarReciboVersion(id, versionId, req.user, dto);
+  }
+
+  @Post(':id/bloques/versiones/:versionId/acusar')
+  @Roles(...ACUSAR_ROLES)
+  @ApiOperation({ summary: 'Alias POST para acuse de recibo formal tras reapertura (R-H14)' })
+  @ApiParam({ name: 'id', description: 'ID unico del pedido (CUID)' })
+  @ApiParam({ name: 'versionId', description: 'ID unico de la VersionBloque' })
+  acusarReciboPost(
+    @Param('id') id: string,
+    @Param('versionId') versionId: string,
+    @Body() dto: AcusarReciboDto,
+    @Request() req: { user: { id: string; rol: RolUsuario } },
+  ) {
+    return this.bloqueService.acusarReciboVersion(id, versionId, req.user, dto);
+  }
+
+  @Get(':id/bloques/versiones-pendientes-acuse')
+  @Roles(...TODOS)
+  @ApiOperation({
+    summary: 'Listar versiones de bloques pendientes de acuse de recibo en taller/diseno (R-H14)',
+  })
+  @ApiParam({ name: 'id', description: 'ID unico del pedido (CUID)' })
+  @ApiResponse({ status: 200, description: 'Lista de versiones con alertas de reapertura pendientes' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Requiere JWT' })
+  @ApiResponse({ status: 404, description: 'Pedido no encontrado' })
+  listarPendientesAcuse(@Param('id') id: string) {
+    return this.bloqueService.listarVersionesPendientesAcuse(id);
   }
 }

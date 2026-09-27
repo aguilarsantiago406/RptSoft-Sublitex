@@ -1,14 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BloqueService } from './bloque.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
-import { TipoBloque, EstadoBloque, PoliticaNumeracion } from '@prisma/client';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { TipoBloque, EstadoBloque, PoliticaNumeracion, RolUsuario } from '@prisma/client';
+import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { AuditoriaService } from '../../5-auditoria/auditoria/auditoria.service';
+import { AreaAcuse } from './dto/acusar-recibo.dto';
 
 describe('BloqueService - Gobernanza de Bloques (R-H01, R-H11, R-H12, R-H13, R-H14)', () => {
   let service: BloqueService;
   let prisma: any;
+  let auditoria: any;
 
   beforeEach(async () => {
+    auditoria = {
+      registrar: jest.fn().mockResolvedValue(undefined),
+    };
+
     prisma = {
       pedido: {
         findUnique: jest.fn(),
@@ -22,7 +29,10 @@ describe('BloqueService - Gobernanza de Bloques (R-H01, R-H11, R-H12, R-H13, R-H
       },
       versionBloque: {
         findFirst: jest.fn(),
+        findUnique: jest.fn(),
+        findMany: jest.fn(),
         create: jest.fn(),
+        update: jest.fn(),
       },
       nestingParte: {
         count: jest.fn(),
@@ -33,6 +43,7 @@ describe('BloqueService - Gobernanza de Bloques (R-H01, R-H11, R-H12, R-H13, R-H
       providers: [
         BloqueService,
         { provide: PrismaService, useValue: prisma },
+        { provide: AuditoriaService, useValue: auditoria },
       ],
     }).compile();
 
@@ -247,6 +258,200 @@ describe('BloqueService - Gobernanza de Bloques (R-H01, R-H11, R-H12, R-H13, R-H
       );
 
       expect(res.alertaTaller).toBe(false);
+    });
+  });
+
+  describe('acusarReciboVersion (R-H14)', () => {
+    it('lanza NotFoundException si el pedido no existe', async () => {
+      prisma.pedido.findUnique.mockResolvedValue(null);
+      await expect(
+        service.acusarReciboVersion('ped_inexistente', 'v_1', { id: 'usr_taller', rol: RolUsuario.PRODUCCION }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('lanza NotFoundException si la version no existe', async () => {
+      prisma.pedido.findUnique.mockResolvedValue({ id: 'ped_1' });
+      prisma.versionBloque.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.acusarReciboVersion('ped_1', 'v_inexistente', { id: 'usr_taller', rol: RolUsuario.PRODUCCION }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('lanza BadRequestException si la version pertenece a otro pedido', async () => {
+      prisma.pedido.findUnique.mockResolvedValue({ id: 'ped_1' });
+      prisma.versionBloque.findUnique.mockResolvedValue({
+        id: 'v_1',
+        bloque: { pedidoId: 'ped_OTRO' },
+      });
+
+      await expect(
+        service.acusarReciboVersion('ped_1', 'v_1', { id: 'usr_taller', rol: RolUsuario.PRODUCCION }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('lanza ForbiddenException si el usuario no tiene rol autorizado', async () => {
+      prisma.pedido.findUnique.mockResolvedValue({ id: 'ped_1' });
+      prisma.versionBloque.findUnique.mockResolvedValue({
+        id: 'v_1',
+        bloque: { pedidoId: 'ped_1' },
+      });
+
+      await expect(
+        service.acusarReciboVersion('ped_1', 'v_1', { id: 'usr_vendedora', rol: RolUsuario.VENDEDORA }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('sella acusadoDisenoEn cuando el rol es DISENO y audita el cambio (R-I01)', async () => {
+      prisma.pedido.findUnique.mockResolvedValue({ id: 'ped_1' });
+      prisma.versionBloque.findUnique.mockResolvedValue({
+        id: 'v_1',
+        numero: 2,
+        bloque: { pedidoId: 'ped_1' },
+        acusadoDisenoEn: null,
+        acusadoProduccionEn: null,
+      });
+      const fechaMock = new Date();
+      prisma.versionBloque.update.mockResolvedValue({
+        id: 'v_1',
+        numero: 2,
+        acusadoDisenoEn: fechaMock,
+        acusadoProduccionEn: null,
+      });
+
+      const res = await service.acusarReciboVersion('ped_1', 'v_1', { id: 'usr_diseno', rol: RolUsuario.DISENO });
+
+      expect(res.yaAcusado).toBe(false);
+      expect(res.area).toBe(AreaAcuse.DISENO);
+      expect(prisma.versionBloque.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'v_1' },
+          data: expect.objectContaining({ acusadoDisenoEn: expect.any(Date) }),
+        }),
+      );
+      expect(auditoria.registrar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pedidoId: 'ped_1',
+          entidad: 'VersionBloque',
+          entidadId: 'v_1',
+          campo: 'acusadoDisenoEn',
+          origen: 'USUARIO',
+          autorUsuarioId: 'usr_diseno',
+        }),
+      );
+    });
+
+    it('sella acusadoProduccionEn cuando el rol es PRODUCCION', async () => {
+      prisma.pedido.findUnique.mockResolvedValue({ id: 'ped_1' });
+      prisma.versionBloque.findUnique.mockResolvedValue({
+        id: 'v_2',
+        numero: 2,
+        bloque: { pedidoId: 'ped_1' },
+        acusadoDisenoEn: null,
+        acusadoProduccionEn: null,
+      });
+      prisma.versionBloque.update.mockResolvedValue({
+        id: 'v_2',
+        numero: 2,
+        acusadoDisenoEn: null,
+        acusadoProduccionEn: new Date(),
+      });
+
+      const res = await service.acusarReciboVersion('ped_1', 'v_2', { id: 'usr_taller', rol: RolUsuario.PRODUCCION });
+
+      expect(res.yaAcusado).toBe(false);
+      expect(res.area).toBe(AreaAcuse.PRODUCCION);
+      expect(prisma.versionBloque.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'v_2' },
+          data: expect.objectContaining({ acusadoProduccionEn: expect.any(Date) }),
+        }),
+      );
+    });
+
+    it('retorna yaAcusado = true si el area ya habia sido acusada previamente', async () => {
+      const fechaPrevia = new Date('2026-09-20T10:00:00Z');
+      prisma.pedido.findUnique.mockResolvedValue({ id: 'ped_1' });
+      prisma.versionBloque.findUnique.mockResolvedValue({
+        id: 'v_1',
+        numero: 2,
+        bloque: { pedidoId: 'ped_1' },
+        acusadoDisenoEn: null,
+        acusadoProduccionEn: fechaPrevia,
+      });
+
+      const res = await service.acusarReciboVersion('ped_1', 'v_1', { id: 'usr_taller', rol: RolUsuario.PRODUCCION });
+
+      expect(res.yaAcusado).toBe(true);
+      expect(res.mensaje).toContain('ya contaba con acuse');
+      expect(prisma.versionBloque.update).not.toHaveBeenCalled();
+    });
+
+    it('permite a ADMINISTRADOR especificar el area mediante DTO', async () => {
+      prisma.pedido.findUnique.mockResolvedValue({ id: 'ped_1' });
+      prisma.versionBloque.findUnique.mockResolvedValue({
+        id: 'v_1',
+        numero: 2,
+        bloque: { pedidoId: 'ped_1' },
+        acusadoDisenoEn: null,
+        acusadoProduccionEn: null,
+      });
+      prisma.versionBloque.update.mockResolvedValue({
+        id: 'v_1',
+        numero: 2,
+        acusadoDisenoEn: new Date(),
+        acusadoProduccionEn: new Date(),
+      });
+
+      const res = await service.acusarReciboVersion(
+        'ped_1',
+        'v_1',
+        { id: 'usr_admin', rol: RolUsuario.ADMINISTRADOR },
+        { area: AreaAcuse.AMBAS, nota: 'Validado por gerencia' },
+      );
+
+      expect(res.area).toBe(AreaAcuse.AMBAS);
+      expect(prisma.versionBloque.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            acusadoDisenoEn: expect.any(Date),
+            acusadoProduccionEn: expect.any(Date),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('listarVersionesPendientesAcuse (R-H14)', () => {
+    it('lanza NotFoundException si el pedido no existe', async () => {
+      prisma.pedido.findUnique.mockResolvedValue(null);
+      await expect(service.listarVersionesPendientesAcuse('ped_99')).rejects.toThrow(NotFoundException);
+    });
+
+    it('devuelve versiones pendientes y alertaTallerActiva = true si hay partes asignadas', async () => {
+      prisma.pedido.findUnique.mockResolvedValue({ id: 'ped_1' });
+      prisma.versionBloque.findMany.mockResolvedValue([
+        {
+          id: 'v_2',
+          bloqueId: 'b_lista',
+          bloque: { tipo: TipoBloque.LISTA },
+          numero: 2,
+          motivoReapertura: 'Agregar arquero',
+          acusadoDisenoEn: new Date(),
+          acusadoProduccionEn: null,
+          creadoEn: new Date(),
+          creadoPor: { id: 'usr_1', nombre: 'Admin' },
+        },
+      ]);
+      prisma.nestingParte.count.mockResolvedValue(3);
+
+      const res = await service.listarVersionesPendientesAcuse('ped_1');
+
+      expect(res.pedidoId).toBe('ped_1');
+      expect(res.alertaTallerActiva).toBe(true);
+      expect(res.totalPendientes).toBe(1);
+      expect(res.versiones[0].pendienteProduccion).toBe(true);
+      expect(res.versiones[0].pendienteDiseno).toBe(false);
     });
   });
 });

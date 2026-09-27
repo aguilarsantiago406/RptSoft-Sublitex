@@ -1,11 +1,16 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Optional } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
-import { TipoBloque, EstadoBloque, PoliticaNumeracion } from '@prisma/client';
+import { TipoBloque, EstadoBloque, PoliticaNumeracion, RolUsuario } from '@prisma/client';
 import { ReabrirBloqueDto } from './dto/reabrir-bloque.dto';
+import { AcusarReciboDto, AreaAcuse } from './dto/acusar-recibo.dto';
+import { AuditoriaService } from '../../5-auditoria/auditoria/auditoria.service';
 
 @Injectable()
 export class BloqueService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly auditoria?: AuditoriaService,
+  ) {}
 
   async getBloques(pedidoId: string) {
     const pedido = await this.prisma.pedido.findUnique({
@@ -259,6 +264,194 @@ export class BloqueService {
       mensaje: alertaTaller
         ? 'Bloque reabierto con alerta de produccion: el pedido ya tiene partes en taller (R-H14)'
         : 'Bloque reabierto exitosamente',
+    };
+  }
+
+  /**
+   * R-H14 · Acuse de recibo en taller y diseno tras reapertura.
+   * Si el pedido ya esta en produccion, la reapertura genera una alerta
+   * que debe ser acusada de recibo formalmente por diseno o produccion.
+   */
+  async acusarReciboVersion(
+    pedidoId: string,
+    versionId: string,
+    user: { id: string; rol: RolUsuario },
+    dto?: AcusarReciboDto,
+  ) {
+    const pedido = await this.prisma.pedido.findUnique({
+      where: { id: pedidoId },
+    });
+    if (!pedido) {
+      throw new NotFoundException(`Pedido no encontrado: ${pedidoId}`);
+    }
+
+    const version = await this.prisma.versionBloque.findUnique({
+      where: { id: versionId },
+      include: {
+        bloque: true,
+        creadoPor: { select: { id: true, nombre: true, email: true, rol: true } },
+      },
+    });
+
+    if (!version) {
+      throw new NotFoundException(`Versión de bloque no encontrada: ${versionId}`);
+    }
+
+    if (version.bloque.pedidoId !== pedidoId) {
+      throw new BadRequestException(
+        `La versión ${versionId} pertenece al pedido ${version.bloque.pedidoId}, no al pedido ${pedidoId}`,
+      );
+    }
+
+    // Determinar area segun rol o DTO
+    let area: AreaAcuse;
+    if (user.rol === RolUsuario.DISENO) {
+      area = AreaAcuse.DISENO;
+    } else if (user.rol === RolUsuario.PRODUCCION) {
+      area = AreaAcuse.PRODUCCION;
+    } else if (
+      user.rol === RolUsuario.ADMINISTRADOR ||
+      user.rol === RolUsuario.COORDINADOR_OPERATIVO
+    ) {
+      area = dto?.area ?? AreaAcuse.PRODUCCION;
+    } else {
+      throw new ForbiddenException(
+        'Solo usuarios con rol DISENO, PRODUCCION, ADMINISTRADOR o COORDINADOR_OPERATIVO pueden acusar recibo (R-H14)',
+      );
+    }
+
+    // Verificar si ya fue acusada
+    const yaAcusadoDiseno = !!version.acusadoDisenoEn;
+    const yaAcusadoProduccion = !!version.acusadoProduccionEn;
+
+    if (area === AreaAcuse.DISENO && yaAcusadoDiseno) {
+      return {
+        mensaje: 'La versión ya contaba con acuse de recibo de Diseño.',
+        yaAcusado: true,
+        area: AreaAcuse.DISENO,
+        version,
+      };
+    }
+
+    if (area === AreaAcuse.PRODUCCION && yaAcusadoProduccion) {
+      return {
+        mensaje: 'La versión ya contaba con acuse de recibo de Producción / Taller.',
+        yaAcusado: true,
+        area: AreaAcuse.PRODUCCION,
+        version,
+      };
+    }
+
+    const ahora = new Date();
+    const dataUpdate: any = {};
+    if (area === AreaAcuse.DISENO) {
+      dataUpdate.acusadoDisenoEn = ahora;
+    } else if (area === AreaAcuse.PRODUCCION) {
+      dataUpdate.acusadoProduccionEn = ahora;
+    } else if (area === AreaAcuse.AMBAS) {
+      if (!yaAcusadoDiseno) dataUpdate.acusadoDisenoEn = ahora;
+      if (!yaAcusadoProduccion) dataUpdate.acusadoProduccionEn = ahora;
+    }
+
+    let versionActualizada: any;
+    try {
+      versionActualizada = await this.prisma.versionBloque.update({
+        where: { id: versionId },
+        data: dataUpdate,
+        include: {
+          bloque: true,
+          creadoPor: { select: { id: true, nombre: true, email: true, rol: true } },
+        },
+      });
+    } catch {
+      // Fallback a funcion security definer si los permisos de UPDATE estan revocados (01_constraints.sql)
+      const areaParam = area === AreaAcuse.AMBAS ? 'PRODUCCION' : area;
+      if (typeof (this.prisma as any).$executeRawUnsafe === 'function') {
+        await (this.prisma as any).$executeRawUnsafe(
+          `SELECT acusar_recibo_version($1, $2)`,
+          versionId,
+          areaParam,
+        );
+      }
+      versionActualizada = await this.prisma.versionBloque.findUnique({
+        where: { id: versionId },
+        include: {
+          bloque: true,
+          creadoPor: { select: { id: true, nombre: true, email: true, rol: true } },
+        },
+      });
+    }
+
+    // Registrar en auditoria inmutable (R-I01)
+    if (this.auditoria) {
+      await this.auditoria.registrar({
+        pedidoId,
+        entidad: 'VersionBloque',
+        entidadId: versionId,
+        campo: area === AreaAcuse.DISENO ? 'acusadoDisenoEn' : 'acusadoProduccionEn',
+        valorAnterior: null,
+        valorNuevo: ahora.toISOString(),
+        origen: 'USUARIO',
+        autorUsuarioId: user.id,
+        autorRol: user.rol,
+      });
+    }
+
+    return {
+      mensaje: `Acuse de recibo formal registrado exitosamente para ${area} (R-H14)`,
+      yaAcusado: false,
+      area,
+      version: versionActualizada,
+    };
+  }
+
+  /**
+   * R-H14 · Consultar versiones de bloques que requieren acuse de recibo pendiente.
+   */
+  async listarVersionesPendientesAcuse(pedidoId: string) {
+    const pedido = await this.prisma.pedido.findUnique({
+      where: { id: pedidoId },
+    });
+    if (!pedido) {
+      throw new NotFoundException(`Pedido no encontrado: ${pedidoId}`);
+    }
+
+    const versiones = await this.prisma.versionBloque.findMany({
+      where: {
+        bloque: { pedidoId },
+        OR: [
+          { acusadoDisenoEn: null },
+          { acusadoProduccionEn: null },
+        ],
+      },
+      include: {
+        bloque: true,
+        creadoPor: { select: { id: true, nombre: true, email: true, rol: true } },
+      },
+      orderBy: { creadoEn: 'desc' },
+    });
+
+    const partesEnTaller = await this.prisma.nestingParte.count({
+      where: { pedidoId },
+    });
+
+    return {
+      pedidoId,
+      alertaTallerActiva: partesEnTaller > 0,
+      totalPendientes: versiones.length,
+      versiones: versiones.map((v) => ({
+        id: v.id,
+        bloqueId: v.bloqueId,
+        tipoBloque: v.bloque.tipo,
+        numero: v.numero,
+        motivoReapertura: v.motivoReapertura,
+        acusadoDisenoEn: v.acusadoDisenoEn,
+        acusadoProduccionEn: v.acusadoProduccionEn,
+        pendienteDiseno: !v.acusadoDisenoEn,
+        pendienteProduccion: !v.acusadoProduccionEn,
+        creadoEn: v.creadoEn,
+        creadoPor: v.creadoPor,
+      })),
     };
   }
 

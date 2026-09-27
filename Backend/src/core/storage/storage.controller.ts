@@ -19,6 +19,8 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../guards/roles.guard';
+import { Roles, ROLES_TODOS, ROLES_COORDINACION } from '../decorators/roles.decorator';
 import { StorageService } from './storage.service';
 
 @ApiTags('Almacenamiento y Archivos (Supabase Storage)')
@@ -38,7 +40,8 @@ export class StorageController {
   }
 
   @Post('subir')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(...ROLES_TODOS)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Sube un archivo o imagen a Supabase Storage y retorna su URL pública',
@@ -75,7 +78,8 @@ export class StorageController {
   }
 
   @Delete()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(...ROLES_COORDINACION)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Elimina un archivo almacenado en Supabase Storage por su path' })
   @ApiQuery({ name: 'path', required: true, example: 'disenos/1711234567_arte.ai' })

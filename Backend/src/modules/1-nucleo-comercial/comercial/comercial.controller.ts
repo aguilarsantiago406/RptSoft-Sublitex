@@ -1,6 +1,13 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../../../core/guards/roles.guard';
+import {
+  Roles,
+  ROLES_COORDINACION,
+  ROLES_COMERCIAL,
+  ROLES_TODOS,
+} from '../../../core/decorators/roles.decorator';
 import { TipoTarifa } from '@prisma/client';
 import { ComercialService } from './comercial.service';
 import { CreateTarifaDto } from './dto/create-tarifa.dto';
@@ -11,12 +18,13 @@ import { EmitirConfirmacionDto } from './dto/emitir-confirmacion.dto';
 
 @ApiTags('Comercial / Tarifas y Envios')
 @Controller('api/comercial')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiBearerAuth()
 export class ComercialController {
   constructor(private readonly comercialService: ComercialService) {}
 
   @Post('tarifas')
+  @Roles(...ROLES_COORDINACION)
   @ApiOperation({ summary: 'Crear nueva tarifa (R-K10)' })
   @ApiResponse({ status: 201, description: 'Tarifa creada exitosamente' })
   @ApiResponse({ status: 400, description: 'Rango de fechas invalido o datos incorrectos' })
@@ -27,6 +35,7 @@ export class ComercialController {
   }
 
   @Get('tarifas')
+  @Roles(...ROLES_TODOS)
   @ApiOperation({ summary: 'Listar todas las tarifas (historicas y activas)' })
   @ApiQuery({ name: 'tipo', required: false, enum: TipoTarifa, description: 'Filtrar por tipo de tarifa' })
   @ApiResponse({ status: 200, description: 'Lista de tarifas' })
@@ -36,6 +45,7 @@ export class ComercialController {
   }
 
   @Get('tarifas/vigentes')
+  @Roles(...ROLES_TODOS)
   @ApiOperation({ summary: 'Listar tarifas vigentes en rango de fecha actual' })
   @ApiQuery({ name: 'tipo', required: false, enum: TipoTarifa, description: 'Filtrar por tipo de tarifa' })
   @ApiResponse({ status: 200, description: 'Lista de tarifas vigentes hoy' })
@@ -45,6 +55,7 @@ export class ComercialController {
   }
 
   @Get('tarifas/:id')
+  @Roles(...ROLES_TODOS)
   @ApiOperation({ summary: 'Obtener tarifa por ID' })
   @ApiParam({ name: 'id', description: 'ID unico de la tarifa (CUID)' })
   @ApiResponse({ status: 200, description: 'Detalle de la tarifa' })
@@ -55,6 +66,7 @@ export class ComercialController {
   }
 
   @Patch('tarifas/:id')
+  @Roles(...ROLES_COORDINACION)
   @ApiOperation({ summary: 'Actualizar tarifa' })
   @ApiParam({ name: 'id', description: 'ID unico de la tarifa (CUID)' })
   @ApiResponse({ status: 200, description: 'Tarifa actualizada' })
@@ -66,6 +78,7 @@ export class ComercialController {
   }
 
   @Delete('tarifas/:id')
+  @Roles(...ROLES_COORDINACION)
   @ApiOperation({ summary: 'Eliminar tarifa' })
   @ApiParam({ name: 'id', description: 'ID unico de la tarifa (CUID)' })
   @ApiResponse({ status: 200, description: 'Tarifa eliminada' })
@@ -76,6 +89,7 @@ export class ComercialController {
   }
 
   @Post('pedidos/:pedidoId/envio')
+  @Roles(...ROLES_COMERCIAL)
   @ApiOperation({ summary: 'Crear datos de envio para un pedido (R-K08)' })
   @ApiParam({ name: 'pedidoId', description: 'ID unico del pedido (CUID)' })
   @ApiResponse({ status: 201, description: 'Datos de envio creados' })
@@ -88,6 +102,7 @@ export class ComercialController {
   }
 
   @Get('pedidos/:pedidoId/envio')
+  @Roles(...ROLES_TODOS)
   @ApiOperation({ summary: 'Obtener datos de envio de un pedido' })
   @ApiParam({ name: 'pedidoId', description: 'ID unico del pedido (CUID)' })
   @ApiResponse({ status: 200, description: 'Datos de envio del pedido' })
@@ -98,6 +113,7 @@ export class ComercialController {
   }
 
   @Patch('pedidos/:pedidoId/envio')
+  @Roles(...ROLES_COMERCIAL)
   @ApiOperation({ summary: 'Actualizar datos de envio de un pedido' })
   @ApiParam({ name: 'pedidoId', description: 'ID unico del pedido (CUID)' })
   @ApiResponse({ status: 200, description: 'Datos de envio actualizados' })
@@ -109,6 +125,7 @@ export class ComercialController {
   }
 
   @Delete('pedidos/:pedidoId/envio')
+  @Roles(...ROLES_COMERCIAL)
   @ApiOperation({ summary: 'Eliminar datos de envio de un pedido' })
   @ApiParam({ name: 'pedidoId', description: 'ID unico del pedido (CUID)' })
   @ApiResponse({ status: 200, description: 'Datos de envio eliminados' })
@@ -119,6 +136,7 @@ export class ComercialController {
   }
 
   @Post('pedidos/:pedidoId/confirmacion')
+  @Roles(...ROLES_COMERCIAL)
   @ApiOperation({ summary: 'Emitir confirmacion comercial congelada del pedido (R-H05, R-K06, R-K07)' })
   @ApiParam({ name: 'pedidoId', description: 'ID unico del pedido (CUID)' })
   @ApiResponse({ status: 201, description: 'Confirmacion emitida exitosamente' })
@@ -133,6 +151,7 @@ export class ComercialController {
   }
 
   @Get('pedidos/:pedidoId/confirmaciones')
+  @Roles(...ROLES_TODOS)
   @ApiOperation({ summary: 'Listar historial de confirmaciones de un pedido (R-K06)' })
   @ApiParam({ name: 'pedidoId', description: 'ID unico del pedido (CUID)' })
   @ApiResponse({ status: 200, description: 'Lista de confirmaciones ordenadas por version desc' })

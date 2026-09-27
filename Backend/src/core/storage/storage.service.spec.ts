@@ -102,6 +102,25 @@ describe('📦 StorageService & StorageController (Supabase Storage)', () => {
       expect(mockSupabase.storage.from).toHaveBeenCalledWith('sublitex-archivos');
     });
 
+    it('debe subir un buffer exitosamente (PDF generado) a la carpeta confirmaciones', async () => {
+      const buffer = Buffer.from('%PDF-1.4 Fake PDF Header');
+      const res = await service.subirBuffer(buffer, 'SUB-2002-v1.pdf', 'application/pdf', 'confirmaciones');
+
+      expect(res.url).toBe(
+        'https://test.supabase.co/storage/v1/object/public/sublitex-archivos/disenos/1_test.png',
+      );
+      expect(res.path).toContain('confirmaciones/');
+      expect(res.nombreOriginal).toBe('SUB-2002-v1.pdf');
+      expect(res.mimetype).toBe('application/pdf');
+      expect(res.tamanoBytes).toBe(buffer.length);
+    });
+
+    it('debe rechazar subirBuffer si el buffer está vacío', async () => {
+      await expect(service.subirBuffer(Buffer.alloc(0), 'vacio.pdf')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
     it('debe lanzar BadRequestException si Supabase responde con error al subir', async () => {
       mockSupabase.storage.from.mockReturnValue({
         upload: jest.fn().mockResolvedValue({ data: null, error: { message: 'Bucket not found' } }),

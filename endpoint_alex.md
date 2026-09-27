@@ -11,11 +11,11 @@
 
 | Frente | Módulos | Controladores | Total Endpoints | Seguridad Principal |
 |---|---|---|:---:|---|
-| **BK2** | Operación de Prendas | 5 controladores | **17** | JWT (Privados) + Token Enlace (Públicos) |
-| **BK3** | Diseño · Taller-Producción · Auditoría | 3 controladores | **14** | JWT Bearer Token |
-| **BK1** | Núcleo Comercial · Gobernanza · Auth | 8 controladores | **37** | JWT Bearer Token |
+| **BK2** | Operación de Prendas | 5 controladores | **18** | JWT (Privados) + Token Enlace (Públicos) |
+| **BK3** | Diseño · Taller-Producción · Auditoría | 3 controladores | **16** | JWT Bearer Token |
+| **BK1** | Núcleo Comercial · Gobernanza · Auth | 8 controladores | **39** | JWT Bearer Token |
 | **Core** | Infraestructura / Supabase Storage | 1 controlador | **3** | JWT Bearer Token / Healthcheck |
-| **TOTAL** | **Plataforma Completa** | **17 controladores** | **71** | **Seguridad integral por roles** |
+| **TOTAL** | **Plataforma Completa** | **17 controladores** | **76** | **Seguridad integral por roles** |
 
 ---
 
@@ -63,6 +63,7 @@
 | `PATCH` | `/api/prendas/:id` | Actualiza la ficha mínima de la prenda (talla, número, corte, apodo, color). Valida paleta de color del pedido y candado de lista. | `R-E03`, `R-K05`, `R-H03` |
 | `DELETE` | `/api/prendas/:id` | Elimina una prenda de la lista del grupo si el bloque `LISTA` sigue abierto. | `R-H03` |
 | `GET` | `/api/pedidos/:pedidoId/resumen-produccion` | Resumen consolidado para taller multiplicando por piezas físicas reales (camisetas, shorts, medias), nunca solo por prendas. | `R-E07`, `R-K03` |
+| `GET` | `/api/pedidos/:pedidoId/diagnostico-cierre-lista` | Diagnóstico preventivo previo al cierre del bloque LISTA con conteo de prendas/participantes y alertas bloqueantes/informativas. | `R-H09`, `R-I06..R-I09` |
 
 ---
 
@@ -122,6 +123,8 @@
 | `POST` | `/api/nestings/:id/partes` | **Candado de Taller:** Agrega una parte real (ancho/largo en cm) cargada a un pedido. Rechaza estrictamente si los bloques `DISENO` o `LISTA` están abiertos. | `R-H04`, `R-K11`, `R-I01` |
 | `POST` | `/api/nestings/:id/archivos` | Registra un archivo TIF exportado para impresión. Valida límite físico de 5 metros de largo y correlatividad de serie (`orden <= total`). | `R-K13` |
 | `GET` | `/api/consumo-tela/pedido/:pedidoId` | Reporta el consumo exacto sumando solo las partes del pedido. Entrega metros de tela, rib, desperdicio lateral (`180 - anchoMaximo`) y costo por tarifa vigente. | `R-K10`, `R-K12`, `R-K14`, `R-K15` |
+| `PATCH` | `/api/taller/pedidos/:pedidoId/versiones/:versionId/acusar` | **Acuse de Recibo en Taller:** Sella la confirmación formal del operario de taller ante cambios en reapertura (`acusadoProduccionEn`). | `R-H14`, `R-I01` |
+| `GET` | `/api/taller/pedidos/:pedidoId/alertas-reapertura` | Lista todas las versiones de bloques reabiertas con acuse pendiente para el taller. | `R-H14` |
 
 ---
 
@@ -148,6 +151,8 @@
 | `GET` | `/api/pedidos/:id/bloques` | Consulta el semáforo consolidado de los tres bloques (`DISENO`, `LISTA`, `COMERCIAL`). Si no existen, los inicializa en `ABIERTO`. | `R-H01`, `R-H11` |
 | `POST` | `/api/pedidos/:id/bloques/:tipo/cerrar` | Cierra formalmente un bloque (`LISTA` o `COMERCIAL`). Para Lista valida cero prendas incompletas (`R-E03`), sin números duplicados (`R-G03`) y cuadre con cantidad contratada (`R-B02`). Congela snapshot inmutable. | `R-H01`, `R-H03`, `R-H11` |
 | `POST` | `/api/pedidos/:id/bloques/:tipo/reabrir` | Reapertura formal de un bloque cerrado. Exige `motivoReapertura` obligatorio, calcula diff inmutable y activa `alertaTaller` si el pedido ya tiene partes en corte. | `R-H12`, `R-H13`, `R-H14` |
+| `PATCH` | `/api/pedidos/:id/bloques/versiones/:versionId/acusar` | Sella el acuse de recibo formal en taller o diseño ante una reapertura (`R-H14`), auditando en `RegistroCambio` (`R-I01`). *(Soporta alias POST).* | `R-H14`, `R-I01` |
+| `GET` | `/api/pedidos/:id/bloques/versiones-pendientes-acuse` | Lista las versiones del pedido que tienen pendiente la firma de acuse de Diseño o Producción. | `R-H14` |
 
 ---
 
