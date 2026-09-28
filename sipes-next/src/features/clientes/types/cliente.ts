@@ -23,3 +23,23 @@ export interface CreateClienteInput {
   telefono?: string;
   ciudad?: string;
 }
+
+export interface UpdateClienteInput {
+  nombre?: string;
+  tipo?: TipoCliente;
+  telefono?: string;
+  ciudad?: string;
+}
+
+export interface PedidoResumenCliente {
+  id: string;
+  codigo: string | null;
+  estado: string;
+  fechaPedido: string;
+  fechaCompromiso: string;
+}
+
+export interface ClienteDetalle extends Cliente {
+  pedidos: PedidoResumenCliente[];
+}
+

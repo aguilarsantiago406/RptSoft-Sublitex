@@ -64,6 +64,52 @@ export default function AuditoriaGlobalPage() {
 
   const tarjetasAMostrar = tarjetasFiltradas.slice(0, visibles);
 
+  const handleExportarCSV = () => {
+    if (tarjetasFiltradas.length === 0) return;
+
+    const headers = ["Fecha", "Hora", "Origen", "Titulo", "Subtitulo", "Autor", "Cambios"];
+    const rows = tarjetasFiltradas.map((card) => {
+      const fecha = formatDate(card.creadoEn);
+      const hora = new Date(card.creadoEn).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
+      const origen = ORIGEN_LABELS[card.origen]?.label || card.origen;
+      const cambiosStr = card.cambios
+        .map((c) => {
+          if (c.campo === "creacion") return `${c.campoLabel}: Creado (${c.valorNuevo || "VENTA"})`;
+          if (c.campo === "eliminacion") return `${c.campoLabel}: Eliminado (${c.valorAnterior || "VENTA"})`;
+          return `${c.campoLabel}: ${c.valorAnterior || "(vacio)"} -> ${c.valorNuevo || "(vacio)"}`;
+        })
+        .join(" | ");
+
+      return [
+        fecha,
+        hora,
+        origen,
+        card.titulo,
+        card.subtitulo,
+        card.autorNombre,
+        cambiosStr,
+      ];
+    });
+
+    const escapeCsv = (val: string) => `"${val.replace(/"/g, '""')}"`;
+    const csvContent =
+      "\uFEFF" +
+      [
+        headers.map(escapeCsv).join(","),
+        ...rows.map((row) => row.map((cell) => escapeCsv(String(cell))).join(",")),
+      ].join("\r\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `auditoria_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -92,6 +138,14 @@ export default function AuditoriaGlobalPage() {
             disabled={isPending}
           >
             {isPending ? "Actualizando..." : "Actualizar"}
+          </button>
+          <button
+            type="button"
+            className={styles.exportButton}
+            onClick={handleExportarCSV}
+            disabled={tarjetasFiltradas.length === 0}
+          >
+            Exportar CSV
           </button>
         </div>
 

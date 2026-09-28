@@ -1,11 +1,16 @@
 "use client";
 
+import { useState, useTransition } from "react";
+import Link from "next/link";
 import { formatDate } from "@/lib/format/date";
 import { useTableState } from "@/lib/useTableState";
 import { Pagination } from "@/components/ui/table/Pagination";
 import { SortableTh } from "@/components/ui/table/SortableTh";
+import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import shared from "@/components/ui/table/tableShared.module.css";
 import type { Cliente, TipoCliente } from "../types/cliente";
+import { actionEliminarCliente } from "../actions/clientes.actions";
+import { ModalEditarCliente } from "./ModalEditarCliente";
 import styles from "./clientes.module.css";
 
 interface ClientesTableProps {
@@ -50,11 +55,31 @@ export function ClientesTable({ clientes, error }: ClientesTableProps) {
   const table = useTableState<Cliente>(clientes);
   const offset = (table.page - 1) * table.pageSize;
 
+  const [clienteAEditar, setClienteAEditar] = useState<Cliente | null>(null);
+  const [clienteAEliminar, setClienteAEliminar] = useState<Cliente | null>(null);
+  const [errorAccion, setErrorAccion] = useState<string | null>(null);
+  const [isDeleting, startTransition] = useTransition();
+
+  function handleConfirmEliminar() {
+    if (!clienteAEliminar) return;
+    const { id } = clienteAEliminar;
+
+    setErrorAccion(null);
+    startTransition(async () => {
+      const res = await actionEliminarCliente(id);
+      if (!res.ok) {
+        setErrorAccion(res.error || "No se pudo eliminar el cliente.");
+      } else {
+        setClienteAEliminar(null);
+      }
+    });
+  }
+
   return (
     <>
-      {error && (
+      {(error || errorAccion) && (
         <div className={shared.inlineWarning} role="alert">
-          {error}
+          {errorAccion || error}
         </div>
       )}
 
@@ -93,10 +118,11 @@ export function ClientesTable({ clientes, error }: ClientesTableProps) {
                     activeKey={table.sortKey}
                     dir={table.sortDir}
                     onSort={table.toggleSort}
-                    width={160}
+                    width={150}
                   />
-                  <th style={{ width: "160px" }}>Teléfono</th>
-                  <th style={{ width: "150px" }}>Registrado el</th>
+                  <th style={{ width: "140px" }}>Teléfono</th>
+                  <th style={{ width: "130px" }}>Registrado</th>
+                  <th style={{ width: "200px", textAlign: "right" }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -105,7 +131,13 @@ export function ClientesTable({ clientes, error }: ClientesTableProps) {
                     <tr key={cliente.id}>
                       <td className={styles.colIndex}>{offset + index + 1}</td>
                       <td>
-                        <div className={styles.clientName}>{cliente.nombre}</div>
+                        <Link
+                          href={`/clientes/${cliente.id}`}
+                          className={styles.clientNameLink}
+                          title="Ver ficha técnica e historial"
+                        >
+                          {cliente.nombre}
+                        </Link>
                       </td>
                       <td>
                         <span className={getBadgeClass(cliente.tipo)}>
@@ -116,6 +148,33 @@ export function ClientesTable({ clientes, error }: ClientesTableProps) {
                       <td>{cliente.telefono || "—"}</td>
                       <td style={{ color: "#64748b", fontSize: "0.82rem" }} suppressHydrationWarning>
                         {formatDate(cliente.creadoEn)}
+                      </td>
+                      <td>
+                        <div className={styles.actionsCell}>
+                          <Link
+                            href={`/clientes/${cliente.id}`}
+                            className={styles.actionBtnView}
+                          >
+                            Ver Ficha
+                          </Link>
+                          <button
+                            type="button"
+                            className={styles.actionBtnEdit}
+                            onClick={() => setClienteAEditar(cliente)}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.actionBtnDelete}
+                            onClick={() => {
+                              setErrorAccion(null);
+                              setClienteAEliminar(cliente);
+                            }}
+                          >
+                            Eliminar
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -134,6 +193,34 @@ export function ClientesTable({ clientes, error }: ClientesTableProps) {
           />
         </div>
       )}
+
+      {clienteAEditar && (
+        <ModalEditarCliente
+          isOpen={Boolean(clienteAEditar)}
+          onClose={() => setClienteAEditar(null)}
+          cliente={clienteAEditar}
+        />
+      )}
+
+      <ModalConfirmacion
+        isOpen={Boolean(clienteAEliminar)}
+        onClose={() => setClienteAEliminar(null)}
+        onConfirm={handleConfirmEliminar}
+        title="Eliminar Cliente"
+        description={
+          clienteAEliminar ? (
+            <>
+              ¿Deseas eliminar a <strong>{clienteAEliminar.nombre}</strong>?
+              <br />
+              <br />
+              Solo se podrá eliminar si no tiene pedidos registrados en el sistema.
+            </>
+          ) : ""
+        }
+        confirmText="Eliminar Cliente"
+        variant="danger"
+        isPending={isDeleting}
+      />
     </>
   );
 }
