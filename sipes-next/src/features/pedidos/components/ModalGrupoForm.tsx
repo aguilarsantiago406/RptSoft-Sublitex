@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/lib/useIsClient";
 import type { TipoProductoCatalogoItem } from "../api/pedidos.api";
 import { actionCrearGrupo } from "../actions/grupos.actions";
 import styles from "./pedidos.module.css";
@@ -19,6 +20,7 @@ export function ModalGrupoForm({
   pedidoId,
   tiposProducto,
 }: ModalGrupoFormProps) {
+  const isClient = useIsClient();
   const [nombre, setNombre] = useState("");
   const [tipoProductoId, setTipoProductoId] = useState(tiposProducto[0]?.id ?? "");
   const [cantidadContratada, setCantidadContratada] = useState<number>(20);
@@ -27,13 +29,7 @@ export function ModalGrupoForm({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !isClient) return null;
 
   function handleReset() {
     setNombre("");

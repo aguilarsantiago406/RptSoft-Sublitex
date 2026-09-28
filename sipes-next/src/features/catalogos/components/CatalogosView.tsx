@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { Scissors, Layers, Sparkles, MapPin } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Scissors, Layers, Sparkles, MapPin, Plus } from "lucide-react";
 import { useTableState } from "@/lib/useTableState";
 import { Pagination } from "@/components/ui/table/Pagination";
 import { SortableTh } from "@/components/ui/table/SortableTh";
@@ -14,6 +14,8 @@ import type {
   TarifaCatalogo,
 } from "../types/catalogo";
 import { TarifasView } from "./TarifasView";
+import { ModalNuevoTipoProducto } from "./ModalNuevoTipoProducto";
+import { ModalNuevaTela } from "./ModalNuevaTela";
 import styles from "./catalogos.module.css";
 
 interface CatalogosViewProps {
@@ -54,6 +56,9 @@ export function CatalogosView({
   tarifas,
   error,
 }: CatalogosViewProps) {
+  const [isModalProductoOpen, setIsModalProductoOpen] = useState(false);
+  const [isModalTelaOpen, setIsModalTelaOpen] = useState(false);
+
   const productos = useTableState<TipoProductoCatalogo>(tiposProducto);
   const offset = (productos.page - 1) * productos.pageSize;
 
@@ -98,6 +103,8 @@ export function CatalogosView({
     return { patronaje: p, telas: t, acabados: a, otros: o };
   }, [atributos]);
 
+  const telaAtributoId = telas[0]?.id ?? atributos.find((a) => a.codigo === "TELA")?.id ?? "";
+
   return (
     <div className={styles.container}>
       {error && (
@@ -106,7 +113,26 @@ export function CatalogosView({
         </div>
       )}
 
-      {/* Tabla Unificada de Prendas */}
+      {/* Cabecera y Tabla de Prendas / Tipos de Producto */}
+      <div className={styles.tarifasHeader}>
+        <div>
+          <h3 className={styles.standardsTitle}>Catálogo de Prendas y Tipos de Producto</h3>
+          <p className={styles.standardsDesc}>
+            Piezas físicas oficiales según regla R-K03, tallas autorizadas y precio de referencia
+          </p>
+        </div>
+        <div className={styles.tarifasHeaderActions}>
+          <button
+            type="button"
+            className={styles.tarifaNuevaButton}
+            onClick={() => setIsModalProductoOpen(true)}
+          >
+            <Plus size={14} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+            Nuevo tipo de prenda
+          </button>
+        </div>
+      </div>
+
       <section className={styles.tableCard}>
         <div className={styles.tableScroll}>
           <table className={styles.table}>
@@ -250,9 +276,22 @@ export function CatalogosView({
                 </span>
                 <h4 className={styles.standardsCardTitle}>Telas y Materiales Textiles</h4>
               </div>
-              <span className={styles.standardsCardBadge}>
-                {telas.reduce((acc, t) => acc + t.valores.length, 0)} telas
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span className={styles.standardsCardBadge}>
+                  {telas.reduce((acc, t) => acc + t.valores.length, 0)} telas
+                </span>
+                {telaAtributoId && (
+                  <button
+                    type="button"
+                    className={styles.tarifaNuevaButton}
+                    style={{ padding: "4px 8px", fontSize: "0.74rem" }}
+                    onClick={() => setIsModalTelaOpen(true)}
+                  >
+                    <Plus size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: "2px" }} />
+                    Nueva tela
+                  </button>
+                )}
+              </div>
             </div>
             <div className={styles.attributeRows}>
               {telas.map((atr) => (
@@ -351,6 +390,20 @@ export function CatalogosView({
 
       {/* Gestion del Catalogo de Tarifas (R-K10) */}
       <TarifasView tarifas={tarifas} />
+
+      {/* Modales de Creación Dinámica */}
+      <ModalNuevoTipoProducto
+        isOpen={isModalProductoOpen}
+        onClose={() => setIsModalProductoOpen(false)}
+      />
+
+      {telaAtributoId && (
+        <ModalNuevaTela
+          isOpen={isModalTelaOpen}
+          onClose={() => setIsModalTelaOpen(false)}
+          atributoId={telaAtributoId}
+        />
+      )}
     </div>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { CheckCircle2, FileText, X, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { useIsClient } from "@/lib/useIsClient";
 import type { TipoComprobante } from "../../api/comercial.api";
 import { actionEmitirConfirmacion } from "../../actions/comercial.actions";
 import styles from "./modalEmitirConfirmacion.module.css";
@@ -24,11 +25,14 @@ export function ModalEmitirConfirmacion({
   basePrendas,
   recargoTallasInicial = 0,
 }: ModalEmitirConfirmacionProps) {
-  const [mounted, setMounted] = useState(false);
+  const isClient = useIsClient();
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const [adelantoRecibido, setAdelantoRecibido] = useState<number>(0);
+  const totalEstimado = basePrendas + recargoTallasInicial;
+  const sugerido = Math.round(totalEstimado * 0.5 * 100) / 100;
+
+  const [adelantoRecibido, setAdelantoRecibido] = useState<number>(sugerido);
   const [comprobante, setComprobante] = useState<TipoComprobante>("BOLETA");
   const [showExtras, setShowExtras] = useState(false);
 
@@ -38,26 +42,7 @@ export function ModalEmitirConfirmacion({
   const [recargoAcabados, setRecargoAcabados] = useState<number>(0);
   const [adicionales, setAdicionales] = useState<number>(0);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      const totalEstimado = basePrendas + recargoTallasInicial;
-      const sugerido = Math.round(totalEstimado * 0.5 * 100) / 100;
-      setAdelantoRecibido(sugerido);
-      setErrorMsg(null);
-      setShowExtras(false);
-      setRecargoTallas(recargoTallasInicial);
-      setRecargoTelas(0);
-      setRecargoCuellos(0);
-      setRecargoAcabados(0);
-      setAdicionales(0);
-    }
-  }, [isOpen, basePrendas, recargoTallasInicial]);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !isClient) return null;
 
   const totalExtras = recargoTallas + recargoTelas + recargoCuellos + recargoAcabados + adicionales;
   const baseSinIgv = basePrendas + totalExtras;

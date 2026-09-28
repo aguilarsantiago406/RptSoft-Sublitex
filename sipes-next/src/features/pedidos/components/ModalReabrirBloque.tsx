@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { AlertTriangle, X } from "lucide-react";
+import { useIsClient } from "@/lib/useIsClient";
 import type { TipoBloque } from "../types/bloque";
 import styles from "./modalReabrirBloque.module.css";
 
@@ -27,22 +28,17 @@ export function ModalReabrirBloque({
   onConfirm,
   isPending = false,
 }: ModalReabrirBloqueProps) {
-  const [mounted, setMounted] = useState(false);
+  const isClient = useIsClient();
   const [motivo, setMotivo] = useState("");
   const [errorLocal, setErrorLocal] = useState<string | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  if (!isOpen || !isClient || !tipo) return null;
 
-  useEffect(() => {
-    if (isOpen) {
-      setMotivo("");
-      setErrorLocal(null);
-    }
-  }, [isOpen]);
-
-  if (!isOpen || !mounted || !tipo) return null;
+  function handleClose() {
+    setMotivo("");
+    setErrorLocal(null);
+    onClose();
+  }
 
   const esValido = motivo.trim().length >= 5;
 
@@ -53,10 +49,11 @@ export function ModalReabrirBloque({
     }
     setErrorLocal(null);
     await onConfirm(motivo.trim());
+    setMotivo("");
   }
 
   return createPortal(
-    <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true">
+    <div className={styles.overlay} onClick={handleClose} role="dialog" aria-modal="true">
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <div className={styles.titleRow}>
@@ -73,7 +70,7 @@ export function ModalReabrirBloque({
           <button
             type="button"
             className={styles.closeBtn}
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isPending}
             aria-label="Cerrar modal"
           >

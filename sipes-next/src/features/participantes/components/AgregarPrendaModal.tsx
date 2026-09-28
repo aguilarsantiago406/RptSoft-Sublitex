@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useIsClient } from "@/lib/useIsClient";
 import type { GrupoPedido } from "@/features/pedidos/types/pedido";
 import type { ParticipanteConPrendas } from "@/features/pedidos/api/pedidos.api";
 import { actionCrearPrenda } from "@/features/pedidos/actions/prendas.actions";
 import styles from "./participantes.module.css";
+
+type TipoPrendaVal = "VENTA" | "OBSEQUIO" | "MUESTRA";
 
 interface AgregarPrendaModalProps {
   isOpen: boolean;
@@ -25,11 +28,12 @@ export function AgregarPrendaModal({
   tiposProducto = [],
   colores = [],
 }: AgregarPrendaModalProps) {
+  const isClient = useIsClient();
   const grupo = grupos.find((g) => g.id === participante?.grupoId);
   const defaultProdId = grupo?.tipoProducto?.id ?? tiposProducto[0]?.id ?? "";
 
   const [tipoProductoId, setTipoProductoId] = useState(defaultProdId);
-  const [tipoPrenda, setTipoPrenda] = useState<"VENTA" | "OBSEQUIO" | "MUESTRA">("VENTA");
+  const [tipoPrenda, setTipoPrenda] = useState<TipoPrendaVal>("VENTA");
   const [esArquero, setEsArquero] = useState(false);
   const [colorId, setColorId] = useState(colores[0]?.id ?? "");
   const [numero, setNumero] = useState("");
@@ -37,20 +41,7 @@ export function AgregarPrendaModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (participante) {
-      const g = grupos.find((item) => item.id === participante.grupoId);
-      setTipoProductoId(g?.tipoProducto?.id ?? tiposProducto[0]?.id ?? "");
-      setColorId(colores[0]?.id ?? "");
-      setNumero("");
-      setNombreEnPrenda("");
-      setEsArquero(false);
-      setTipoPrenda("VENTA");
-      setError(null);
-    }
-  }, [participante, grupos, tiposProducto, colores]);
-
-  if (!isOpen || !participante) return null;
+  if (!isOpen || !participante || !isClient) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -101,7 +92,7 @@ export function AgregarPrendaModal({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <div className={styles.formGroup}>
               <label className={styles.formLabel} htmlFor="tipoPrenda">Tipo</label>
-              <select id="tipoPrenda" className={styles.formSelect} value={tipoPrenda} onChange={(e) => setTipoPrenda(e.target.value as any)}>
+              <select id="tipoPrenda" className={styles.formSelect} value={tipoPrenda} onChange={(e) => setTipoPrenda(e.target.value as TipoPrendaVal)}>
                 <option value="VENTA">Venta</option>
                 <option value="OBSEQUIO">Obsequio</option>
                 <option value="MUESTRA">Muestra</option>

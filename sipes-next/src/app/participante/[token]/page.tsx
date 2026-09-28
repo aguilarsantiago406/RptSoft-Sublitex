@@ -1,6 +1,7 @@
 import { getFichaParticipantePublica } from "@/features/participantes/api/portal.api";
 import { getTallasCatalogo } from "@/features/pedidos/api/pedidos.api";
 import { PortalParticipanteView } from "@/features/participantes/components/portal/PortalParticipanteView";
+import { SipesApiError } from "@/lib/api/http";
 import styles from "@/features/participantes/components/portal/portal.module.css";
 
 interface ParticipantePageProps {
@@ -23,13 +24,14 @@ export default async function ParticipantePublicPage({ params }: ParticipantePag
     ]);
     participante = ficha;
     tallas = tallasCatalogo;
-  } catch (err: any) {
-    if (err?.status === 410) {
+  } catch (err: unknown) {
+    const apiError = err instanceof SipesApiError ? err : null;
+    if (apiError?.status === 410) {
       errorMsg = "Este enlace ha expirado o fue revocado por el coordinador.";
-    } else if (err?.status === 404) {
+    } else if (apiError?.status === 404) {
       errorMsg = "El enlace no existe o es incorrecto.";
     } else {
-      errorMsg = err?.message ?? "No se pudo cargar la información del participante.";
+      errorMsg = err instanceof Error ? err.message : "No se pudo cargar la información del participante.";
     }
   }
 

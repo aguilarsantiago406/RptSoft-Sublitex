@@ -1,17 +1,17 @@
 import { notFound } from "next/navigation";
 import { getPedido, getTiposProducto, getAtributosCatalogo } from "@/features/pedidos/api/pedidos.api";
 import { getDatosEnvio, getResumenProduccion } from "@/features/pedidos/api/comercial.api";
-import { getBloquesPedido } from "@/features/pedidos/api/bloques.api";
+import { getBloquesPedido, getVersionesPendientesAcuse } from "@/features/pedidos/api/bloques.api";
 import { getUsuarios } from "@/features/usuarios/api/usuarios.api";
 import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { PedidoHeader } from "@/features/pedidos/components/PedidoHeader";
+import { AlertaReaperturaTaller } from "@/features/pedidos/components/AlertaReaperturaTaller";
 import { PedidoStepper } from "@/features/pedidos/components/PedidoStepper";
 import { PedidoIdentificacion } from "@/features/pedidos/components/PedidoIdentificacion";
 import { PedidoGrupos } from "@/features/pedidos/components/PedidoGrupos";
 import { PedidoEnvio } from "@/features/pedidos/components/PedidoEnvio";
 import { PedidoDisenoCard } from "@/features/pedidos/components/PedidoDisenoCard";
 import { PedidoColores } from "@/features/pedidos/components/PedidoColores";
-import { PedidoRecoleccionCard } from "@/features/pedidos/components/PedidoRecoleccionCard";
 import { PedidoRevision } from "@/features/pedidos/components/PedidoRevision";
 import { PedidoGuiaEtapa } from "@/features/pedidos/components/PedidoGuiaEtapa";
 import guiaStyles from "@/features/pedidos/components/pedidoGuiaEtapa.module.css";
@@ -37,12 +37,22 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   let disenosRes;
   let resumenRes;
   let bloquesRes;
+  let versionesPendientesRes;
 
   try {
     pedido = await getPedido(id);
     const pedidoRealId = pedido.id;
 
-    const [tiposRes, envioResult, usuariosResult, atributosResult, disenosResult, resumenResult, bloquesResult] = await Promise.all([
+    const [
+      tiposRes,
+      envioResult,
+      usuariosResult,
+      atributosResult,
+      disenosResult,
+      resumenResult,
+      bloquesResult,
+      versionesResult,
+    ] = await Promise.all([
       loadData(() => getTiposProducto()),
       loadData(() => getDatosEnvio(pedidoRealId)),
       loadData(() => getUsuarios()),
@@ -50,6 +60,7 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
       loadData(() => getDisenosPedido(pedidoRealId)),
       loadData(() => getResumenProduccion(pedidoRealId)),
       loadData(() => getBloquesPedido(pedidoRealId)),
+      loadData(() => getVersionesPendientesAcuse(pedidoRealId)),
     ]);
     tiposProductoRes = tiposRes;
     envioRes = envioResult;
@@ -58,6 +69,7 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
     disenosRes = disenosResult;
     resumenRes = resumenResult;
     bloquesRes = bloquesResult;
+    versionesPendientesRes = versionesResult;
   } catch (error) {
     if (error instanceof SipesApiError && error.status === 404) notFound();
     throw error;
@@ -70,11 +82,13 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   const disenos = disenosRes.data ?? [];
   const resumenProduccion = resumenRes.data;
   const bloques = bloquesRes?.data ?? [];
+  const versionesPendientes = versionesPendientesRes?.data?.versiones ?? [];
 
   const avisosAuxiliares = [
     tiposProductoRes.error ? `Tipos de producto: ${tiposProductoRes.error}` : null,
     envioRes.error ? `Datos de envío: ${envioRes.error}` : null,
     bloquesRes?.error ? `Bloques: ${bloquesRes.error}` : null,
+    versionesPendientesRes?.error ? `Alertas de reapertura: ${versionesPendientesRes.error}` : null,
   ].filter((mensaje): mensaje is string => mensaje !== null);
 
   let vendedoras = (usuarios ?? [])
@@ -97,6 +111,10 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
     <main>
       <PedidoHeader pedido={pedido} />
       <BarraAuditoriaPedido pedidoId={pedido.id} codigo={pedido.codigo} />
+      <AlertaReaperturaTaller
+        pedidoId={pedido.id}
+        versionesPendientes={versionesPendientes}
+      />
       {avisosAuxiliares.length > 0 && (
         <div className={shared.inlineWarning} role="alert">
           {avisosAuxiliares.join(" · ")}

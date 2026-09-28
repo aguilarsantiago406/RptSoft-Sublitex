@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { useIsClient } from "@/lib/useIsClient";
 import type { PedidoDetalle } from "../types/pedido";
 import { actionActualizarCabeceraPedido } from "../actions/pedidos.actions";
 import styles from "./pedidos.module.css";
@@ -20,6 +21,7 @@ export function ModalEditarPedido({
   pedido,
   vendedoras = [],
 }: ModalEditarPedidoProps) {
+  const isClient = useIsClient();
   const router = useRouter();
   const fechaActual = pedido.fechaCompromiso ? pedido.fechaCompromiso.split("T")[0] : "";
 
@@ -29,13 +31,7 @@ export function ModalEditarPedido({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !isClient) return null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

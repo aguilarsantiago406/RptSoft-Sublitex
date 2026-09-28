@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from "@/lib/api/http";
+import { apiGet, apiPost, apiDelete } from "@/lib/api/http";
 import type { DisenoItem, BloqueEstadoItem } from "../types/diseno";
 
 export async function getDisenosPedido(pedidoId: string): Promise<DisenoItem[]> {
@@ -17,4 +17,8 @@ export async function subirArchivoApi(
     `/api/archivos/subir?carpeta=${encodeURIComponent(carpeta)}`,
     formData
   );
+}
+
+export async function eliminarArchivoApi(path: string): Promise<{ ok: boolean }> {
+  return apiDelete<{ ok: boolean }>(`/api/archivos?path=${encodeURIComponent(path)}`);
 }

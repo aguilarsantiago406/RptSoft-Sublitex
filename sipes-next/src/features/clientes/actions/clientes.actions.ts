@@ -33,10 +33,10 @@ export async function actionCrearCliente(
     revalidatePath("/pedidos");
 
     return { ok: true, data: cliente };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       ok: false,
-      error: error?.message || "No se pudo crear el cliente.",
+      error: error instanceof Error ? error.message : "No se pudo crear el cliente.",
     };
   }
 }

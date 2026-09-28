@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { apiPatch, apiPost, SipesApiError } from "@/lib/api/http";
-import { subirArchivoApi } from "../api/disenos.api";
+import { subirArchivoApi, eliminarArchivoApi } from "../api/disenos.api";
 
 export async function actionSubirYCrearDiseno(
   pedidoId: string,
@@ -123,5 +123,17 @@ export async function actionRechazarDiseno(
   } catch (error) {
     if (error instanceof SipesApiError) return { ok: false, error: error.message };
     return { ok: false, error: "No se pudo registrar el rechazo del diseño." };
+  }
+}
+
+export async function actionEliminarArchivoEnNube(
+  path: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await eliminarArchivoApi(path);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) return { ok: false, error: error.message };
+    return { ok: false, error: "No se pudo eliminar el archivo de la nube." };
   }
 }

@@ -3,9 +3,12 @@ import type {
   TipoProductoCatalogo,
   TallaCatalogo,
   AtributoCatalogo,
+  ValorAtributoCatalogo,
   UbicacionPersonalizacionCatalogo,
   TarifaCatalogo,
   TipoTarifa,
+  CreateTipoProductoInput,
+  CreateValorAtributoInput,
 } from "../types/catalogo";
 
 export async function getTiposProducto(): Promise<TipoProductoCatalogo[]> {
@@ -62,4 +65,20 @@ export async function eliminarTarifa(id: string): Promise<void> {
 
 export async function getTarifa(id: string): Promise<TarifaCatalogo> {
   return apiGet<TarifaCatalogo>(`/api/comercial/tarifas/${encodeURIComponent(id)}`);
+}
+
+export async function crearTipoProducto(
+  dto: CreateTipoProductoInput
+): Promise<TipoProductoCatalogo> {
+  return apiPost<TipoProductoCatalogo>("/api/catalogos/tipos-producto", dto);
+}
+
+export async function crearValorAtributo(
+  atributoId: string,
+  dto: CreateValorAtributoInput
+): Promise<ValorAtributoCatalogo> {
+  return apiPost<ValorAtributoCatalogo>(
+    `/api/catalogos/atributos/${encodeURIComponent(atributoId)}/valores`,
+    dto
+  );
 }

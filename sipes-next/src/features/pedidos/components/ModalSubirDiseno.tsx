@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { useIsClient } from "@/lib/useIsClient";
 import { actionSubirYCrearDiseno, actionActualizarArtefactos } from "../actions/disenos.actions";
 import styles from "./pedidos.module.css";
 
@@ -21,19 +22,14 @@ export function ModalSubirDiseno({
   disenoId,
   versionNumero,
 }: ModalSubirDisenoProps) {
+  const isClient = useIsClient();
   const router = useRouter();
   const [mockupFile, setMockupFile] = useState<File | null>(null);
   const [vectorFile, setVectorFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !isClient) return null;
 
   const isReemplazo = Boolean(disenoId);
 

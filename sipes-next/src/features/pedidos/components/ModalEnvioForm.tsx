@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/lib/useIsClient";
 import type { DatosEnvioItem } from "../api/comercial.api";
 import {
   actionActualizarDatosEnvio,
@@ -18,34 +19,18 @@ interface ModalEnvioFormProps {
 }
 
 export function ModalEnvioForm({ isOpen, onClose, pedidoId, initial }: ModalEnvioFormProps) {
-  const [mounted, setMounted] = useState(false);
-  const [nombreCompleto, setNombreCompleto] = useState("");
-  const [dni, setDni] = useState("");
-  const [celular, setCelular] = useState("");
-  const [ciudad, setCiudad] = useState("");
-  const [agencia, setAgencia] = useState("");
-  const [referencia, setReferencia] = useState("");
-  const [correo, setCorreo] = useState("");
+  const isClient = useIsClient();
+  const [nombreCompleto, setNombreCompleto] = useState(initial?.nombreCompleto ?? "");
+  const [dni, setDni] = useState(initial?.dni ?? "");
+  const [celular, setCelular] = useState(initial?.celular ?? "");
+  const [ciudad, setCiudad] = useState(initial?.ciudad ?? "");
+  const [agencia, setAgencia] = useState(initial?.agencia ?? "");
+  const [referencia, setReferencia] = useState(initial?.referencia ?? "");
+  const [correo, setCorreo] = useState(initial?.correo ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setNombreCompleto(initial?.nombreCompleto ?? "");
-    setDni(initial?.dni ?? "");
-    setCelular(initial?.celular ?? "");
-    setCiudad(initial?.ciudad ?? "");
-    setAgencia(initial?.agencia ?? "");
-    setReferencia(initial?.referencia ?? "");
-    setCorreo(initial?.correo ?? "");
-    setError(null);
-  }, [isOpen, initial]);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !isClient) return null;
 
   function handleReset() {
     setError(null);

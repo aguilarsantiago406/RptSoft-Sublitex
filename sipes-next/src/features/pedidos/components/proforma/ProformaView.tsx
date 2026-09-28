@@ -466,14 +466,17 @@ export function ProformaView({
       </div>
 
       {/* Modal para emitir confirmación oficial */}
-      <ModalEmitirConfirmacion
-        isOpen={isModalEmitirOpen}
-        onClose={() => setIsModalEmitirOpen(false)}
-        pedidoId={pedido.id}
-        pedidoCodigo={pedido.codigo}
-        basePrendas={calculo.baseProductos}
-        recargoTallasInicial={calculo.recargoTallas.total}
-      />
+      {isModalEmitirOpen && (
+        <ModalEmitirConfirmacion
+          key={String(isModalEmitirOpen)}
+          isOpen={isModalEmitirOpen}
+          onClose={() => setIsModalEmitirOpen(false)}
+          pedidoId={pedido.id}
+          pedidoCodigo={pedido.codigo}
+          basePrendas={calculo.baseProductos}
+          recargoTallasInicial={calculo.recargoTallas.total}
+        />
+      )}
     </div>
   );
 }

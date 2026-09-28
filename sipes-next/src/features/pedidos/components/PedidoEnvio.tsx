@@ -120,12 +120,15 @@ export function PedidoEnvio({ pedidoId, datosEnvio }: PedidoEnvioProps) {
         </>
       )}
 
-      <ModalEnvioForm
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        pedidoId={pedidoId}
-        initial={datosEnvio}
-      />
+      {isModalOpen && (
+        <ModalEnvioForm
+          key={datosEnvio ? JSON.stringify(datosEnvio) : "nuevo"}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          pedidoId={pedidoId}
+          initial={datosEnvio}
+        />
+      )}
 
       <ModalConfirmacion
         isOpen={confirmDeleteOpen}

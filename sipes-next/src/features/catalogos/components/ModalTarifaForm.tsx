@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/lib/useIsClient";
 import type { TarifaCatalogo } from "../types/catalogo";
 import { TIPOS_TARIFA } from "../types/catalogo";
 import {
@@ -64,34 +65,19 @@ const SUGERENCIAS_POR_TIPO: Record<string, string[]> = {
 };
 
 export function ModalTarifaForm({ isOpen, onClose, initial }: ModalTarifaFormProps) {
-  const [tipo, setTipo] = useState<string>("PRODUCTO");
-  const [concepto, setConcepto] = useState("");
-  const [valor, setValor] = useState("");
-  const [vigenteDesde, setVigenteDesde] = useState("");
-  const [vigenteHasta, setVigenteHasta] = useState("");
-  const [nota, setNota] = useState("");
+  const isClient = useIsClient();
+  const hoyStr = fechaLocalInput(new Date().toISOString());
+
+  const [tipo, setTipo] = useState<string>(initial?.tipo ?? "PRODUCTO");
+  const [concepto, setConcepto] = useState(initial?.concepto ?? "");
+  const [valor, setValor] = useState(initial ? String(initial.valor) : "");
+  const [vigenteDesde, setVigenteDesde] = useState(initial?.vigenteDesde ? fechaLocalInput(initial.vigenteDesde) : hoyStr);
+  const [vigenteHasta, setVigenteHasta] = useState(fechaLocalInput(initial?.vigenteHasta));
+  const [nota, setNota] = useState(initial?.nota ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const hoyStr = fechaLocalInput(new Date().toISOString());
-    setTipo(initial?.tipo ?? "PRODUCTO");
-    setConcepto(initial?.concepto ?? "");
-    setValor(initial ? String(initial.valor) : "");
-    setVigenteDesde(initial?.vigenteDesde ? fechaLocalInput(initial.vigenteDesde) : hoyStr);
-    setVigenteHasta(fechaLocalInput(initial?.vigenteHasta));
-    setNota(initial?.nota ?? "");
-    setError(null);
-  }, [isOpen, initial]);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !isClient) return null;
 
   function handleReset() {
     setError(null);

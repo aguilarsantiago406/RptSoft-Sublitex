@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/lib/useIsClient";
 import { actionActualizarUsuario, actionCambiarPasswordUsuario } from "../actions/usuarios.actions";
 import { ROLES_DISPONIBLES, type UsuarioItem, type RolUsuario } from "../types/usuario";
 import styles from "./usuarios.module.css";
@@ -17,30 +18,15 @@ export function ModalEditarUsuario({
   onClose,
   usuario,
 }: ModalEditarUsuarioProps) {
-  const [nombre, setNombre] = useState("");
-  const [rol, setRol] = useState<RolUsuario>("VENDEDORA");
-  const [activo, setActivo] = useState(true);
+  const isClient = useIsClient();
+  const [nombre, setNombre] = useState(usuario?.nombre ?? "");
+  const [rol, setRol] = useState<RolUsuario>(usuario?.rol ?? "VENDEDORA");
+  const [activo, setActivo] = useState(usuario?.activo ?? true);
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (usuario) {
-      setNombre(usuario.nombre);
-      setRol(usuario.rol);
-      setActivo(usuario.activo);
-      setNewPassword("");
-      setError(null);
-    }
-  }, [usuario]);
-
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !usuario || !mounted) return null;
+  if (!isOpen || !usuario || !isClient) return null;
 
   function handleClose() {
     setNewPassword("");

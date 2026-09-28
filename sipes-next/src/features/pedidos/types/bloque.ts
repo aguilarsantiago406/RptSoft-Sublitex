@@ -31,3 +31,36 @@ export interface BloquePedidoItem {
   } | null;
   versiones?: VersionBloqueItem[];
 }
+
+export interface VersionPendienteAcuseItem {
+  id: string;
+  bloqueId: string;
+  tipoBloque: TipoBloque;
+  numero: number;
+  motivoReapertura?: string | null;
+  acusadoDisenoEn?: string | null;
+  acusadoProduccionEn?: string | null;
+  pendienteDiseno: boolean;
+  pendienteProduccion: boolean;
+  creadoEn: string;
+  creadoPor: {
+    id: string;
+    nombre: string;
+    email: string;
+    rol?: string;
+  };
+}
+
+export interface VersionesPendientesAcuseResponse {
+  pedidoId: string;
+  alertaTallerActiva: boolean;
+  totalPendientes: number;
+  versiones: VersionPendienteAcuseItem[];
+}
+
+export interface AcuseReciboResponse {
+  mensaje: string;
+  yaAcusado: boolean;
+  area: "DISENO" | "PRODUCCION";
+  version: VersionBloqueItem;
+}
