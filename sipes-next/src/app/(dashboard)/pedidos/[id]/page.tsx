@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getPedido, getTiposProducto, getAtributosCatalogo } from "@/features/pedidos/api/pedidos.api";
 import { getDatosEnvio, getResumenProduccion } from "@/features/pedidos/api/comercial.api";
+import { getBloquesPedido } from "@/features/pedidos/api/bloques.api";
 import { getUsuarios } from "@/features/usuarios/api/usuarios.api";
 import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { PedidoHeader } from "@/features/pedidos/components/PedidoHeader";
@@ -35,18 +36,20 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   let atributosRes;
   let disenosRes;
   let resumenRes;
+  let bloquesRes;
 
   try {
     pedido = await getPedido(id);
     const pedidoRealId = pedido.id;
 
-    const [tiposRes, envioResult, usuariosResult, atributosResult, disenosResult, resumenResult] = await Promise.all([
+    const [tiposRes, envioResult, usuariosResult, atributosResult, disenosResult, resumenResult, bloquesResult] = await Promise.all([
       loadData(() => getTiposProducto()),
       loadData(() => getDatosEnvio(pedidoRealId)),
       loadData(() => getUsuarios()),
       loadData(() => getAtributosCatalogo()),
       loadData(() => getDisenosPedido(pedidoRealId)),
       loadData(() => getResumenProduccion(pedidoRealId)),
+      loadData(() => getBloquesPedido(pedidoRealId)),
     ]);
     tiposProductoRes = tiposRes;
     envioRes = envioResult;
@@ -54,6 +57,7 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
     atributosRes = atributosResult;
     disenosRes = disenosResult;
     resumenRes = resumenResult;
+    bloquesRes = bloquesResult;
   } catch (error) {
     if (error instanceof SipesApiError && error.status === 404) notFound();
     throw error;
@@ -65,10 +69,12 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   const atributosCatalogo = atributosRes.data ?? [];
   const disenos = disenosRes.data ?? [];
   const resumenProduccion = resumenRes.data;
+  const bloques = bloquesRes?.data ?? [];
 
   const avisosAuxiliares = [
     tiposProductoRes.error ? `Tipos de producto: ${tiposProductoRes.error}` : null,
     envioRes.error ? `Datos de envío: ${envioRes.error}` : null,
+    bloquesRes?.error ? `Bloques: ${bloquesRes.error}` : null,
   ].filter((mensaje): mensaje is string => mensaje !== null);
 
   let vendedoras = (usuarios ?? [])
@@ -105,6 +111,8 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
         disenos={disenos}
         datosEnvio={datosEnvio}
         totalPrendas={totalPrendas}
+        resumenProduccion={resumenProduccion}
+        bloques={bloques}
       />
 
       <div className={styles.sheetContainer}>
@@ -136,27 +144,19 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
           </div>
         </div>
 
-        {/* BLOQUE 3: RECOLECCIÓN DE DATOS (TALLAS Y PARTICIPANTES) */}
-        <div style={{ position: "relative", borderRadius: "18px" }} className={etapa === "EN_RECOLECCION" ? guiaStyles.activeSectionHighlight : undefined}>
-          {etapa === "EN_RECOLECCION" && (
-            <span className={guiaStyles.activeSectionBadge}>Etapa activa · Recolección de Tallas</span>
-          )}
-          <PedidoRecoleccionCard pedido={pedido} totalPrendas={totalPrendas} resumen={resumenProduccion} />
-        </div>
 
         {/* BLOQUE 4: DISEÑO Y MOCKUPS */}
-        <div style={{ position: "relative", borderRadius: "18px" }}>
+        <div id="seccion-diseno" style={{ position: "relative", borderRadius: "18px" }}>
           <PedidoDisenoCard pedidoId={pedido.id} pedidoCodigo={pedido.codigo} disenos={disenos} />
         </div>
 
         {/* BLOQUE 5: REVISIÓN Y CONTROL DE CALIDAD (AUDITORÍA PRE-TALLER) */}
-        <div style={{ position: "relative", borderRadius: "18px" }} className={etapa === "EN_REVISION" ? guiaStyles.activeSectionHighlight : undefined}>
+        <div id="seccion-revision" style={{ position: "relative", borderRadius: "18px" }} className={etapa === "EN_REVISION" ? guiaStyles.activeSectionHighlight : undefined}>
           {etapa === "EN_REVISION" && <span className={guiaStyles.activeSectionBadge}>Etapa activa · Auditoría de Calidad</span>}
           <PedidoRevision
             pedido={pedido}
+            bloques={bloques}
             totalPrendas={totalPrendas}
-            disenoAprobado={disenos.some((d) => d.estado === "APROBADO")}
-            datosEnvio={datosEnvio}
           />
         </div>
       </div>

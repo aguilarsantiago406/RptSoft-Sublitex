@@ -8,12 +8,14 @@ interface PedidoRecoleccionCardProps {
   pedido: PedidoDetalle;
   totalPrendas: number;
   resumen?: ResumenProduccionItem | null;
+  mostrarEnlace?: boolean;
 }
 
 export function PedidoRecoleccionCard({
   pedido,
   totalPrendas,
   resumen = null,
+  mostrarEnlace = false,
 }: PedidoRecoleccionCardProps) {
   const contratadas = resumen?.totales?.cantidadContratada ?? totalPrendas;
   const registradas = resumen?.totales?.prendasRegistradas ?? 0;
@@ -27,19 +29,21 @@ export function PedidoRecoleccionCard({
         <div>
           <h2 className={styles.sectionTitle} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Shirt size={18} color="var(--sky-dark)" />
-            RECOLECCIÓN DE DATOS (ESTADO DE PRENDAS)
+            RECOLECCIÓN DE DATOS
           </h2>
           <p className={styles.sectionSubtitle}>
             Progreso de asignación de tallas y participantes frente a lo contratado
           </p>
         </div>
-        <Link
-          href={`/pedidos/${pedido.codigo}/prendas`}
-          className={styles.linkButton}
-          style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-        >
-          Gestionar Matriz de Prendas →
-        </Link>
+        {mostrarEnlace && (
+          <Link
+            href={`/pedidos/${pedido.codigo}/prendas`}
+            className={styles.linkButton}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            Gestionar Matriz de Prendas →
+          </Link>
+        )}
       </div>
 
       {/* Métricas Principales */}

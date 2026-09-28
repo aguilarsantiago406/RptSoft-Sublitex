@@ -25,6 +25,44 @@ function fechaLocalInput(iso?: string | null): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+const SUGERENCIAS_POR_TIPO: Record<string, string[]> = {
+  PRODUCTO: [
+    "Kit completo",
+    "Camiseta sola",
+    "Camiseta",
+    "Camiseta + short",
+    "Conjunto deportivo",
+    "Camiseta arquero",
+    "Conjunto arquero",
+    "Short solo",
+    "Short",
+    "Medias",
+    "Falda deportiva",
+    "Falda",
+    "Banderola",
+  ],
+  RECARGO_TALLA: ["XL", "XXL", "XXXL", "6", "8", "10", "12", "14", "16", "S", "M", "L"],
+  RECARGO_TELA: [
+    "Marathon",
+    "Puma",
+    "Palmeira",
+    "Hexagonal",
+    "Labrada",
+    "Dry Fit",
+    "Win Fresh",
+    "Nova sin forro",
+  ],
+  RECARGO_CUELLO: ["Camisero", "V cruzado", "Redondo cruzado", "V", "Redondo"],
+  RECARGO_ACABADO: ["Termosellado", "Bordado", "DTF", "Vinil", "Parche", "Sublimado"],
+  ADICIONAL: ["Bolsillo", "Cierre", "Diseño especial", "Flete provincia"],
+  COSTO_INTERNO: [
+    "Impresión metro lineal",
+    "Confección camiseta",
+    "Confección short",
+    "Tela por metro lineal",
+  ],
+};
+
 export function ModalTarifaForm({ isOpen, onClose, initial }: ModalTarifaFormProps) {
   const [tipo, setTipo] = useState<string>("PRODUCTO");
   const [concepto, setConcepto] = useState("");
@@ -43,10 +81,11 @@ export function ModalTarifaForm({ isOpen, onClose, initial }: ModalTarifaFormPro
 
   useEffect(() => {
     if (!isOpen) return;
+    const hoyStr = fechaLocalInput(new Date().toISOString());
     setTipo(initial?.tipo ?? "PRODUCTO");
     setConcepto(initial?.concepto ?? "");
     setValor(initial ? String(initial.valor) : "");
-    setVigenteDesde(fechaLocalInput(initial?.vigenteDesde));
+    setVigenteDesde(initial?.vigenteDesde ? fechaLocalInput(initial.vigenteDesde) : hoyStr);
     setVigenteHasta(fechaLocalInput(initial?.vigenteHasta));
     setNota(initial?.nota ?? "");
     setError(null);
@@ -138,12 +177,18 @@ export function ModalTarifaForm({ isOpen, onClose, initial }: ModalTarifaFormPro
               id="tarifa-concepto"
               type="text"
               required
+              list="tarifa-conceptos-sugeridos"
               placeholder="Ej: Kit completo, XL, Puma, Camisero, Termosellado"
               value={concepto}
               onChange={(e) => setConcepto(e.target.value)}
               className={styles.formInput}
               autoFocus
             />
+            <datalist id="tarifa-conceptos-sugeridos">
+              {(SUGERENCIAS_POR_TIPO[tipo] ?? []).map((sug) => (
+                <option key={sug} value={sug} />
+              ))}
+            </datalist>
           </div>
 
           <div className={styles.twoColsLayout} style={{ gap: "12px" }}>
@@ -153,9 +198,9 @@ export function ModalTarifaForm({ isOpen, onClose, initial }: ModalTarifaFormPro
                 id="tarifa-valor"
                 type="number"
                 required
-                min="0.01"
+                min="0"
                 step="0.01"
-                placeholder="Ej: 150.00"
+                placeholder="Ej: 45.00 (0 para base sin recargo)"
                 value={valor}
                 onChange={(e) => setValor(e.target.value)}
                 className={styles.formInput}

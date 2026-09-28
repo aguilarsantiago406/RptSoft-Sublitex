@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import shared from "@/components/ui/table/tableShared.module.css";
+import type { UbicacionPersonalizacionCatalogo } from "@/features/catalogos/types/catalogo";
 import type { AtributoCatalogoItem, TallaCatalogoItem } from "../api/pedidos.api";
 import type { GrupoPedido, PrendaDetalle } from "../types/pedido";
 import { PrendasTable } from "./PrendasTable";
@@ -14,6 +16,7 @@ interface PrendasViewProps {
   tallas: TallaCatalogoItem[];
   atributos: AtributoCatalogoItem[];
   colores?: Array<{ id: string; nombre: string; codigoHex: string }>;
+  ubicaciones?: UbicacionPersonalizacionCatalogo[];
   errorGrupos?: string[];
 }
 
@@ -24,12 +27,12 @@ export function PrendasView({
   tallas,
   atributos,
   colores,
+  ubicaciones,
   errorGrupos = [],
 }: PrendasViewProps) {
   const [grupoActivo, setGrupoActivo] = useState<string>("TODOS");
   const [busqueda, setBusqueda] = useState<string>("");
 
-  // Conteos por grupo
   const conteoPorGrupo = useMemo(() => {
     const mapa = new Map<string, number>();
     for (const p of prendas) {
@@ -39,15 +42,11 @@ export function PrendasView({
     return mapa;
   }, [prendas]);
 
-  // Filtrado reactivo en memoria
   const prendasFiltradas = useMemo(() => {
     return prendas.filter((p) => {
-      // Filtro por grupo
       if (grupoActivo !== "TODOS" && p.grupoId !== grupoActivo) {
         return false;
       }
-
-      // Filtro por búsqueda de texto
       if (busqueda.trim() !== "") {
         const query = busqueda.toLowerCase().trim();
         const persona = (p.participante?.nombrePersona ?? "").toLowerCase();
@@ -56,6 +55,9 @@ export function PrendasView({
         const talla = (p.talla?.codigo ?? "").toLowerCase();
         const genero = (p.genero ?? "").toLowerCase();
         const grupo = (p.grupo?.nombre ?? "").toLowerCase();
+        const estampados = (p.personalizaciones ?? [])
+          .map((pers) => (pers.contenido ?? "").toLowerCase())
+          .join(" ");
 
         return (
           persona.includes(query) ||
@@ -63,10 +65,10 @@ export function PrendasView({
           numero.includes(query) ||
           talla.includes(query) ||
           genero.includes(query) ||
-          grupo.includes(query)
+          grupo.includes(query) ||
+          estampados.includes(query)
         );
       }
-
       return true;
     });
   }, [prendas, grupoActivo, busqueda]);
@@ -83,15 +85,13 @@ export function PrendasView({
             <span>Todos</span>
             <span className={styles.tabBadge}>{prendas.length}</span>
           </button>
-
           {grupos.map((g) => {
             const count = conteoPorGrupo.get(g.id) ?? 0;
-            const activo = grupoActivo === g.id;
             return (
               <button
                 key={g.id}
                 type="button"
-                className={`${styles.filterTab} ${activo ? styles.filterTabActive : ""}`}
+                className={`${styles.filterTab} ${grupoActivo === g.id ? styles.filterTabActive : ""}`}
                 onClick={() => setGrupoActivo(g.id)}
               >
                 <span>{g.nombre}</span>
@@ -102,26 +102,11 @@ export function PrendasView({
         </div>
 
         <div className={styles.searchBox}>
-          <span className={styles.searchIcon}>
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-          </span>
+          <Search size={14} className={styles.searchIcon} />
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="Buscar por nombre, número, talla..."
+            placeholder="Buscar participante, apodo, N°, estampado..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
@@ -142,6 +127,7 @@ export function PrendasView({
         tallas={tallas}
         atributos={atributos}
         colores={colores}
+        ubicaciones={ubicaciones}
       />
 
       <div className={styles.countSummary}>

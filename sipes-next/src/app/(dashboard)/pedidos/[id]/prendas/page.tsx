@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import {
   getPedido,
   getParticipantesGrupo,
@@ -6,7 +8,10 @@ import {
   getAtributosCatalogo,
   type ParticipanteConPrendas,
 } from "@/features/pedidos/api/pedidos.api";
+import { getUbicaciones } from "@/features/catalogos/api/catalogos.api";
+import { getResumenProduccion } from "@/features/pedidos/api/comercial.api";
 import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
+import { PedidoRecoleccionCard } from "@/features/pedidos/components/PedidoRecoleccionCard";
 import { PrendasView } from "@/features/pedidos/components/PrendasView";
 import type { PrendaDetalle } from "@/features/pedidos/types/pedido";
 import styles from "@/features/pedidos/components/pedidos.module.css";
@@ -23,13 +28,21 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
   let pedido;
   let tallasCatalogo;
   let atributosCatalogo;
+  let ubicacionesCatalogo;
+  let resumenProduccion = null;
 
   try {
-    [pedido, tallasCatalogo, atributosCatalogo] = await Promise.all([
-      getPedido(id),
+    pedido = await getPedido(id);
+    const [tallasRes, atributosRes, ubicacionesRes, resumenRes] = await Promise.all([
       getTallasCatalogo(),
       getAtributosCatalogo(),
+      getUbicaciones().catch(() => []),
+      getResumenProduccion(pedido.id),
     ]);
+    tallasCatalogo = tallasRes;
+    atributosCatalogo = atributosRes;
+    ubicacionesCatalogo = ubicacionesRes;
+    resumenProduccion = resumenRes;
   } catch {
     notFound();
   }
@@ -51,9 +64,9 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
   }
 
   // Mapa de grupos por id
-  const mapaGrupos = new Map<string, { id: string; nombre: string; politicaNumeracion: string }>();
+  const mapaGrupos = new Map<string, { id: string; nombre: string; politicaNumeracion: string; configuracion?: Array<{ atributo: string; valor: string }> }>();
   for (const g of pedido.grupos) {
-    mapaGrupos.set(g.id, { id: g.id, nombre: g.nombre, politicaNumeracion: g.politicaNumeracion });
+    mapaGrupos.set(g.id, { id: g.id, nombre: g.nombre, politicaNumeracion: g.politicaNumeracion, configuracion: g.configuracion });
   }
 
   // Mapa de atributos y valores del catálogo para excepciones
@@ -67,7 +80,6 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
   }
 
   // Consultar los participantes de cada grupo usando el endpoint oficial GET /api/grupos/:id/participantes
-  // Un grupo que falla se reporta por nombre en lugar de confundirse con un grupo vacío.
   const resultadosPorGrupo = await Promise.allSettled(
     pedido.grupos.map((g) => getParticipantesGrupo(g.id))
   );
@@ -111,7 +123,7 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
             nombrePersona: part.nombrePersona,
             estado: part.estado,
           },
-          grupo: grupo ? { id: grupo.id, nombre: grupo.nombre, politicaNumeracion: grupo.politicaNumeracion } : null,
+          grupo: grupo ? { id: grupo.id, nombre: grupo.nombre, politicaNumeracion: grupo.politicaNumeracion, configuracion: grupo.configuracion } : null,
           talla: codigoTalla ? { id: p.tallaId!, codigo: codigoTalla, etiqueta: codigoTalla } : null,
           color: color ? { id: p.colorId!, nombre: color.nombre, codigoHex: color.codigoHex } : null,
           excepciones: (p.excepciones ?? []).map((e: any) => ({
@@ -128,19 +140,38 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
     }
   }
 
+  const totalPrendas = pedido.grupos.reduce((acc, g) => acc + g.cantidadContratada, 0);
+
   return (
     <main>
-      <header className={styles.detailHeader}>
+      <header className={styles.detailHeader} style={{ marginBottom: "20px" }}>
         <div className={styles.detailHeaderMain}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+            <Link
+              href={`/pedidos/${pedido.codigo}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                color: "var(--muted)",
+                fontSize: "0.84rem",
+                textDecoration: "none",
+                fontWeight: 500,
+              }}
+            >
+              <ArrowLeft size={16} /> Volver a datos del pedido
+            </Link>
+          </div>
           <h1 className={styles.detailHeaderTitle}>
             PRENDAS <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
           </h1>
-          <p className={styles.detailHeaderSubtitle}>
-            <span>Detalle de Prendas</span>
-          </p>
         </div>
         <EstadoPedidoBadge estado={pedido.estado} size="lg" />
       </header>
+
+      <div style={{ marginBottom: "24px" }}>
+        <PedidoRecoleccionCard pedido={pedido} totalPrendas={totalPrendas} resumen={resumenProduccion} />
+      </div>
 
       <PrendasView
         prendas={prendas}
@@ -149,6 +180,7 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
         tallas={tallasCatalogo ?? []}
         atributos={atributosCatalogo ?? []}
         colores={pedido.colores}
+        ubicaciones={ubicacionesCatalogo ?? []}
         errorGrupos={errorGrupos}
       />
     </main>

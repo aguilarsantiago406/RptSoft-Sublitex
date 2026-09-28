@@ -1,4 +1,4 @@
-﻿.container {
+.container {
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -157,7 +157,7 @@
 
 .standardsGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 18px;
 }
 
@@ -169,7 +169,27 @@
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+}
+
+.standardsCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-soft);
+  padding-bottom: 10px;
+}
+
+.standardsCardTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.standardsCardIcon {
+  color: var(--sky-dark);
+  display: flex;
+  align-items: center;
 }
 
 .standardsCardTitle {
@@ -177,26 +197,36 @@
   font-size: 0.92rem;
   font-weight: 700;
   color: var(--navy);
-  border-bottom: 1px solid var(--border-soft);
-  padding-bottom: 8px;
+}
+
+.standardsCardBadge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
 
 .attributeRows {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .attributeRow {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .attributeLabel {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  color: #475569;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .chipsList {
@@ -206,13 +236,19 @@
 }
 
 .chip {
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 6px;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #334155;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.chip:hover {
+  background: #e2e8f0;
+  color: var(--navy);
 }
 
 .placementChip {
@@ -226,21 +262,27 @@
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--navy);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.placementChip:hover {
+  border-color: var(--sky-dark);
+  background: #ffffff;
 }
 
 .placementOrder {
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--sky-soft);
   color: var(--sky-dark);
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 750;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 900px) {
   .standardsGrid {
     grid-template-columns: 1fr;
   }

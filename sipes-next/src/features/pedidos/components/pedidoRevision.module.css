@@ -1,0 +1,222 @@
+.gridBloques {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin: 18px 0;
+}
+
+.bloqueCard {
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 16px 18px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: box-shadow var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+
+.bloqueCard:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.bloqueCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bloqueTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+}
+
+.bloqueBadgeOk {
+  background: #e5f8ed;
+  color: #15803d;
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.bloqueBadgePending {
+  background: #fff5dc;
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.bloqueList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bloqueListItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--navy);
+  line-height: 1.4;
+}
+
+.bloqueListItem svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.itemOk {
+  color: #15803d;
+}
+
+.itemPending {
+  color: #b45309;
+}
+
+.bloqueFooter {
+  border-top: 1px solid var(--border-soft);
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bloqueLink {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--sky-dark);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.bloqueLink:hover {
+  text-decoration: underline;
+}
+
+.readinessBannerOk {
+  background: rgba(22, 163, 74, 0.08);
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #15803d;
+  font-size: 0.86rem;
+  font-weight: 500;
+  margin-top: 16px;
+}
+
+.readinessBannerPending {
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #b45309;
+  font-size: 0.86rem;
+  font-weight: 500;
+  margin-top: 16px;
+}
+
+.bloqueActionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-soft);
+  flex-wrap: wrap;
+}
+
+.btnCerrar {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--sky-dark);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: opacity 0.15s ease;
+}
+
+.btnCerrar:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btnCerrar:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.btnReabrir {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.1);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.15s ease;
+}
+
+.btnReabrir:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.18);
+}
+
+.metaAuditoria {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.alertaError {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  line-height: 1.3;
+  margin-top: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+

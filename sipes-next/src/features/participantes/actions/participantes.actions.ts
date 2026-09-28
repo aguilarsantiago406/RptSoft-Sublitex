@@ -15,11 +15,18 @@ export interface CrearParticipanteResult {
   };
 }
 
+export interface PrendaInicialConfig {
+  tipoProductoId?: string;
+  tipoPrenda?: "VENTA" | "OBSEQUIO" | "MUESTRA";
+  esArquero?: boolean;
+  colorId?: string;
+}
+
 export async function actionCrearParticipante(
   grupoId: string,
   nombrePersona: string,
   pedidoId: string,
-  tipoProductoId?: string
+  prendaConfig?: PrendaInicialConfig
 ): Promise<CrearParticipanteResult> {
   const nombreTrimmed = nombrePersona.trim();
   if (!grupoId || !nombreTrimmed) {
@@ -36,30 +43,19 @@ export async function actionCrearParticipante(
       nombrePersona: nombreTrimmed,
     });
 
-    // Crear la prenda física base para este participante
-    if (tipoProductoId) {
+    if (prendaConfig?.tipoProductoId) {
       try {
-        let colorId: string | undefined;
-        try {
-          const ped = await apiGet<{ colores?: Array<{ id: string }> }>(
-            `/api/pedidos/${encodeURIComponent(pedidoId)}`
-          );
-          if (ped.colores && ped.colores.length > 0) {
-            colorId = ped.colores[0].id;
-          }
-        } catch {
-          // Si no se pudo obtener el color, se crea la prenda sin color
-        }
-
         await apiPost("/api/prendas", {
           participanteId: res.id,
           grupoId,
-          tipoProductoId,
-          colorId,
+          tipoProductoId: prendaConfig.tipoProductoId,
+          tipoPrenda: prendaConfig.tipoPrenda || "VENTA",
+          esArquero: Boolean(prendaConfig.esArquero),
+          colorId: prendaConfig.colorId || undefined,
           nombreEnPrenda: nombreTrimmed,
         });
-      } catch (err) {
-        console.warn("No se pudo crear la prenda base para el participante:", err);
+      } catch (errPrenda) {
+        console.warn("No se pudo crear la prenda inicial:", errPrenda);
       }
     }
 

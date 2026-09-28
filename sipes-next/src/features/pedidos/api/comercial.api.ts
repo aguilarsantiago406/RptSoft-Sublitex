@@ -85,3 +85,45 @@ export async function getDatosEnvio(pedidoId: string) {
 export async function getResumenProduccion(pedidoId: string) {
   return apiGet<ResumenProduccionItem>(`/api/pedidos/${encodeURIComponent(pedidoId)}/resumen-produccion`).catch(() => null);
 }
+
+export type TipoComprobante = "BOLETA" | "FACTURA" | "NOTA_VENTA" | "NINGUNO";
+
+export interface ConfirmacionItem {
+  id: string;
+  pedidoId: string;
+  version: number;
+  totalSinIgv: number;
+  recargoTallas?: number;
+  recargoTelas?: number;
+  recargoCuellos?: number;
+  recargoAcabados?: number;
+  adicionales?: number;
+  adelantoSugerido: number;
+  adelantoRecibido: number;
+  saldo: number;
+  comprobante: TipoComprobante | string;
+  igvCalculado?: number | null;
+  pdfUrl: string;
+  emitidaPorId?: string | null;
+  emitidaPor?: {
+    id: string;
+    nombre: string;
+    email: string;
+  } | null;
+  creadoEn: string;
+}
+
+export interface EmitirConfirmacionParams {
+  adelantoRecibido?: number;
+  comprobante?: TipoComprobante;
+  recargoTallas?: number;
+  recargoTelas?: number;
+  recargoCuellos?: number;
+  recargoAcabados?: number;
+  adicionales?: number;
+}
+
+export async function getConfirmaciones(pedidoId: string): Promise<ConfirmacionItem[]> {
+  return apiGet<ConfirmacionItem[]>(`/api/comercial/pedidos/${encodeURIComponent(pedidoId)}/confirmaciones`).catch(() => []);
+}
+

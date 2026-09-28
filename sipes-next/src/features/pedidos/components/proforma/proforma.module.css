@@ -73,6 +73,176 @@
   border-color: var(--border);
 }
 
+.btnEmitir {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.btnEmitir:hover {
+  background: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.warningBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  color: #92400e;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.noTarifaTag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 2px;
+}
+
+/* Sección de Confirmaciones Emitidas */
+.confirmacionesSection {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.confirmacionesHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.confirmacionesTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confirmacionesSubtitle {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.confirmacionesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirmacionCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirmacionTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 10px;
+}
+
+.confirmacionVersionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-family: monospace;
+}
+
+.confirmacionMeta {
+  font-size: 0.8rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.confirmacionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  font-size: 0.82rem;
+}
+
+.confirmacionMetric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.confirmacionMetricLabel {
+  font-size: 0.72rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.confirmacionMetricValue {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.btnPdfDownload {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #0284c7;
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.btnPdfDownload:hover {
+  background: #0369a1;
+}
+
 /* Hoja física / Proforma imprimible */
 .sheet {
   background: #ffffff;
@@ -293,6 +463,256 @@
   line-height: 1.5;
 }
 
+/* Recuadro de Mockup de Diseño */
+.mockupCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.mockupCardHeader {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.mockupImgWrapper {
+  max-width: 380px;
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.mockupImg {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.mockupPlaceholder {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Fila de recargo automático en tabla */
+.surchargeRow {
+  background: #faf5ff;
+}
+
+.surchargeBadge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #7e22ce;
+  background: #f3e8ff;
+  border: 1px solid #d8b4fe;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+
+/* Bloque bancario y firma */
+.bankAccountsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.bankBoxTitle {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.bankItem {
+  font-size: 0.82rem;
+  margin-bottom: 4px;
+  color: #1e293b;
+}
+
+.signatureSection {
+  margin-top: 36px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.signatureBox {
+  width: 260px;
+  text-align: center;
+  border-top: 1px solid #0f172a;
+  padding-top: 6px;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+/* Página 2: Resúmenes y Detalle de Prendas */
+.sheetPage2 {
+  margin-top: 28px;
+}
+
+.page2Header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.page2Title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.page2Subtitle {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* Resúmenes Calculados (Página 2 - Formato Fiel a Excel) */
+.detalleResumenSection {
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.componentesStrip {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.82rem;
+}
+
+.stripBlock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stripLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+.stripVal {
+  color: #1e293b;
+}
+
+.threeTablesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.miniTableWrapper {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.miniTableHeader {
+  background: #f1f5f9;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #334155;
+  letter-spacing: 0.05em;
+  padding: 6px 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.miniTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.miniTable td {
+  padding: 5px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.8rem;
+}
+
+.miniTable tr:last-child td {
+  border-bottom: none;
+}
+
+.miniCellName {
+  color: #475569;
+  font-weight: 500;
+}
+
+.miniCellCount {
+  text-align: right;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: monospace;
+}
+
+.rowActive {
+  background: #f0fdf4;
+}
+
+.rowActive .miniCellName {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.rowActive .miniCellCount {
+  color: #15803d;
+}
+
+.rowZero {
+  color: #94a3b8;
+}
+
+.rowZero .miniCellName,
+.rowZero .miniCellCount {
+  color: #cbd5e1;
+}
+
 @media (max-width: 800px) {
   .toolbar { flex-direction: column; align-items: stretch; }
   .toolbarActions { justify-content: flex-end; }
@@ -301,11 +721,18 @@
   .docCol { text-align: left; }
   .summaryLayout { grid-template-columns: 1fr; }
   .infoGrid { grid-template-columns: 1fr; }
+  .bankAccountsGrid { grid-template-columns: 1fr; }
 }
 
 /* Modo de impresión A4 profesional */
 @media print {
   .toolbar {
+    display: none !important;
+  }
+  .confirmacionesSection {
+    display: none !important;
+  }
+  .warningBanner {
     display: none !important;
   }
   .sheet {
@@ -314,5 +741,10 @@
     padding: 0 !important;
     margin: 0 !important;
     max-width: 100% !important;
+  }
+  .sheetPage2 {
+    page-break-before: always !important;
+    margin-top: 0 !important;
+    padding-top: 20px !important;
   }
 }

@@ -31,8 +31,8 @@ function validarTarifa(data: TarifaForm): string | null {
   }
 
   const valor = Number(data.valor);
-  if (!Number.isFinite(valor) || valor <= 0) {
-    return "El valor debe ser un número positivo mayor a cero.";
+  if (!Number.isFinite(valor) || valor < 0) {
+    return "El valor debe ser un número positivo mayor o igual a cero.";
   }
 
   const desde = new Date(data.vigenteDesde);

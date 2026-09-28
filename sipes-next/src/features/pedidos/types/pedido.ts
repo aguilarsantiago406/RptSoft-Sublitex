@@ -79,6 +79,7 @@ export interface PrendaDetalle {
     id: string;
     nombre: string;
     politicaNumeracion: string;
+    configuracion?: Array<{ atributo: string; valor: string }>;
   } | null;
   tipoProducto?: {
     id: string;
