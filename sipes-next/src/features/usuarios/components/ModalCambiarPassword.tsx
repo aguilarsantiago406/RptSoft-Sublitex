@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/lib/useIsClient";
 import { actionCambiarPassword } from "../actions/usuarios.actions";
 import type { UsuarioItem } from "../types/usuario";
 import styles from "./usuarios.module.css";
@@ -17,19 +18,14 @@ export function ModalCambiarPassword({
   usuario,
   onClose,
 }: ModalCambiarPasswordProps) {
+  const isClient = useIsClient();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !usuario || !mounted) return null;
+  if (!isOpen || !usuario || !isClient) return null;
 
   function handleReset() {
     setCurrentPassword("");

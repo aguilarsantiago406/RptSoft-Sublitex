@@ -51,3 +51,24 @@ export async function actionReabrirBloque(
     return { ok: false, error: "No se pudo reabrir el bloque en el servidor." };
   }
 }
+
+export async function actionAcusarReciboVersion(
+  pedidoId: string,
+  versionId: string,
+  area?: "DISENO" | "PRODUCCION"
+): Promise<BloqueActionResult> {
+  try {
+    const res = await apiPost(
+      `/api/pedidos/${encodeURIComponent(pedidoId)}/bloques/versiones/${encodeURIComponent(versionId)}/acusar`,
+      area ? { area } : {}
+    );
+    revalidatePath(`/pedidos/${pedidoId}`);
+    revalidatePath("/pedidos");
+    return { ok: true, data: res };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo registrar el acuse de recibo." };
+  }
+}

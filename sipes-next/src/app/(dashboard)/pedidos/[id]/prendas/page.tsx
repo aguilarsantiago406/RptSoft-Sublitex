@@ -126,15 +126,13 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
           grupo: grupo ? { id: grupo.id, nombre: grupo.nombre, politicaNumeracion: grupo.politicaNumeracion, configuracion: grupo.configuracion } : null,
           talla: codigoTalla ? { id: p.tallaId!, codigo: codigoTalla, etiqueta: codigoTalla } : null,
           color: color ? { id: p.colorId!, nombre: color.nombre, codigoHex: color.codigoHex } : null,
-          excepciones: (p.excepciones ?? []).map((e: any) => ({
+          excepciones: (p.excepciones ?? []).map((e) => ({
             id: e.id,
             motivo: e.motivo,
-            atributoId: e.atributoId,
-            valorAtributoId: e.valorAtributoId,
             atributo: mapaAtributos.get(e.atributoId) ?? { id: e.atributoId, nombre: "Atributo", codigo: "" },
             valor: mapaValores.get(e.valorAtributoId) ?? { id: e.valorAtributoId, etiqueta: "Valor", codigo: "" },
           })),
-          personalizaciones: p.personalizaciones as any,
+          personalizaciones: p.personalizaciones,
         });
       }
     }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Shirt, CheckCircle2, AlertCircle } from "lucide-react";
+import { Shirt } from "lucide-react";
 import type { PedidoDetalle } from "../types/pedido";
 import type { ResumenProduccionItem } from "../api/comercial.api";
 import styles from "./pedidos.module.css";

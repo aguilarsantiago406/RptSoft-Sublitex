@@ -67,11 +67,11 @@ export async function actionAgregarColorPedido(
     await apiPost(`/api/pedidos/${encodeURIComponent(pedidoId)}/colores`, payload);
     revalidatePath(`/pedidos/${pedidoId}`);
     return { ok: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof SipesApiError) {
       return { ok: false, error: error.message };
     }
-    return { ok: false, error: error?.message || "No se pudo registrar el color en el pedido." };
+    return { ok: false, error: error instanceof Error ? error.message : "No se pudo registrar el color en el pedido." };
   }
 }
 

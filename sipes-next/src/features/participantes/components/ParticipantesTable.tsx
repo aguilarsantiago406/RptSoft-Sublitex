@@ -100,15 +100,18 @@ export function ParticipantesTable({
         onPage={table.setPage}
       />
 
-      <AgregarPrendaModal
-        isOpen={Boolean(partParaPrenda)}
-        onClose={() => setPartParaPrenda(null)}
-        participante={partParaPrenda}
-        pedidoId={pedidoId}
-        grupos={grupos}
-        tiposProducto={tiposProducto}
-        colores={colores}
-      />
+      {partParaPrenda && (
+        <AgregarPrendaModal
+          key={partParaPrenda.id}
+          isOpen={true}
+          onClose={() => setPartParaPrenda(null)}
+          participante={partParaPrenda}
+          pedidoId={pedidoId}
+          grupos={grupos}
+          tiposProducto={tiposProducto}
+          colores={colores}
+        />
+      )}
     </div>
   );
 }

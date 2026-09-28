@@ -26,8 +26,17 @@ export interface ParticipanteConPrendas {
     tipoPrenda: "VENTA" | "OBSEQUIO" | "MUESTRA";
     colorId: string | null;
     esArquero: boolean;
-    excepciones: Array<{ id: string; motivo?: string | null }>;
-    personalizaciones: Array<{ id: string; contenido?: string | null }>;
+    excepciones: Array<{
+      id: string;
+      motivo?: string | null;
+      atributoId: string;
+      valorAtributoId: string;
+    }>;
+    personalizaciones: Array<{
+      id: string;
+      contenido?: string | null;
+      ubicacion?: { id: string; etiqueta: string; codigo: string };
+    }>;
   }>;
 }
 

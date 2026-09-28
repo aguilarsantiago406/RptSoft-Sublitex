@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { useIsClient } from "@/lib/useIsClient";
 import type { GrupoPedido } from "../types/pedido";
 import type { AtributoCatalogoItem } from "../api/pedidos.api";
 import { actionActualizarGrupo } from "../actions/grupos.actions";
@@ -47,13 +48,9 @@ export function ModalEditarGrupo({
     getInitialConfig(grupo.configuracion, atributosCatalogo)
   );
 
-  const [mounted, setMounted] = useState(false);
+  const isClient = useIsClient();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !isClient) return null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,7 +60,7 @@ export function ModalEditarGrupo({
     setError(null);
     startTransition(async () => {
       const configuracion = Object.entries(configMap)
-        .filter(([_, valId]) => Boolean(valId))
+        .filter(([, valId]) => Boolean(valId))
         .map(([atributoId, valorAtributoId]) => ({ atributoId, valorAtributoId }));
 
       const res = await actionActualizarGrupo(grupo.id, pedidoId, {

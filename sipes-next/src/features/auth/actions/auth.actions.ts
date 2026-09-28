@@ -30,10 +30,10 @@ export async function actionLogin(formData: FormData): Promise<ActionResult> {
     });
 
     return { ok: true, data: user };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       ok: false,
-      error: error?.message || "Credenciales incorrectas o error en el servidor.",
+      error: error instanceof Error ? error.message : "Credenciales incorrectas o error en el servidor.",
     };
   }
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/lib/useIsClient";
 import { actionCrearUsuario } from "../actions/usuarios.actions";
 import { ROLES_DISPONIBLES, type RolUsuario } from "../types/usuario";
 import styles from "./usuarios.module.css";
@@ -12,6 +13,7 @@ interface ModalNuevoUsuarioProps {
 }
 
 export function ModalNuevoUsuario({ isOpen, onClose }: ModalNuevoUsuarioProps) {
+  const isClient = useIsClient();
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,13 +22,7 @@ export function ModalNuevoUsuario({ isOpen, onClose }: ModalNuevoUsuarioProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !isClient) return null;
 
   function handleReset() {
     setNombre("");

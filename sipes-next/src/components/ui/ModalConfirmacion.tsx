@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { useIsClient } from "@/lib/useIsClient";
 import styles from "./modalConfirmacion.module.css";
 
 interface ModalConfirmacionProps {
@@ -28,13 +29,9 @@ export function ModalConfirmacion({
   variant = "primary",
   isPending = false,
 }: ModalConfirmacionProps) {
-  const [mounted, setMounted] = useState(false);
+  const isClient = useIsClient();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !isClient) return null;
 
   const IconComponent =
     variant === "danger"

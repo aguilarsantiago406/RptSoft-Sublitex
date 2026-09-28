@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { useIsClient } from "@/lib/useIsClient";
 import { actionRechazarDiseno } from "../actions/disenos.actions";
 import styles from "./pedidos.module.css";
 
@@ -19,18 +20,13 @@ export function ModalRechazarDiseno({
   disenoId,
   pedidoId,
 }: ModalRechazarDisenoProps) {
+  const isClient = useIsClient();
   const router = useRouter();
   const [motivo, setMotivo] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !isClient) return null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

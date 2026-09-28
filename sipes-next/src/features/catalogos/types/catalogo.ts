@@ -86,3 +86,19 @@ export const ETIQUETA_TIPO_TARIFA: Record<TipoTarifa, string> = {
   ADICIONAL: "Adicional",
   COSTO_INTERNO: "Costo interno",
 };
+
+export interface CreateTipoProductoInput {
+  codigo: string;
+  nombre: string;
+  camisetas: number;
+  shorts: number;
+  medias: number;
+  orden?: number;
+}
+
+export interface CreateValorAtributoInput {
+  atributoId: string;
+  codigo: string;
+  etiqueta: string;
+  orden?: number;
+}

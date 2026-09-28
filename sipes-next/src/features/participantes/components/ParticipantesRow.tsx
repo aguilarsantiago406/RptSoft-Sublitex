@@ -77,8 +77,6 @@ export function ParticipantesRow({
 
   const puedeRevocar = !participante.enlaceRevocado && estado !== "CONFIRMADO";
 
-  const badgeClass = getGroupBadgeClass(nombreGrupo);
-
   let statusBadgeClass = styles.statusBadgePendiente;
   let statusText = "Pendiente";
   if (estado === "REGISTRADO") {
@@ -93,12 +91,23 @@ export function ParticipantesRow({
     <tr>
       <td className={styles.colIndex}>{index + 1}</td>
       <td className={styles.cellTruncate}>
-        <span
-          className={styles.participanteNombre}
-          title={participante.nombrePersona}
-        >
-          {participante.nombrePersona}
-        </span>
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          <span
+            className={styles.participanteNombre}
+            title={participante.nombrePersona}
+          >
+            {participante.nombrePersona}
+          </span>
+          {nombreGrupo ? (
+            <span
+              className={getGroupBadgeClass(nombreGrupo)}
+              style={{ alignSelf: "flex-start", marginTop: "2px" }}
+              title={nombreGrupo}
+            >
+              {nombreGrupo}
+            </span>
+          ) : null}
+        </div>
       </td>
       <td>
         <span className={statusBadgeClass}>

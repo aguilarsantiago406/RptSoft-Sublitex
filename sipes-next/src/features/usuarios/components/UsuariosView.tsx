@@ -91,17 +91,23 @@ export function UsuariosView({ usuarios, error }: UsuariosViewProps) {
         onClose={() => setIsNewModalOpen(false)}
       />
 
-      <ModalEditarUsuario
-        isOpen={editingUser !== null}
-        usuario={editingUser}
-        onClose={() => setEditingUser(null)}
-      />
+      {editingUser !== null && (
+        <ModalEditarUsuario
+          key={editingUser.id}
+          isOpen={true}
+          usuario={editingUser}
+          onClose={() => setEditingUser(null)}
+        />
+      )}
 
-      <ModalCambiarPassword
-        isOpen={passwordUser !== null}
-        usuario={passwordUser}
-        onClose={() => setPasswordUser(null)}
-      />
+      {passwordUser !== null && (
+        <ModalCambiarPassword
+          key={passwordUser.id}
+          isOpen={true}
+          usuario={passwordUser}
+          onClose={() => setPasswordUser(null)}
+        />
+      )}
     </div>
   );
 }

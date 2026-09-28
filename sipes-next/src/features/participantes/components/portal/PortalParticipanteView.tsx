@@ -269,7 +269,7 @@ export function PortalParticipanteView({
                       value={p.genero}
                       disabled={isConfirmed || saving || confirming}
                       onChange={(e) =>
-                        handleFieldChange(idx, "genero", e.target.value as any)
+                        handleFieldChange(idx, "genero", e.target.value as FormPrendaState["genero"])
                       }
                     >
                       <option value="SIN_ESPECIFICAR">Estándar</option>

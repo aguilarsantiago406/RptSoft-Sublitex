@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { useIsClient } from "@/lib/useIsClient";
 import type { UbicacionPersonalizacionCatalogo } from "@/features/catalogos/types/catalogo";
 import type { AtributoCatalogoItem } from "../api/pedidos.api";
 import type { PrendaDetalle } from "../types/pedido";
@@ -17,6 +18,8 @@ const GENEROS = [
   { val: "NINO", label: "Niño" }, { val: "NINA", label: "Niña" },
   { val: "SIN_ESPECIFICAR", label: "Estándar" },
 ] as const;
+
+type GeneroTipo = (typeof GENEROS)[number]["val"];
 
 interface ModalEditarPrendaProps {
   isOpen: boolean;
@@ -34,18 +37,18 @@ export function ModalEditarPrenda({
   tallasDisponibles, atributosCatalogo,
   coloresDisponibles = [], ubicacionesCatalogo = [],
 }: ModalEditarPrendaProps) {
+  const isClient = useIsClient();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<"ficha" | "estampados" | "confeccion">("ficha");
   const [nombreEnPrenda, setNombreEnPrenda] = useState(prenda.nombreEnPrenda ?? "");
   const [numero, setNumero] = useState(prenda.numero ?? "");
   const [tallaId, setTallaId] = useState(prenda.tallaId ?? "");
-  const [genero, setGenero] = useState<typeof GENEROS[number]["val"]>((prenda.genero as any) ?? "SIN_ESPECIFICAR");
+  const [genero, setGenero] = useState<GeneroTipo>((prenda.genero as GeneroTipo) ?? "SIN_ESPECIFICAR");
   const [colorId, setColorId] = useState(prenda.colorId ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  useEffect(() => { setMounted(true); }, []);
-  if (!isOpen || !mounted) return null;
+
+  if (!isOpen || !isClient) return null;
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -124,7 +127,7 @@ export function ModalEditarPrenda({
             <div className={styles.twoColsLayout} style={{ gap: "10px" }}>
               <div className={styles.formField}>
                 <label htmlFor="prenda-genero">Género</label>
-                <select id="prenda-genero" value={genero} onChange={(e) => setGenero(e.target.value as any)} className={styles.formInput}>
+                <select id="prenda-genero" value={genero} onChange={(e) => setGenero(e.target.value as GeneroTipo)} className={styles.formInput}>
                   {GENEROS.map((g) => <option key={g.val} value={g.val}>{g.label}</option>)}
                 </select>
               </div>

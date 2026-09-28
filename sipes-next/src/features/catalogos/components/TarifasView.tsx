@@ -198,11 +198,14 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
         />
       </div>
 
-      <ModalTarifaForm
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        initial={editing}
-      />
+      {isModalOpen && (
+        <ModalTarifaForm
+          key={editing?.id ?? "nueva"}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          initial={editing}
+        />
+      )}
 
       <ModalConfirmacion
         isOpen={Boolean(tarifaAEliminar)}

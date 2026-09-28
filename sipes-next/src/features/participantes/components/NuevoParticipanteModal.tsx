@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/lib/useIsClient";
 import type { GrupoPedido } from "@/features/pedidos/types/pedido";
 import { actionCrearParticipante } from "../actions/participantes.actions";
 import styles from "./participantes.module.css";
@@ -19,7 +20,7 @@ export function NuevoParticipanteModal({
   grupos,
   pedidoId,
 }: NuevoParticipanteModalProps) {
-  const [mounted, setMounted] = useState(false);
+  const isClient = useIsClient();
   const [nombrePersona, setNombrePersona] = useState("");
   const [grupoId, setGrupoId] = useState(grupos[0]?.id ?? "");
   const [tipoPrenda, setTipoPrenda] = useState<"VENTA" | "OBSEQUIO" | "MUESTRA">("VENTA");
@@ -27,17 +28,9 @@ export function NuevoParticipanteModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  if (!isOpen || !isClient) return null;
 
-  useEffect(() => {
-    if (grupos.length > 0 && (!grupoId || !grupos.some((g) => g.id === grupoId))) {
-      setGrupoId(grupos[0].id);
-    }
-  }, [grupos, grupoId]);
-
-  if (!isOpen || !mounted) return null;
+  const grupoValidoId = grupos.some((g) => g.id === grupoId) ? grupoId : (grupos[0]?.id ?? "");
 
   function handleResetAndClose() {
     setNombrePersona("");
@@ -49,12 +42,12 @@ export function NuevoParticipanteModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!nombrePersona.trim() || !grupoId) return;
+    if (!nombrePersona.trim() || !grupoValidoId) return;
     setLoading(true);
     setError(null);
-    const tipoProductoId = grupos.find((g) => g.id === grupoId)?.tipoProducto?.id;
+    const tipoProductoId = grupos.find((g) => g.id === grupoValidoId)?.tipoProducto?.id;
     const res = await actionCrearParticipante(
-      grupoId,
+      grupoValidoId,
       nombrePersona,
       pedidoId,
       tipoProductoId ? { tipoProductoId, tipoPrenda, esArquero } : undefined
@@ -117,7 +110,7 @@ export function NuevoParticipanteModal({
 
           <div className={styles.formGroup}>
             <label className={styles.formLabel} htmlFor="tipoPrenda">Tipo</label>
-            <select id="tipoPrenda" className={styles.formSelect} value={tipoPrenda} onChange={(e) => setTipoPrenda(e.target.value as any)}>
+            <select id="tipoPrenda" className={styles.formSelect} value={tipoPrenda} onChange={(e) => setTipoPrenda(e.target.value as "VENTA" | "OBSEQUIO" | "MUESTRA")}>
               <option value="VENTA">Venta</option>
               <option value="OBSEQUIO">Obsequio</option>
               <option value="MUESTRA">Muestra</option>
