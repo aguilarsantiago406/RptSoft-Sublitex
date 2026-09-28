@@ -5,6 +5,8 @@ import type { ParticipanteConPrendas } from "@/features/pedidos/api/pedidos.api"
 import {
   actionRegenerarEnlace,
   actionRevocarEnlace,
+  actionConfirmarManual,
+  actionEliminarParticipante,
 } from "../actions/participantes.actions";
 import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import styles from "./participantes.module.css";
@@ -17,17 +19,9 @@ interface ParticipantesRowProps {
   onAgregarPrenda?: (participante: ParticipanteConPrendas) => void;
 }
 
-function getGroupBadgeClass(nombreGrupo: string): string {
-  const lower = nombreGrupo.toLowerCase();
-  if (lower.includes("kit")) return styles.groupBadgeKit;
-  if (lower.includes("camiseta")) return styles.groupBadgeCamiseta;
-  return styles.groupBadgeDefault;
-}
-
 export function ParticipantesRow({
   index,
   participante,
-  nombreGrupo,
   pedidoId,
   onAgregarPrenda,
 }: ParticipantesRowProps) {
@@ -35,14 +29,13 @@ export function ParticipantesRow({
   const estado = participante.estado;
   const [copied, setCopied] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
-  const [isRevoking, setIsRevoking] = useState(false);
+  const [modalAction, setModalAction] = useState<"revocar" | "confirmar" | "eliminar" | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
   function handleCopy() {
     if (!token) return;
-    const url = `${window.location.origin}/participante/${token}`;
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(`${window.location.origin}/participante/${token}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -58,75 +51,46 @@ export function ParticipantesRow({
     }
   }
 
-  const [isConfirmRevocarOpen, setIsConfirmRevocarOpen] = useState(false);
-
-  function handleConfirmRevocar() {
-    if (isRevoking) return;
-
+  function handleModalConfirm() {
+    if (!modalAction) return;
     setErrorMsg(null);
-    setIsRevoking(true);
+    const act = modalAction;
+    setModalAction(null);
     startTransition(async () => {
-      const res = await actionRevocarEnlace(participante.id, pedidoId);
-      setIsRevoking(false);
-      setIsConfirmRevocarOpen(false);
-      if (!res.ok) {
-        setErrorMsg(res.error || "No se pudo revocar el enlace del participante.");
-      }
+      let res;
+      if (act === "revocar") res = await actionRevocarEnlace(participante.id, pedidoId);
+      else if (act === "confirmar") res = await actionConfirmarManual(participante.id, pedidoId);
+      else if (act === "eliminar") res = await actionEliminarParticipante(participante.id, pedidoId);
+      if (res && !res.ok) setErrorMsg(res.error || "No se pudo completar la acción.");
     });
   }
 
   const puedeRevocar = !participante.enlaceRevocado && estado !== "CONFIRMADO";
-
-  let statusBadgeClass = styles.statusBadgePendiente;
-  let statusText = "Pendiente";
-  if (estado === "REGISTRADO") {
-    statusBadgeClass = styles.statusBadgeRegistrado;
-    statusText = "Registrado";
-  } else if (estado === "CONFIRMADO") {
-    statusBadgeClass = styles.statusBadgeConfirmado;
-    statusText = "Confirmado";
-  }
+  const statusConfig = {
+    PENDIENTE: { cls: styles.statusBadgePendiente, text: "Pendiente" },
+    REGISTRADO: { cls: styles.statusBadgeRegistrado, text: "Registrado" },
+    CONFIRMADO: { cls: styles.statusBadgeConfirmado, text: "Confirmado" },
+  }[estado] ?? { cls: styles.statusBadgePendiente, text: "Pendiente" };
 
   return (
     <tr>
       <td className={styles.colIndex}>{index + 1}</td>
       <td className={styles.cellTruncate}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-          <span
-            className={styles.participanteNombre}
-            title={participante.nombrePersona}
-          >
-            {participante.nombrePersona}
-          </span>
-          {nombreGrupo ? (
-            <span
-              className={getGroupBadgeClass(nombreGrupo)}
-              style={{ alignSelf: "flex-start", marginTop: "2px" }}
-              title={nombreGrupo}
-            >
-              {nombreGrupo}
-            </span>
-          ) : null}
-        </div>
-      </td>
-      <td>
-        <span className={statusBadgeClass}>
-          {statusText}
+        <span className={styles.participanteNombre} title={participante.nombrePersona}>
+          {participante.nombrePersona}
         </span>
       </td>
       <td>
+        <span className={statusConfig.cls}>{statusConfig.text}</span>
+      </td>
+      <td>
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-          <span
-            className={styles.tabBadge}
-            title={`${participante.prendas?.length ?? 0} prendas asignadas`}
-            style={{ fontWeight: 600 }}
-          >
+          <span className={styles.tabBadge} title={`${participante.prendas?.length ?? 0} prendas`} style={{ fontWeight: 600 }}>
             {participante.prendas?.length ?? 0}
           </span>
           {onAgregarPrenda && (
             <button
-              type="button"
-              className={styles.copyButton}
+              type="button" className={styles.copyButton}
               onClick={() => onAgregarPrenda(participante)}
               title="Sumar una prenda adicional a este participante"
               style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600 }}
@@ -140,69 +104,65 @@ export function ParticipantesRow({
         {token ? (
           <div className={styles.linkCell}>
             <div className={styles.linkActions}>
-              <button
-                type="button"
-                className={styles.copyButton}
-                onClick={handleCopy}
-                title="Copiar enlace público del participante"
-              >
+              <button type="button" className={styles.copyButton} onClick={handleCopy} title="Copiar enlace público">
                 {copied ? "Copiado" : "Copiar enlace"}
               </button>
-              <button
-                type="button"
-                className={styles.regenerateButton}
-                onClick={handleRegenerate}
-                disabled={regenerating}
-                title="Regenerar nuevo token de 7 días"
-              >
+              <button type="button" className={styles.regenerateButton} onClick={handleRegenerate} disabled={regenerating} title="Regenerar nuevo token de 7 días">
                 {regenerating ? "…" : "Renovar"}
               </button>
               {puedeRevocar && (
-                <button
-                  type="button"
-                  className={styles.revokeButton}
-                  onClick={() => setIsConfirmRevocarOpen(true)}
-                  disabled={isRevoking}
-                  title="Revocar el enlace público de forma permanente"
-                >
-                  {isRevoking ? "Revocando…" : "Revocar enlace"}
+                <button type="button" className={styles.revokeButton} onClick={() => setModalAction("revocar")} disabled={isPending} title="Revocar enlace">
+                  Revocar
                 </button>
               )}
             </div>
-
-            {errorMsg && (
-              <div className={styles.linkError} role="alert">
-                {errorMsg}
-              </div>
-            )}
+            {errorMsg && <div className={styles.linkError} role="alert">{errorMsg}</div>}
           </div>
         ) : (
-          <button
-            type="button"
-            className={styles.copyButton}
-            onClick={handleRegenerate}
-            disabled={regenerating}
-          >
+          <button type="button" className={styles.copyButton} onClick={handleRegenerate} disabled={regenerating}>
             {regenerating ? "Generando…" : "+ Generar link"}
           </button>
         )}
+      </td>
+      <td>
+        <div className={styles.linkActions} style={{ justifyContent: "flex-end" }}>
+          {estado !== "CONFIRMADO" && (
+            <button
+              type="button" className={styles.copyButton}
+              onClick={() => setModalAction("confirmar")}
+              disabled={isPending}
+              title="Confirmar participante manualmente sin enlace público"
+              style={{ background: "#ecfdf5", color: "#047857", borderColor: "#a7f3d0", fontWeight: 600 }}
+            >
+              Confirmar
+            </button>
+          )}
+          <button
+            type="button" className={styles.revokeButton}
+            onClick={() => setModalAction("eliminar")}
+            disabled={isPending}
+            title="Eliminar participante del grupo"
+          >
+            Eliminar
+          </button>
+        </div>
 
         <ModalConfirmacion
-          isOpen={isConfirmRevocarOpen}
-          onClose={() => setIsConfirmRevocarOpen(false)}
-          onConfirm={handleConfirmRevocar}
-          title="Revocar Enlace"
-          description={
-            <>
-              ¿Revocar el enlace público de <strong>{participante.nombrePersona}</strong>?
-              <br />
-              <br />
-              El enlace dejará de funcionar y el participante deberá solicitar un nuevo token.
-            </>
+          isOpen={modalAction !== null}
+          onClose={() => setModalAction(null)}
+          onConfirm={handleModalConfirm}
+          title={
+            modalAction === "revocar" ? "Revocar Enlace" :
+            modalAction === "confirmar" ? "Confirmar Participante" : "Eliminar Participante"
           }
-          confirmText="Revocar Enlace"
-          variant="danger"
-          isPending={isRevoking}
+          description={
+            modalAction === "revocar" ? `¿Revocar el enlace público de ${participante.nombrePersona}? El enlace dejará de funcionar.` :
+            modalAction === "confirmar" ? `¿Confirmar manualmente la ficha de ${participante.nombrePersona}? El estado pasará a Confirmado.` :
+            `¿Eliminar a ${participante.nombrePersona} y todas sus prendas asignadas del pedido? Esta acción es irreversible.`
+          }
+          confirmText={modalAction === "revocar" ? "Revocar" : modalAction === "confirmar" ? "Confirmar" : "Eliminar"}
+          variant={modalAction === "confirmar" ? "primary" : "danger"}
+          isPending={isPending}
         />
       </td>
     </tr>

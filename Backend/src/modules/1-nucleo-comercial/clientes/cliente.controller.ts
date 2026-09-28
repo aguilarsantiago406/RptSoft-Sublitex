@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolUsuario } from '@prisma/client';
 import { ClienteService } from './cliente.service';
 import { CreateClienteDto } from './dto/create-cliente.dto';
+import { UpdateClienteDto } from './dto/update-cliente.dto';
 import { RolesGuard } from '../../../core/guards/roles.guard';
 import { Roles } from '../../../core/decorators/roles.decorator';
 
@@ -47,5 +48,27 @@ export class ClienteController {
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
   findOne(@Param('id') id: string) {
     return this.clienteService.findOne(id);
+  }
+
+  @Patch(':id')
+  @Roles(...COMERCIAL)
+  @ApiOperation({ summary: 'Actualizar datos de un cliente / organización' })
+  @ApiParam({ name: 'id', description: 'ID único del cliente (CUID)' })
+  @ApiResponse({ status: 200, description: 'Cliente actualizado exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Requiere JWT' })
+  @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
+  update(@Param('id') id: string, @Body() dto: UpdateClienteDto) {
+    return this.clienteService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles(RolUsuario.ADMINISTRADOR, RolUsuario.COORDINADOR_OPERATIVO)
+  @ApiOperation({ summary: 'Eliminar cliente si no tiene pedidos asociados' })
+  @ApiParam({ name: 'id', description: 'ID único del cliente (CUID)' })
+  @ApiResponse({ status: 200, description: 'Cliente eliminado exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Requiere JWT' })
+  @ApiResponse({ status: 409, description: 'No se puede eliminar porque tiene pedidos' })
+  remove(@Param('id') id: string) {
+    return this.clienteService.remove(id);
   }
 }

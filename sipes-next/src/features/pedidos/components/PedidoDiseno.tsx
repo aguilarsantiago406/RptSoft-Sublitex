@@ -3,7 +3,11 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { DisenoItem, EstadoDiseno } from "../types/diseno";
-import { actionProponerDiseno, actionAprobarDiseno } from "../actions/disenos.actions";
+import {
+  actionProponerDiseno,
+  actionAprobarDiseno,
+  actionEliminarArchivoEnNube,
+} from "../actions/disenos.actions";
 import { ModalSubirDiseno } from "./ModalSubirDiseno";
 import { ModalRechazarDiseno } from "./ModalRechazarDiseno";
 import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
@@ -27,7 +31,7 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
   const router = useRouter();
   const [modalUploadOpen, setModalUploadOpen] = useState(false);
   const [modalRechazoOpen, setModalRechazoOpen] = useState(false);
-  const [modalAprobarOpen, setModalAprobarOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<"aprobar" | "quitar" | null>(null);
   const [isReemplazo, setIsReemplazo] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -44,19 +48,22 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
     });
   }
 
-  function handleAprobar() {
-    if (!disenoActivo) return;
-    setModalAprobarOpen(true);
-  }
-
-  function confirmarAprobacion() {
-    if (!disenoActivo) return;
+  function handleConfirmAction() {
+    if (!disenoActivo || !confirmAction) return;
     setErrorMsg(null);
+    const action = confirmAction;
     startTransition(async () => {
-      const res = await actionAprobarDiseno(disenoActivo.id, pedidoId);
-      setModalAprobarOpen(false);
-      if (!res.ok) setErrorMsg(res.error || "No se pudo aprobar el diseño.");
-      else router.refresh();
+      if (action === "aprobar") {
+        const res = await actionAprobarDiseno(disenoActivo.id, pedidoId);
+        setConfirmAction(null);
+        if (!res.ok) setErrorMsg(res.error || "No se pudo aprobar el diseño.");
+        else router.refresh();
+      } else {
+        const parts = (disenoActivo.archivoUrl || "").split("/disenos/");
+        if (parts.length > 1) await actionEliminarArchivoEnNube(`disenos/${parts[1]}`);
+        setConfirmAction(null);
+        router.refresh();
+      }
     });
   }
 
@@ -67,11 +74,7 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
       <div className={styles.sectionHeaderRow}>
         <div>
           <h2 className={styles.sectionTitle}>Arte y Mockup Activo</h2>
-          {disenoActivo && (
-            <p className={styles.sectionSubtitle}>
-              Versión activa v{disenoActivo.version}
-            </p>
-          )}
+          {disenoActivo && <p className={styles.sectionSubtitle}>Versión activa v{disenoActivo.version}</p>}
         </div>
         {badgeInfo && (
           <span style={{ fontSize: "0.78rem", fontWeight: 650, padding: "4px 10px", borderRadius: "999px", color: badgeInfo.color, background: badgeInfo.bg }}>
@@ -93,8 +96,7 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
             Este pedido todavía no tiene un mockup de diseño registrado.
           </p>
           <button
-            type="button"
-            className={styles.addGrupoButton}
+            type="button" className={styles.addGrupoButton}
             onClick={() => { setIsReemplazo(false); setModalUploadOpen(true); }}
           >
             + Subir Primer Mockup
@@ -106,8 +108,7 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
             {disenoActivo.imagenUrl ? (
               <div style={{ position: "relative", borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0", background: "#ffffff" }}>
                 <img
-                  src={disenoActivo.imagenUrl}
-                  alt={`Mockup versión ${disenoActivo.version}`}
+                  src={disenoActivo.imagenUrl} alt={`Mockup v${disenoActivo.version}`}
                   style={{ width: "100%", height: "auto", display: "block", maxHeight: "360px", objectFit: "contain" }}
                 />
               </div>
@@ -118,8 +119,7 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
             )}
             <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
               <button
-                type="button"
-                className={styles.secondaryButton}
+                type="button" className={styles.secondaryButton}
                 onClick={() => { setIsReemplazo(true); setModalUploadOpen(true); }}
                 disabled={isPending || disenoActivo.estado === "APROBADO"}
                 title={disenoActivo.estado === "APROBADO" ? "No modificable en estado aprobado" : "Reemplazar archivos"}
@@ -127,8 +127,7 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
                 Reemplazar archivos
               </button>
               <button
-                type="button"
-                className={styles.secondaryButton}
+                type="button" className={styles.secondaryButton}
                 onClick={() => { setIsReemplazo(false); setModalUploadOpen(true); }}
                 disabled={isPending}
               >
@@ -138,15 +137,17 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
           </div>
 
           <div style={{ display: "grid", gap: "14px" }}>
-            <DisenoDetallesCard diseno={disenoActivo} />
+            <DisenoDetallesCard
+              diseno={disenoActivo}
+              onQuitarArchivo={() => setConfirmAction("quitar")}
+              isPending={isPending}
+            />
 
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
               {disenoActivo.estado === "BORRADOR" && (
                 <button
-                  type="button"
-                  className={styles.advanceStateButton}
-                  onClick={handleProponer}
-                  disabled={isPending}
+                  type="button" className={styles.advanceStateButton}
+                  onClick={handleProponer} disabled={isPending}
                 >
                   {isPending ? "Procesando..." : "Proponer al cliente"}
                 </button>
@@ -154,18 +155,14 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
               {disenoActivo.estado === "PROPUESTO" && (
                 <>
                   <button
-                    type="button"
-                    className={styles.advanceStateButton}
-                    onClick={handleAprobar}
-                    disabled={isPending}
+                    type="button" className={styles.advanceStateButton}
+                    onClick={() => setConfirmAction("aprobar")} disabled={isPending}
                   >
                     {isPending ? "Aprobando..." : "✓ Aprobar diseño (Cierra bloque)"}
                   </button>
                   <button
-                    type="button"
-                    className={styles.cancelStateButton}
-                    onClick={() => setModalRechazoOpen(true)}
-                    disabled={isPending}
+                    type="button" className={styles.cancelStateButton}
+                    onClick={() => setModalRechazoOpen(true)} disabled={isPending}
                   >
                     ✕ Rechazar con observaciones
                   </button>
@@ -179,32 +176,20 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
       )}
 
       <ModalSubirDiseno
-        isOpen={modalUploadOpen}
-        onClose={() => setModalUploadOpen(false)}
-        pedidoId={pedidoId}
+        isOpen={modalUploadOpen} onClose={() => setModalUploadOpen(false)} pedidoId={pedidoId}
         disenoId={isReemplazo && disenoActivo ? disenoActivo.id : undefined}
         versionNumero={isReemplazo && disenoActivo ? disenoActivo.version : undefined}
       />
-
       {disenoActivo && (
-        <ModalRechazarDiseno
-          isOpen={modalRechazoOpen}
-          onClose={() => setModalRechazoOpen(false)}
-          disenoId={disenoActivo.id}
-          pedidoId={pedidoId}
-        />
+        <ModalRechazarDiseno isOpen={modalRechazoOpen} onClose={() => setModalRechazoOpen(false)} disenoId={disenoActivo.id} pedidoId={pedidoId} />
       )}
-
       <ModalConfirmacion
-        isOpen={modalAprobarOpen}
-        onClose={() => setModalAprobarOpen(false)}
-        onConfirm={confirmarAprobacion}
-        title="Aprobar Diseño Textil"
-        description="¿Confirmas la aprobación del diseño? Esto cerrará formalmente el bloque DISENO (R-H01) y congelará la versión gráfica para confección en taller."
-        confirmText="Aprobar y Cerrar Bloque"
-        cancelText="Volver"
-        variant="primary"
-        isPending={isPending}
+        isOpen={confirmAction !== null} onClose={() => setConfirmAction(null)}
+        onConfirm={handleConfirmAction}
+        title={confirmAction === "aprobar" ? "Aprobar Diseño Textil" : "Eliminar Archivo Vectorial"}
+        description={confirmAction === "aprobar" ? "¿Confirmar aprobación del diseño? Cerrará el bloque DISENO (R-H01) para taller." : "¿Eliminar el archivo vectorial adjunto de la nube? Solo permitido en Borrador."}
+        confirmText={confirmAction === "aprobar" ? "Aprobar y Cerrar Bloque" : "Eliminar Archivo"}
+        variant={confirmAction === "aprobar" ? "primary" : "danger"} isPending={isPending}
       />
     </section>
   );

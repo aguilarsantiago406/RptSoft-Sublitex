@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { apiGet, apiPost, SipesApiError } from "@/lib/api/http";
-import { revocarEnlaceParticipante } from "../api/participantes.api";
+import { revocarEnlaceParticipante, eliminarParticipante } from "../api/participantes.api";
 
 export interface CrearParticipanteResult {
   ok: boolean;
@@ -147,5 +147,20 @@ export async function actionObtenerEnlacesGrupo(
       return { ok: false, error: error.message };
     }
     return { ok: false, error: "No se pudieron obtener los enlaces del grupo." };
+  }
+}
+
+export async function actionEliminarParticipante(
+  participanteId: string,
+  pedidoId: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await eliminarParticipante(participanteId);
+    revalidatePath(`/pedidos/${pedidoId}/participantes`);
+    revalidatePath(`/pedidos/${pedidoId}/prendas`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) return { ok: false, error: error.message };
+    return { ok: false, error: "No se pudo eliminar el participante." };
   }
 }
