@@ -1,3 +1,4 @@
+'use client';
 import { Package, Truck, CheckCircle2, Shirt } from "lucide-react";
 import { StatCard } from "@/components/ui/StatCard/StatCard";
 import type { PedidoResumen, EstadoPedido } from "../types/pedido";

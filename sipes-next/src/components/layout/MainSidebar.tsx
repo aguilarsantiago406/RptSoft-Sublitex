@@ -14,7 +14,7 @@ interface NavItemData {
   icon: LucideIcon;
 }
 
-interface NavSectionData {
+interface NavSectionData {  
   label: string;
   items: NavItemData[];
 }
@@ -25,7 +25,7 @@ const sections: NavSectionData[] = [
     items: [
       { label: "Pedidos", href: "/pedidos", icon: ShoppingBag },
       { label: "Clientes", href: "/clientes", icon: Users },
-      { label: "Producción", icon: Layers },
+      { label: "Producción", href: "/taller", icon: Layers }, // Habilitado con la ruta /nesting
     ],
   },
   {
@@ -84,7 +84,6 @@ export function MainSidebar() {
                   <span className={`${styles.navItem} ${styles.disabled}`} key={item.label} aria-disabled="true">
                     <Icon size={18} />
                     <span>{item.label}</span>
-                    <small>Próximo</small>
                   </span>
                 );
               })}
