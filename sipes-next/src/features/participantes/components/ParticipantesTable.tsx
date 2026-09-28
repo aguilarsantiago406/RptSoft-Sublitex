@@ -50,10 +50,11 @@ export function ParticipantesTable({
         <table className={styles.table}>
           <colgroup>
             <col style={{ width: "44px" }} />
-            <col style={{ width: "260px" }} />
+            <col style={{ width: "220px" }} />
             <col style={{ width: "110px" }} />
-            <col style={{ width: "130px" }} />
-            <col style={{ width: "270px" }} />
+            <col style={{ width: "120px" }} />
+            <col style={{ width: "240px" }} />
+            <col style={{ width: "160px" }} />
           </colgroup>
           <thead>
             <tr>
@@ -74,6 +75,7 @@ export function ParticipantesTable({
               />
               <th>Prendas</th>
               <th>Enlace</th>
+              <th style={{ textAlign: "right" }}>Acciones</th>
             </tr>
           </thead>
           <tbody>

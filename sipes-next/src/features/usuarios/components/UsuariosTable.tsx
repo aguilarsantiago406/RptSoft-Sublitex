@@ -11,51 +11,37 @@ interface UsuariosTableProps {
   usuarios: UsuarioItem[];
   onEdit: (usuario: UsuarioItem) => void;
   onChangePassword: (usuario: UsuarioItem) => void;
+  onViewProfile?: (usuario: UsuarioItem) => void;
+  onDelete?: (usuario: UsuarioItem) => void;
 }
 
-function getRoleBadgeClass(rol: RolUsuario): string {
-  switch (rol) {
-    case "ADMINISTRADOR":
-      return styles.roleAdmin;
-    case "COORDINADOR_OPERATIVO":
-      return styles.roleCoordinador;
-    case "VENDEDOR":
-    case "VENDEDORA":
-      return styles.roleVendedora;
-    case "DISENO":
-      return styles.roleDiseno;
-    case "PRODUCCION":
-      return styles.roleProduccion;
-    case "COORDINADOR_CLIENTE":
-      return styles.roleCliente;
-    default:
-      return "";
-  }
-}
+const ROLE_BADGE_MAP: Record<string, string> = {
+  ADMINISTRADOR: styles.roleAdmin,
+  COORDINADOR_OPERATIVO: styles.roleCoordinador,
+  VENDEDOR: styles.roleVendedora,
+  VENDEDORA: styles.roleVendedora,
+  DISENO: styles.roleDiseno,
+  PRODUCCION: styles.roleProduccion,
+  COORDINADOR_CLIENTE: styles.roleCliente,
+};
 
-function formatRoleLabel(rol: RolUsuario): string {
-  switch (rol) {
-    case "ADMINISTRADOR":
-      return "Administrador";
-    case "COORDINADOR_OPERATIVO":
-      return "Coord. Operativo";
-    case "VENDEDOR":
-      return "Vendedor";
-    case "VENDEDORA":
-      return "Vendedora";
-    case "DISENO":
-      return "Diseño";
-    case "PRODUCCION":
-      return "Producción";
-    case "COORDINADOR_CLIENTE":
-      return "Coord. Cliente";
-    default:
-      return rol;
-  }
-}
+const ROLE_LABELS: Record<string, string> = {
+  ADMINISTRADOR: "Administrador",
+  COORDINADOR_OPERATIVO: "Coord. Operativo",
+  VENDEDOR: "Vendedor",
+  VENDEDORA: "Vendedora",
+  DISENO: "Diseño",
+  PRODUCCION: "Producción",
+  COORDINADOR_CLIENTE: "Coord. Cliente",
+};
 
-
-export function UsuariosTable({ usuarios, onEdit, onChangePassword }: UsuariosTableProps) {
+export function UsuariosTable({
+  usuarios,
+  onEdit,
+  onChangePassword,
+  onViewProfile,
+  onDelete,
+}: UsuariosTableProps) {
   const table = useTableState<UsuarioItem>(usuarios);
   const offset = (table.page - 1) * table.pageSize;
 
@@ -110,13 +96,20 @@ export function UsuariosTable({ usuarios, onEdit, onChangePassword }: UsuariosTa
                 </td>
                 <td>
                   <div className={styles.userCell}>
-                    <span className={styles.userName}>{usr.nombre}</span>
+                    <span
+                      className={styles.userName}
+                      onClick={() => onViewProfile?.(usr)}
+                      style={{ cursor: onViewProfile ? "pointer" : "default" }}
+                      title="Ver ficha técnica de perfil"
+                    >
+                      {usr.nombre}
+                    </span>
                     <span className={styles.userEmail}>{usr.email}</span>
                   </div>
                 </td>
                 <td>
-                  <span className={`${styles.roleBadge} ${getRoleBadgeClass(usr.rol)}`}>
-                    {formatRoleLabel(usr.rol)}
+                  <span className={`${styles.roleBadge} ${ROLE_BADGE_MAP[usr.rol] ?? ""}`}>
+                    {ROLE_LABELS[usr.rol] ?? usr.rol}
                   </span>
                 </td>
                 <td>
@@ -144,10 +137,21 @@ export function UsuariosTable({ usuarios, onEdit, onChangePassword }: UsuariosTa
                       type="button"
                       className={styles.secondaryActionButton}
                       onClick={() => onChangePassword(usr)}
-                      title={`Cambiar la contraseña de ${usr.nombre}`}
+                      title={`Cambiar contraseña de ${usr.nombre}`}
                     >
-                      Cambiar contraseña
+                      Clave
                     </button>
+                    {onDelete && (
+                      <button
+                        type="button"
+                        className={styles.secondaryActionButton}
+                        onClick={() => onDelete(usr)}
+                        title={`Eliminar usuario ${usr.nombre}`}
+                        style={{ color: "#e11d48", borderColor: "#fecdd3" }}
+                      >
+                        Eliminar
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

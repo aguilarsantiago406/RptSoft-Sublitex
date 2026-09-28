@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import { ROLES_DISPONIBLES } from "../types/usuario";
 import type { UsuarioItem, RolUsuario } from "../types/usuario";
+import { actionEliminarUsuario } from "../actions/usuarios.actions";
 import { UsuariosTable } from "./UsuariosTable";
 import { ModalNuevoUsuario } from "./ModalNuevoUsuario";
 import { ModalEditarUsuario } from "./ModalEditarUsuario";
 import { ModalCambiarPassword } from "./ModalCambiarPassword";
+import { ModalDetalleUsuario } from "./ModalDetalleUsuario";
+import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import shared from "@/components/ui/table/tableShared.module.css";
 import styles from "./usuarios.module.css";
 
@@ -21,6 +24,23 @@ export function UsuariosView({ usuarios, error }: UsuariosViewProps) {
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UsuarioItem | null>(null);
   const [passwordUser, setPasswordUser] = useState<UsuarioItem | null>(null);
+  const [viewingUser, setViewingUser] = useState<UsuarioItem | null>(null);
+  const [deletingUser, setDeletingUser] = useState<UsuarioItem | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, startDeleteTransition] = useTransition();
+
+  function handleConfirmDelete() {
+    if (!deletingUser) return;
+    setDeleteError(null);
+    startDeleteTransition(async () => {
+      const res = await actionEliminarUsuario(deletingUser.id);
+      if (!res.ok) {
+        setDeleteError(res.error || "No se pudo eliminar el usuario.");
+      } else {
+        setDeletingUser(null);
+      }
+    });
+  }
 
   const filteredUsuarios = useMemo(() => {
     return usuarios.filter((usr) => {
@@ -84,6 +104,11 @@ export function UsuariosView({ usuarios, error }: UsuariosViewProps) {
         usuarios={filteredUsuarios}
         onEdit={(usr) => setEditingUser(usr)}
         onChangePassword={(usr) => setPasswordUser(usr)}
+        onViewProfile={(usr) => setViewingUser(usr)}
+        onDelete={(usr) => {
+          setDeleteError(null);
+          setDeletingUser(usr);
+        }}
       />
 
       <ModalNuevoUsuario
@@ -101,6 +126,31 @@ export function UsuariosView({ usuarios, error }: UsuariosViewProps) {
         isOpen={passwordUser !== null}
         usuario={passwordUser}
         onClose={() => setPasswordUser(null)}
+      />
+
+      <ModalDetalleUsuario
+        isOpen={viewingUser !== null}
+        usuario={viewingUser}
+        onClose={() => setViewingUser(null)}
+        onEdit={(usr) => setEditingUser(usr)}
+      />
+
+      <ModalConfirmacion
+        isOpen={deletingUser !== null}
+        onClose={() => {
+          setDeletingUser(null);
+          setDeleteError(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Eliminar Usuario"
+        description={
+          deleteError
+            ? `Error: ${deleteError}`
+            : `¿Eliminar definitivamente a ${deletingUser?.nombre} (${deletingUser?.email})? Esta acción borrará al usuario de la base de datos.`
+        }
+        confirmText="Eliminar Usuario"
+        variant="danger"
+        isPending={isDeleting}
       />
     </div>
   );
