@@ -1,22 +1,39 @@
 "use client";
 
+import { useState } from "react";
+import { useTableState } from "@/lib/useTableState";
+import { Pagination } from "@/components/ui/table/Pagination";
+import { SortableTh } from "@/components/ui/table/SortableTh";
+import type { GrupoPedido } from "@/features/pedidos/types/pedido";
 import type { ParticipanteConPrendas } from "@/features/pedidos/api/pedidos.api";
 import { ParticipantesRow } from "./ParticipantesRow";
+import { AgregarPrendaModal } from "./AgregarPrendaModal";
 import styles from "./participantes.module.css";
 
+interface FilaParticipante {
+  participante: ParticipanteConPrendas;
+  nombreGrupo: string;
+}
+
 interface ParticipantesTableProps {
-  participantes: Array<{
-    participante: ParticipanteConPrendas;
-    nombreGrupo: string;
-  }>;
+  participantes: FilaParticipante[];
   pedidoId: string;
-  mapaTallas?: Map<string, string>;
+  grupos: GrupoPedido[];
+  tiposProducto?: Array<{ id: string; nombre: string; codigo: string }>;
+  colores?: Array<{ id: string; nombre: string; codigoHex: string }>;
 }
 
 export function ParticipantesTable({
   participantes,
   pedidoId,
+  grupos,
+  tiposProducto = [],
+  colores = [],
 }: ParticipantesTableProps) {
+  const table = useTableState<FilaParticipante>(participantes);
+  const offset = (table.page - 1) * table.pageSize;
+  const [partParaPrenda, setPartParaPrenda] = useState<ParticipanteConPrendas | null>(null);
+
   if (participantes.length === 0) {
     return (
       <div className={styles.tableCard}>
@@ -32,34 +49,66 @@ export function ParticipantesTable({
       <div className={styles.tableScroll}>
         <table className={styles.table}>
           <colgroup>
-            <col style={{ width: "48px" }} />
-            <col style={{ width: "150px" }} />
-            <col style={{ width: "240px" }} />
+            <col style={{ width: "44px" }} />
+            <col style={{ width: "260px" }} />
+            <col style={{ width: "110px" }} />
             <col style={{ width: "130px" }} />
-            <col style={{ width: "auto" }} />
+            <col style={{ width: "270px" }} />
           </colgroup>
           <thead>
             <tr>
               <th className={styles.colIndex}>#</th>
-              <th>Grupo</th>
-              <th>Participante</th>
-              <th>Estado</th>
-              <th>Enlace WhatsApp</th>
+              <SortableTh<FilaParticipante>
+                label="Participante"
+                sortKey="participante.nombrePersona"
+                activeKey={table.sortKey}
+                dir={table.sortDir}
+                onSort={table.toggleSort}
+              />
+              <SortableTh<FilaParticipante>
+                label="Estado"
+                sortKey="participante.estado"
+                activeKey={table.sortKey}
+                dir={table.sortDir}
+                onSort={table.toggleSort}
+              />
+              <th>Prendas</th>
+              <th>Enlace</th>
             </tr>
           </thead>
           <tbody>
-            {participantes.map((item, idx) => (
+            {table.sortedRows.map((item, idx) => (
               <ParticipantesRow
                 key={item.participante.id}
-                index={idx}
+                index={offset + idx}
                 participante={item.participante}
                 nombreGrupo={item.nombreGrupo}
                 pedidoId={pedidoId}
+                onAgregarPrenda={setPartParaPrenda}
               />
             ))}
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        page={table.page}
+        totalPages={table.totalPages}
+        totalRows={table.totalRows}
+        firstRow={table.firstRow}
+        lastRow={table.lastRow}
+        onPage={table.setPage}
+      />
+
+      <AgregarPrendaModal
+        isOpen={Boolean(partParaPrenda)}
+        onClose={() => setPartParaPrenda(null)}
+        participante={partParaPrenda}
+        pedidoId={pedidoId}
+        grupos={grupos}
+        tiposProducto={tiposProducto}
+        colores={colores}
+      />
     </div>
   );
 }

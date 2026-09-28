@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from './core/prisma/prisma.module';
+import { StorageModule } from './core/storage/storage.module';
 import { NucleoComercialModule } from './modules/1-nucleo-comercial/nucleo-comercial.module';
 import { OperacionPrendasModule } from './modules/2-operacion-prendas/operacion-prendas.module';
 import { DominioDisenoModule } from './modules/3-diseno/dominio-diseno.module';
@@ -9,6 +10,7 @@ import { DominioAuditoriaModule } from './modules/5-auditoria/dominio-auditoria.
 @Module({
   imports: [
     PrismaModule,
+    StorageModule,
     NucleoComercialModule,
     OperacionPrendasModule,
     DominioDisenoModule,

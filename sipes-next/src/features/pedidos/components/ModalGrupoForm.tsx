@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { createPortal } from "react-dom";
 import type { TipoProductoCatalogoItem } from "../api/pedidos.api";
-import { actionCrearGrupo } from "../actions/pedidos.actions";
+import { actionCrearGrupo } from "../actions/grupos.actions";
 import styles from "./pedidos.module.css";
 
 interface ModalGrupoFormProps {
@@ -26,7 +27,13 @@ export function ModalGrupoForm({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   function handleReset() {
     setNombre("");
@@ -74,7 +81,7 @@ export function ModalGrupoForm({
 
   const selectedTipo = tiposProducto.find((t) => t.id === tipoProductoId);
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={handleReset}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
@@ -204,6 +211,7 @@ export function ModalGrupoForm({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

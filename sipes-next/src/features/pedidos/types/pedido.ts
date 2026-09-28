@@ -12,8 +12,10 @@ export interface PedidoResumen {
   id: string;
   codigo: string;
   cliente: { id: string; nombre: string };
+  vendedora?: { id: string; nombre: string; email: string } | null;
   estado: EstadoPedido;
   totalPrendas: number;
+  tiempoDias?: number | null;
   fechaPedido: string;
   fechaCompromiso: string | null;
 }
@@ -40,6 +42,7 @@ export interface PedidoDetalle {
   fechaPedido: string;
   fechaCompromiso: string | null;
   observaciones?: string | null;
+  vendedora?: { id: string; nombre: string; email: string } | null;
   cliente: {
     id: string;
     nombre: string;
@@ -76,6 +79,7 @@ export interface PrendaDetalle {
     id: string;
     nombre: string;
     politicaNumeracion: string;
+    configuracion?: Array<{ atributo: string; valor: string }>;
   } | null;
   tipoProducto?: {
     id: string;

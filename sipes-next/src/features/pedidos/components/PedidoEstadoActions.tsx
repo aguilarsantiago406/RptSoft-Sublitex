@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import type { EstadoPedido } from "../types/pedido";
 import { actionActualizarEstadoPedido } from "../actions/pedidos.actions";
+import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import styles from "./pedidos.module.css";
 
 interface PedidoEstadoActionsProps {
@@ -20,6 +21,7 @@ const SIGUIENTE_ESTADO: Partial<Record<EstadoPedido, { destino: EstadoPedido; la
 };
 
 export function PedidoEstadoActions({ pedidoId, estadoActual }: PedidoEstadoActionsProps) {
+  const [isConfirmCancelarOpen, setIsConfirmCancelarOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -38,15 +40,11 @@ export function PedidoEstadoActions({ pedidoId, estadoActual }: PedidoEstadoActi
     });
   };
 
-  const handleCancelar = () => {
-    const confirmar = window.confirm(
-      "¿Estás seguro de que deseas CANCELAR este pedido? Esta acción es irreversible."
-    );
-    if (!confirmar) return;
-
+  const handleConfirmCancelar = () => {
     setErrorMsg(null);
     startTransition(async () => {
       const res = await actionActualizarEstadoPedido(pedidoId, "CANCELADO", "Cancelado desde ficha técnica");
+      setIsConfirmCancelarOpen(false);
       if (!res.ok) {
         setErrorMsg(res.error || "No se pudo cancelar el pedido.");
       }
@@ -87,7 +85,7 @@ export function PedidoEstadoActions({ pedidoId, estadoActual }: PedidoEstadoActi
 
         <button
           type="button"
-          onClick={handleCancelar}
+          onClick={() => setIsConfirmCancelarOpen(true)}
           disabled={isPending}
           className={styles.cancelStateButton}
           title="Cancelar pedido"
@@ -95,6 +93,24 @@ export function PedidoEstadoActions({ pedidoId, estadoActual }: PedidoEstadoActi
           Cancelar
         </button>
       </div>
+
+      <ModalConfirmacion
+        isOpen={isConfirmCancelarOpen}
+        onClose={() => setIsConfirmCancelarOpen(false)}
+        onConfirm={handleConfirmCancelar}
+        title="Cancelar Pedido"
+        description={
+          <>
+            ¿Estás seguro de que deseas <strong>CANCELAR</strong> este pedido?
+            <br />
+            <br />
+            Esta acción es irreversible y el pedido pasará a estado cancelado.
+          </>
+        }
+        confirmText="Sí, Cancelar Pedido"
+        variant="danger"
+        isPending={isPending}
+      />
     </div>
   );
 }

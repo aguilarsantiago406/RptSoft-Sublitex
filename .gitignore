@@ -55,3 +55,8 @@ Thumbs.db
 # Carpetas de bk2
 mio/
 docs_bk2/
+falta.md
+
+# Storage local efímero
+Backend/storage/
+storage/

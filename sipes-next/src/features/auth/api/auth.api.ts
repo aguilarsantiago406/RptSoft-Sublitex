@@ -1,4 +1,5 @@
-import { SipesApiError } from "@/lib/api/http";
+import { apiGet, SipesApiError } from "@/lib/api/http";
+import type { RolUsuario } from "@/features/usuarios/types/usuario";
 import type { RespuestaLogin } from "../types/auth";
 
 const AUTH_API_URL = process.env.SIPES_API_URL ?? "http://localhost:3001";
@@ -26,4 +27,15 @@ export async function loginConBackend(email: string, password: string): Promise<
   }
 
   return (await response.json()) as RespuestaLogin;
+}
+
+export interface MiPerfil {
+  id: string;
+  email: string;
+  nombre: string;
+  rol: RolUsuario;
+}
+
+export async function getMiPerfil(): Promise<MiPerfil> {
+  return apiGet<MiPerfil>("/api/auth/me");
 }

@@ -1,4 +1,4 @@
-.container {
+﻿.container {
   display: grid;
   gap: 18px;
 }
@@ -91,8 +91,8 @@
 .tableCard {
   background: #ffffff;
   border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
 }
 
@@ -106,7 +106,7 @@
   border-collapse: collapse;
   font-size: 0.84rem;
   text-align: left;
-  min-width: 960px;
+  min-width: 1140px;
 }
 
 .prendasTable th {
@@ -115,7 +115,7 @@
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 12px 14px;
+  padding: 12px 10px;
   border-bottom: 1px solid #e2e8f0;
   white-space: nowrap;
   overflow: hidden;
@@ -123,18 +123,42 @@
 }
 
 .prendasTable td {
-  padding: 11px 14px;
+  padding: 11px 10px;
   border-bottom: 1px solid #f1f5f9;
   color: var(--navy);
   vertical-align: middle;
+  overflow: hidden;
+}
+
+.cellTruncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cellGrupo {
+  overflow: hidden;
+}
+
+.participanteName {
+  font-weight: 500;
+  color: var(--navy);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .prendasTable tbody tr:last-child td {
   border-bottom: none;
 }
 
+.prendasTable tbody tr {
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
 .prendasTable tbody tr:hover {
-  background: #f8fafc;
+  background: var(--sky-soft);
 }
 
 .colIndex {
@@ -146,8 +170,11 @@
 }
 
 .groupBadgeKit {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
   font-size: 0.72rem;
   font-weight: 500;
   padding: 3px 8px;
@@ -159,8 +186,11 @@
 }
 
 .groupBadgeCamiseta {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
   font-size: 0.72rem;
   font-weight: 500;
   padding: 3px 8px;
@@ -172,8 +202,11 @@
 }
 
 .groupBadgeDefault {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
   font-size: 0.72rem;
   font-weight: 500;
   padding: 3px 8px;
@@ -220,6 +253,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
+  overflow: hidden;
 }
 
 .colorDot {
@@ -228,6 +262,12 @@
   border-radius: 50%;
   border: 1px solid rgba(0, 0, 0, 0.15);
   flex: 0 0 auto;
+}
+
+.colorName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .excepcionBadge {
@@ -257,19 +297,63 @@
 
 .actionButton {
   padding: 4px 10px;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  background: var(--navy-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   font-size: 0.76rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--navy);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
 }
 
 .actionButton:hover {
-  background: #0284c7;
-  border-color: #0284c7;
+  background: var(--sky-soft);
+  border-color: rgba(2, 132, 199, 0.35);
+  color: var(--sky-dark);
+  transform: translateY(-1px);
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.deleteButton {
+  padding: 4px 10px;
+  background: var(--danger-soft);
+  border: 1px solid #fecdd3;
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--danger);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: var(--danger);
+  border-color: var(--danger);
   color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.deleteButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.rowActionError {
+  margin-top: 6px;
+  padding: 5px 8px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+  color: #be123c;
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1.3;
 }
 

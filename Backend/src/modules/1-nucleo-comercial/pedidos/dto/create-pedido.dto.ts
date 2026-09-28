@@ -11,6 +11,16 @@ export class CreatePedidoDto {
   @IsDateString()
   fechaCompromiso: string;
 
+  @ApiPropertyOptional({ example: 'cuid_de_la_vendedora', description: 'ID de la asesora/vendedora asignada' })
+  @IsOptional()
+  @IsString()
+  vendedoraId?: string;
+
+  @ApiPropertyOptional({ example: 'cuid_del_vendedor', description: 'Alias opcional de vendedoraId' })
+  @IsOptional()
+  @IsString()
+  vendedorId?: string;
+
   @ApiPropertyOptional({ example: 'Entrega prioritaria para desfile escolar' })
   @IsOptional()
   @IsString()

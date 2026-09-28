@@ -6,9 +6,10 @@ import { ModalNuevoPedido } from "./ModalNuevoPedido";
 
 interface NuevoPedidoHeaderActionProps {
   clientes: ClienteListItem[];
+  vendedoras?: Array<{ id: string; nombre: string }>;
 }
 
-export function NuevoPedidoHeaderAction({ clientes }: NuevoPedidoHeaderActionProps) {
+export function NuevoPedidoHeaderAction({ clientes, vendedoras }: NuevoPedidoHeaderActionProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -25,6 +26,7 @@ export function NuevoPedidoHeaderAction({ clientes }: NuevoPedidoHeaderActionPro
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         clientesIniciales={clientes}
+        vendedoras={vendedoras}
       />
     </>
   );

@@ -1,5 +1,6 @@
-import { apiGet } from "@/lib/api/http";
-import type { PedidoDetalle, PedidoResumen } from "../types/pedido";
+import { apiGet, apiPatch, apiPost, apiPut } from "@/lib/api/http";
+import type { GrupoPedido, PedidoDetalle, PedidoResumen } from "../types/pedido";
+import type { ResumenProduccionItem } from "./comercial.api";
 
 export interface GetPedidosParams {
   estado?: string;
@@ -12,6 +13,7 @@ export interface ParticipanteConPrendas {
   nombrePersona: string;
   estado: string;
   enlaceToken: string;
+  enlaceRevocado: boolean;
   prendas: Array<{
     id: string;
     participanteId: string;
@@ -104,3 +106,48 @@ export function getAtributosCatalogo() {
   return apiGet<AtributoCatalogoItem[]>("/api/catalogos/atributos");
 }
 
+export type PoliticaNumeracion = "LIBRE" | "UNICA";
+
+export interface GrupoDetalle extends GrupoPedido {
+  pedidoId: string;
+  tipoProductoId: string;
+  politicaNumeracion: PoliticaNumeracion;
+}
+
+export interface UpdateGrupoInput {
+  nombre?: string;
+  politicaNumeracion?: PoliticaNumeracion;
+  tipoProductoId?: string;
+  cantidadContratada?: number;
+  observaciones?: string;
+}
+
+export interface GrupoPoliticaActualizada {
+  id: string;
+  nombre: string;
+  politicaNumeracion: PoliticaNumeracion;
+}
+
+export function getGrupo(id: string) {
+  return apiGet<GrupoDetalle>(`/api/grupos/${encodeURIComponent(id)}`);
+}
+
+export function actualizarGrupo(id: string, data: UpdateGrupoInput) {
+  return apiPut<GrupoDetalle>(`/api/grupos/${encodeURIComponent(id)}`, data);
+}
+
+export function actualizarPoliticaGrupo(
+  id: string,
+  politicaNumeracion: PoliticaNumeracion
+) {
+  return apiPatch<GrupoPoliticaActualizada>(
+    `/api/grupos/${encodeURIComponent(id)}/politica`,
+    { politicaNumeracion }
+  );
+}
+
+export function calcularResumenProduccion(pedidoId: string) {
+  return apiPost<ResumenProduccionItem>(
+    `/api/pedidos/${encodeURIComponent(pedidoId)}/resumen-produccion`
+  );
+}

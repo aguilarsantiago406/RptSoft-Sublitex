@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { ClienteListItem } from "../api/pedidos.api";
 import { actionCrearPedido } from "../actions/pedidos.actions";
@@ -10,17 +11,19 @@ interface ModalNuevoPedidoProps {
   isOpen: boolean;
   onClose: () => void;
   clientesIniciales: ClienteListItem[];
+  vendedoras?: Array<{ id: string; nombre: string }>;
 }
 
 export function ModalNuevoPedido({
   isOpen,
   onClose,
   clientesIniciales,
+  vendedoras = [],
 }: ModalNuevoPedidoProps) {
   const router = useRouter();
   const [clienteId, setClienteId] = useState(clientesIniciales[0]?.id ?? "");
+  const [vendedoraId, setVendedoraId] = useState("");
 
-  // Fecha mínima: mañana
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const minDateStr = tomorrow.toISOString().split("T")[0];
@@ -34,10 +37,17 @@ export function ModalNuevoPedido({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   function handleReset() {
     setClienteId(clientesIniciales[0]?.id ?? "");
+    setVendedoraId("");
     setFechaCompromiso(defaultDateStr);
     setObservaciones("");
     setError(null);
@@ -46,20 +56,15 @@ export function ModalNuevoPedido({
 
   function handleSubmitPedido(e: React.FormEvent) {
     e.preventDefault();
-    if (!clienteId) {
-      setError("Debes seleccionar un cliente para el pedido.");
-      return;
-    }
-    if (!fechaCompromiso) {
-      setError("La fecha de compromiso de entrega es obligatoria (Regla R-A09).");
-      return;
-    }
+    if (!clienteId) return setError("Debes seleccionar un cliente para el pedido.");
+    if (!fechaCompromiso) return setError("La fecha de compromiso de entrega es obligatoria (Regla R-A09).");
 
     setError(null);
     startTransition(async () => {
       const res = await actionCrearPedido({
         clienteId,
         fechaCompromiso,
+        vendedoraId: vendedoraId.trim() || undefined,
         observaciones: observaciones.trim() || undefined,
       });
 
@@ -69,35 +74,22 @@ export function ModalNuevoPedido({
       }
 
       handleReset();
-      router.push(`/pedidos/${res.pedido.id}`);
+      router.push(`/pedidos/${res.pedido.codigo ?? res.pedido.id}`);
     });
   }
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={handleReset}>
       <div className={styles.modalCardWide} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <div>
             <h3 className={styles.modalTitle}>Nuevo Pedido</h3>
-            <p className={styles.modalSubtitle}>
-              Alta de orden técnica con código correlativo (Regla R-A03)
-            </p>
+            <p className={styles.modalSubtitle}>Alta de orden técnica con código correlativo (Regla R-A03)</p>
           </div>
-          <button
-            type="button"
-            className={styles.modalCloseButton}
-            onClick={handleReset}
-            aria-label="Cerrar"
-          >
-            ✕
-          </button>
+          <button type="button" className={styles.modalCloseButton} onClick={handleReset} aria-label="Cerrar">✕</button>
         </div>
 
-        {error && (
-          <div className={styles.modalErrorBanner} role="alert">
-            {error}
-          </div>
-        )}
+        {error && <div className={styles.modalErrorBanner} role="alert">{error}</div>}
 
         <form onSubmit={handleSubmitPedido} className={styles.modalForm}>
           <div className={styles.formField}>
@@ -118,6 +110,25 @@ export function ModalNuevoPedido({
                 </option>
               ))}
             </select>
+            <small className={styles.formHint}>Para pedidos con otras instituciones o promociones, regístralas en el módulo Clientes.</small>
+          </div>
+
+          <div className={styles.formField}>
+            <label htmlFor="pedido-vendedora">Asesora / Vendedor Comercial (Opcional)</label>
+            <select
+              id="pedido-vendedora"
+              value={vendedoraId}
+              onChange={(e) => setVendedoraId(e.target.value)}
+              className={styles.formInput}
+            >
+              <option value="">
+                {vendedoras.length > 0 ? "Sin asesora asignada" : "Sin asesora asignada (opcional)"}
+              </option>
+              {vendedoras.map((v) => (
+                <option key={v.id} value={v.id}>{v.nombre}</option>
+              ))}
+            </select>
+            <small className={styles.formHint}>Personal comercial habilitado en el sistema (módulo Usuarios).</small>
           </div>
 
           <div className={styles.formField}>
@@ -131,9 +142,7 @@ export function ModalNuevoPedido({
               onChange={(e) => setFechaCompromiso(e.target.value)}
               className={styles.formInput}
             />
-            <small className={styles.formHint}>
-              Debe ser posterior a la fecha actual para salir de BORRADOR (Regla R-A09)
-            </small>
+            <small className={styles.formHint}>Debe ser posterior a la fecha actual para salir de BORRADOR (Regla R-A09)</small>
           </div>
 
           <div className={styles.formField}>
@@ -150,24 +159,14 @@ export function ModalNuevoPedido({
           </div>
 
           <div className={styles.modalFooter}>
-            <button
-              type="button"
-              className={styles.modalCancelButton}
-              onClick={handleReset}
-              disabled={isPending}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className={styles.modalSubmitButton}
-              disabled={isPending || !clienteId}
-            >
+            <button type="button" className={styles.modalCancelButton} onClick={handleReset} disabled={isPending}>Cancelar</button>
+            <button type="submit" className={styles.modalSubmitButton} disabled={isPending || !clienteId}>
               {isPending ? "Generando pedido..." : "Crear Pedido →"}
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

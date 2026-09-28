@@ -17,4 +17,8 @@ export class UpdateFichaMinimaDto {
   @IsString()
   @IsOptional()
   nombreEnPrenda?: string;
+
+  @IsString()
+  @IsOptional()
+  colorId?: string;
 }

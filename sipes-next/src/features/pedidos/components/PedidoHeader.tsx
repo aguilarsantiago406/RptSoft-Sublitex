@@ -1,6 +1,5 @@
 import type { PedidoDetalle } from "../types/pedido";
 import { EstadoPedidoBadge } from "./EstadoPedidoBadge";
-import { PedidoEstadoActions } from "./PedidoEstadoActions";
 import styles from "./pedidos.module.css";
 
 interface PedidoHeaderProps {
@@ -20,7 +19,6 @@ export function PedidoHeader({ pedido }: PedidoHeaderProps) {
       </div>
       <div className={styles.detailHeaderRight}>
         <EstadoPedidoBadge estado={pedido.estado} size="lg" />
-        <PedidoEstadoActions pedidoId={pedido.id} estadoActual={pedido.estado} />
       </div>
     </header>
   );

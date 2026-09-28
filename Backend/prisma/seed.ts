@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import process from 'process';
 import { PRODUCTOS, ATRIBUTOS, UBICACIONES, COLORES, PEDIDO_PROMO_2002 } from './promo2002.data';
 
 const prisma = new PrismaClient();

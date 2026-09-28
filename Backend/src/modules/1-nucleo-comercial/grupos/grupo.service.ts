@@ -2,9 +2,12 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
+import { TipoBloque, EstadoBloque } from '@prisma/client';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CreateGrupoDto, PoliticaNumeracion } from './dto/create-grupo.dto';
+import { UpdateGrupoDto } from './dto/update-grupo.dto';
 import { UpdatePoliticaDto } from './dto/update-politica.dto';
 
 @Injectable()
@@ -104,6 +107,14 @@ export class GrupoService {
 
   async remove(id: string) {
     const grupo = await this.findOne(id);
+    if (this.prisma.bloquePedido) {
+      const bloqueLista = await this.prisma.bloquePedido.findUnique({
+        where: { pedidoId_tipo: { pedidoId: grupo.pedidoId, tipo: TipoBloque.LISTA } },
+      });
+      if (bloqueLista?.estado === EstadoBloque.CERRADO) {
+        throw new BadRequestException('No se puede eliminar un grupo con el bloque Lista cerrado (R-H12)');
+      }
+    }
     const [participantes, prendas] = await Promise.all([
       this.prisma.participante.count({ where: { grupoId: id } }),
       this.prisma.prenda.count({ where: { grupoId: id } }),
@@ -119,39 +130,92 @@ export class GrupoService {
     return { id: grupo.id, eliminado: true };
   }
 
-  async update(id: string, dto: Partial<CreateGrupoDto>) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateGrupoDto) {
+    const grupoActual = await this.findOne(id);
+    if (this.prisma.bloquePedido) {
+      const bloqueLista = await this.prisma.bloquePedido.findUnique({
+        where: { pedidoId_tipo: { pedidoId: grupoActual.pedidoId, tipo: TipoBloque.LISTA } },
+      });
+      if (bloqueLista?.estado === EstadoBloque.CERRADO) {
+        throw new BadRequestException('No se puede modificar un grupo con el bloque Lista cerrado (R-H12)');
+      }
+    }
+
     try {
-      return await this.prisma.grupo.update({
+      const grupo = await this.prisma.grupo.update({
         where: { id },
         data: {
           ...(dto.nombre !== undefined ? { nombre: dto.nombre } : {}),
-          ...(dto.politicaNumeracion !== undefined
-            ? { politicaNumeracion: dto.politicaNumeracion }
-            : {}),
-          ...(dto.cantidadContratada !== undefined
-            ? { cantidadContratada: dto.cantidadContratada }
-            : {}),
+          ...(dto.politicaNumeracion !== undefined ? { politicaNumeracion: dto.politicaNumeracion } : {}),
+          ...(dto.cantidadContratada !== undefined ? { cantidadContratada: dto.cantidadContratada } : {}),
           ...(dto.observaciones !== undefined ? { observaciones: dto.observaciones } : {}),
           ...(dto.tipoProductoId !== undefined
             ? { tipoProducto: { connect: { id: dto.tipoProductoId } } }
             : {}),
         },
-        include: { tipoProducto: true },
+        include: {
+          tipoProducto: true,
+          configuracion: {
+            include: { atributo: true, valor: true },
+            orderBy: { atributo: { orden: 'asc' } },
+          },
+        },
       });
-} catch (error: any) {
-        if (error?.code === 'P2002') {
-          throw new ConflictException('Ya existe un grupo con ese nombre en el pedido (R-B01)');
+
+      if (dto.configuracion?.length) {
+        for (const item of dto.configuracion) {
+          const valorAtributo = await this.prisma.valorAtributo.findFirst({
+            where: { id: item.valorAtributoId, atributoId: item.atributoId },
+          });
+          if (!valorAtributo) {
+            throw new NotFoundException(
+              `El valor '${item.valorAtributoId}' no pertenece al atributo '${item.atributoId}'`,
+            );
+          }
+
+          await this.prisma.valorConfiguracion.upsert({
+            where: { grupoId_atributoId: { grupoId: id, atributoId: item.atributoId } },
+            create: {
+              grupoId: id,
+              atributoId: item.atributoId,
+              valorAtributoId: item.valorAtributoId,
+            },
+            update: {
+              valorAtributoId: item.valorAtributoId,
+            },
+          });
         }
-        if (error?.code === 'P2025') {
-          throw new NotFoundException('Tipo de producto no encontrado: ' + dto.tipoProductoId);
-        }
-        throw error;
       }
+
+      return this.toResponse({
+        ...grupo,
+        configuracion: await this.prisma.valorConfiguracion.findMany({
+          where: { grupoId: id },
+          include: { atributo: true, valor: true },
+          orderBy: { atributo: { orden: 'asc' } },
+        }),
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2002') {
+        throw new ConflictException('Ya existe un grupo con ese nombre en el pedido (R-B01)');
+      }
+      if (error?.code === 'P2025') {
+        throw new NotFoundException('Tipo de producto no encontrado: ' + dto.tipoProductoId);
+      }
+      throw error;
+    }
   }
 
   async updatePolitica(id: string, dto: UpdatePoliticaDto) {
     const grupo = await this.findOne(id);
+    if (this.prisma.bloquePedido) {
+      const bloqueLista = await this.prisma.bloquePedido.findUnique({
+        where: { pedidoId_tipo: { pedidoId: grupo.pedidoId, tipo: TipoBloque.LISTA } },
+      });
+      if (bloqueLista?.estado === EstadoBloque.CERRADO) {
+        throw new BadRequestException('No se puede modificar la politica con el bloque Lista cerrado (R-H12)');
+      }
+    }
     if (grupo.politicaNumeracion === dto.politicaNumeracion) {
       return { id: grupo.id, nombre: grupo.nombre, politicaNumeracion: dto.politicaNumeracion };
     }

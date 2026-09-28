@@ -5,6 +5,7 @@ import { PedidoModule } from './pedidos/pedido.module';
 import { GrupoModule } from './grupos/grupo.module';
 import { CatalogoModule } from './catalogos/catalogo.module';
 import { ComercialModule } from './comercial/comercial.module';
+import { BloqueModule } from './bloques/bloque.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ComercialModule } from './comercial/comercial.module';
     GrupoModule,
     CatalogoModule,
     ComercialModule,
+    BloqueModule,
   ],
   exports: [
     AuthModule,
@@ -22,6 +24,7 @@ import { ComercialModule } from './comercial/comercial.module';
     GrupoModule,
     CatalogoModule,
     ComercialModule,
+    BloqueModule,
   ],
 })
 export class NucleoComercialModule {}

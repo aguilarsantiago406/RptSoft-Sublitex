@@ -40,6 +40,10 @@ export class PrendaFichaDto {
   @IsOptional()
   nombreEnPrenda?: string;
 
+  @IsString()
+  @IsOptional()
+  colorId?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => PersonalizacionFichaDto)

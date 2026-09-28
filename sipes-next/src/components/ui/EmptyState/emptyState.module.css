@@ -1,0 +1,35 @@
+.emptyState {
+  padding: 56px 24px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: center;
+}
+
+.iconWrap {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--sky-soft);
+  color: var(--sky-dark);
+}
+
+.title {
+  margin: 12px 0 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.action {
+  margin-top: 16px;
+}

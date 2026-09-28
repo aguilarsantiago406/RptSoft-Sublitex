@@ -1,0 +1,181 @@
+.guiaContainer {
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.guiaHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.04) 0%, rgba(30, 41, 59, 0.02) 100%);
+  border-bottom: 1px solid var(--border-soft);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.guiaTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.etapaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: rgba(2, 132, 199, 0.12);
+  color: var(--sky-dark);
+}
+
+.guiaTitle {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+}
+
+.guiaSubtitle {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.guiaContent {
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .guiaContent {
+    grid-template-columns: 1fr;
+  }
+}
+
+.checklistSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checklistTitle {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 0;
+}
+
+.checkItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.checkItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 8px;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.checkItemOk {
+  background: rgba(22, 163, 74, 0.08);
+  color: #15803d;
+  border: 1px solid rgba(22, 163, 74, 0.2);
+}
+
+.checkItemPending {
+  background: rgba(217, 119, 6, 0.08);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.actionsSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+@media (max-width: 768px) {
+  .actionsSection {
+    align-items: stretch;
+  }
+}
+
+.advanceButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--sky-dark);
+  border: none;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
+}
+
+.advanceButton:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.advanceButton:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.advanceHelper {
+  font-size: 0.74rem;
+  color: #b45309;
+  font-weight: 500;
+  text-align: right;
+}
+
+.activeSectionHighlight {
+  border: 2px solid var(--sky-dark) !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12) !important;
+  position: relative;
+}
+
+.activeSectionBadge {
+  position: absolute;
+  top: -10px;
+  right: 18px;
+  background: var(--sky-dark);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 10px;
+  border-radius: 999px;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
+}

@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Copy, Check } from "lucide-react";
+import shared from "@/components/ui/table/tableShared.module.css";
 import type { GrupoPedido } from "@/features/pedidos/types/pedido";
 import type { ParticipanteConPrendas } from "@/features/pedidos/api/pedidos.api";
+import { actionObtenerEnlacesGrupo } from "../actions/participantes.actions";
 import { ParticipantesTable } from "./ParticipantesTable";
 import { NuevoParticipanteModal } from "./NuevoParticipanteModal";
 import styles from "./participantes.module.css";
@@ -16,26 +19,41 @@ interface ParticipantesViewProps {
   participantes: ItemParticipante[];
   grupos: GrupoPedido[];
   pedidoId: string;
-  mapaTallasObj: Record<string, string>;
+  errorGrupos?: string[];
+  tiposProducto?: Array<{ id: string; nombre: string; codigo: string }>;
+  colores?: Array<{ id: string; nombre: string; codigoHex: string }>;
 }
 
 export function ParticipantesView({
   participantes,
   grupos,
   pedidoId,
-  mapaTallasObj,
+  errorGrupos = [],
+  tiposProducto = [],
+  colores = [],
 }: ParticipantesViewProps) {
   const [grupoActivo, setGrupoActivo] = useState<string>("TODOS");
   const [busqueda, setBusqueda] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [copiando, setCopiando] = useState(false);
+  const [copiado, setCopiado] = useState(false);
 
-  const mapaTallas = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const [k, v] of Object.entries(mapaTallasObj)) {
-      map.set(k, v);
+  async function handleCopiarEnlaces() {
+    if (copiando) return;
+    setCopiando(true);
+    try {
+      const gruposTarget = grupoActivo === "TODOS" ? grupos.map((g) => g.id) : [grupoActivo];
+      const res = await Promise.all(gruposTarget.map((id) => actionObtenerEnlacesGrupo(id)));
+      const texto = res.filter((r) => r.ok && r.mensajeGrupal).map((r) => r.mensajeGrupal).join("\n\n---\n\n");
+      if (texto) {
+        await navigator.clipboard.writeText(texto);
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2500);
+      }
+    } finally {
+      setCopiando(false);
     }
-    return map;
-  }, [mapaTallasObj]);
+  }
 
   // Conteo por grupo
   const conteoPorGrupo = useMemo(() => {
@@ -49,35 +67,15 @@ export function ParticipantesView({
 
   // Filtrado reactivo en memoria
   const participantesFiltrados = useMemo(() => {
+    const q = busqueda.toLowerCase().trim();
     return participantes.filter((item) => {
       const p = item.participante;
-
-      // Filtro por grupo
-      if (grupoActivo !== "TODOS" && p.grupoId !== grupoActivo) {
-        return false;
-      }
-
-      // Filtro por búsqueda de texto
-      if (busqueda.trim() !== "") {
-        const query = busqueda.toLowerCase().trim();
-        const persona = p.nombrePersona.toLowerCase();
-        const estado = p.estado.toLowerCase();
-        const grupo = item.nombreGrupo.toLowerCase();
-        const tieneEnPrenda = (p.prendas ?? []).some(
-          (prenda) =>
-            (prenda.numero ?? "").toLowerCase().includes(query) ||
-            (prenda.nombreEnPrenda ?? "").toLowerCase().includes(query)
-        );
-
-        return (
-          persona.includes(query) ||
-          estado.includes(query) ||
-          grupo.includes(query) ||
-          tieneEnPrenda
-        );
-      }
-
-      return true;
+      if (grupoActivo !== "TODOS" && p.grupoId !== grupoActivo) return false;
+      if (!q) return true;
+      const enPrenda = (p.prendas ?? []).some(
+        (pr) => (pr.numero ?? "").toLowerCase().includes(q) || (pr.nombreEnPrenda ?? "").toLowerCase().includes(q)
+      );
+      return p.nombrePersona.toLowerCase().includes(q) || p.estado.toLowerCase().includes(q) || item.nombreGrupo.toLowerCase().includes(q) || enPrenda;
     });
   }, [participantes, grupoActivo, busqueda]);
 
@@ -139,24 +137,51 @@ export function ParticipantesView({
           </div>
         </div>
 
-        <button
-          type="button"
-          className={styles.primaryButton}
-          onClick={() => setIsModalOpen(true)}
-        >
-          <span>+ Nuevo Participante</span>
-        </button>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            className={styles.filterTab}
+            onClick={handleCopiarEnlaces}
+            disabled={copiando || participantes.length === 0}
+            style={{
+              padding: "8px 14px",
+              fontWeight: 600,
+              color: "var(--navy)",
+              cursor: participantes.length === 0 ? "not-allowed" : "pointer",
+            }}
+            title="Copiar lista compilada de enlaces personales para compartir por WhatsApp"
+          >
+            {copiado ? <Check size={15} color="#16a34a" /> : <Copy size={15} />}
+            <span>{copiado ? "¡Enlaces copiados!" : copiando ? "Obteniendo…" : "Copiar todos los enlaces"}</span>
+          </button>
+
+          <button
+            type="button"
+            className={styles.primaryButton}
+            onClick={() => setIsModalOpen(true)}
+          >
+            <span>+ Nuevo Participante</span>
+          </button>
+        </div>
       </div>
+
+      {errorGrupos.length > 0 && (
+        <div className={shared.inlineWarning} role="alert">
+          {`No se pudieron cargar ${errorGrupos.length} ${
+            errorGrupos.length === 1 ? "grupo" : "grupos"
+          }: ${errorGrupos.join(", ")}. Revisá la conexión o intentá recargar.`}
+        </div>
+      )}
 
       <ParticipantesTable
         participantes={participantesFiltrados}
         pedidoId={pedidoId}
-        mapaTallas={mapaTallas}
+        grupos={grupos}
+        tiposProducto={tiposProducto}
+        colores={colores}
       />
-
       <div className={styles.countSummary}>
-        Mostrando <strong>{participantesFiltrados.length}</strong> de{" "}
-        <strong>{participantes.length}</strong> participantes en total.
+        Mostrando <strong>{participantesFiltrados.length}</strong> de <strong>{participantes.length}</strong> participantes en total.
       </div>
 
       <NuevoParticipanteModal

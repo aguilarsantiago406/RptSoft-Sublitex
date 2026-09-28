@@ -1,0 +1,169 @@
+"use client";
+
+import { formatDate } from "@/lib/format/date";
+import { useTableState } from "@/lib/useTableState";
+import { Pagination } from "@/components/ui/table/Pagination";
+import { SortableTh } from "@/components/ui/table/SortableTh";
+import type { UsuarioItem, RolUsuario } from "../types/usuario";
+import styles from "./usuarios.module.css";
+
+interface UsuariosTableProps {
+  usuarios: UsuarioItem[];
+  onEdit: (usuario: UsuarioItem) => void;
+  onChangePassword: (usuario: UsuarioItem) => void;
+}
+
+function getRoleBadgeClass(rol: RolUsuario): string {
+  switch (rol) {
+    case "ADMINISTRADOR":
+      return styles.roleAdmin;
+    case "COORDINADOR_OPERATIVO":
+      return styles.roleCoordinador;
+    case "VENDEDOR":
+    case "VENDEDORA":
+      return styles.roleVendedora;
+    case "DISENO":
+      return styles.roleDiseno;
+    case "PRODUCCION":
+      return styles.roleProduccion;
+    case "COORDINADOR_CLIENTE":
+      return styles.roleCliente;
+    default:
+      return "";
+  }
+}
+
+function formatRoleLabel(rol: RolUsuario): string {
+  switch (rol) {
+    case "ADMINISTRADOR":
+      return "Administrador";
+    case "COORDINADOR_OPERATIVO":
+      return "Coord. Operativo";
+    case "VENDEDOR":
+      return "Vendedor";
+    case "VENDEDORA":
+      return "Vendedora";
+    case "DISENO":
+      return "Diseño";
+    case "PRODUCCION":
+      return "Producción";
+    case "COORDINADOR_CLIENTE":
+      return "Coord. Cliente";
+    default:
+      return rol;
+  }
+}
+
+
+export function UsuariosTable({ usuarios, onEdit, onChangePassword }: UsuariosTableProps) {
+  const table = useTableState<UsuarioItem>(usuarios);
+  const offset = (table.page - 1) * table.pageSize;
+
+  if (usuarios.length === 0) {
+    return (
+      <div className={styles.tableCard}>
+        <div className={styles.emptyState}>
+          No se encontraron usuarios registrados con el criterio de búsqueda.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.tableCard}>
+      <div className={styles.tableScroll}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th style={{ width: "46px", textAlign: "center" }}>#</th>
+              <SortableTh<UsuarioItem>
+                label="Usuario"
+                sortKey="nombre"
+                activeKey={table.sortKey}
+                dir={table.sortDir}
+                onSort={table.toggleSort}
+              />
+              <SortableTh<UsuarioItem>
+                label="Rol en el Sistema"
+                sortKey="rol"
+                activeKey={table.sortKey}
+                dir={table.sortDir}
+                onSort={table.toggleSort}
+              />
+              <th>Estado</th>
+              <th>Fecha de Alta</th>
+              <th style={{ textAlign: "right" }}>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {table.sortedRows.map((usr, index) => (
+              <tr key={usr.id}>
+                <td
+                  style={{
+                    textAlign: "center",
+                    color: "#94a3b8",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  {offset + index + 1}
+                </td>
+                <td>
+                  <div className={styles.userCell}>
+                    <span className={styles.userName}>{usr.nombre}</span>
+                    <span className={styles.userEmail}>{usr.email}</span>
+                  </div>
+                </td>
+                <td>
+                  <span className={`${styles.roleBadge} ${getRoleBadgeClass(usr.rol)}`}>
+                    {formatRoleLabel(usr.rol)}
+                  </span>
+                </td>
+                <td>
+                  <span
+                    className={`${styles.statusBadge} ${
+                      usr.activo ? styles.statusActive : styles.statusInactive
+                    }`}
+                  >
+                    {usr.activo ? "Activo" : "Inactivo"}
+                  </span>
+                </td>
+                <td style={{ fontSize: "0.82rem", color: "#64748b" }} suppressHydrationWarning>
+                  {formatDate(usr.creadoEn)}
+                </td>
+                <td>
+                  <div className={styles.actionsCell}>
+                    <button
+                      type="button"
+                      className={styles.actionButton}
+                      onClick={() => onEdit(usr)}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.secondaryActionButton}
+                      onClick={() => onChangePassword(usr)}
+                      title={`Cambiar la contraseña de ${usr.nombre}`}
+                    >
+                      Cambiar contraseña
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <Pagination
+        page={table.page}
+        totalPages={table.totalPages}
+        totalRows={table.totalRows}
+        firstRow={table.firstRow}
+        lastRow={table.lastRow}
+        onPage={table.setPage}
+      />
+    </div>
+  );
+}
