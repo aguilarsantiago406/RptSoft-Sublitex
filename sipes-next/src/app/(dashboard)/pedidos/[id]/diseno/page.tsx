@@ -61,7 +61,7 @@ export default async function DisenoPage({ params }: DisenoPageProps) {
             TALLER DE DISEÑO & MOCKUPS <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
           </h1>
           <p className={styles.detailHeaderSubtitle}>
-            <span>Gestión del arte vectorial, imágenes de mockup y aprobación formal del cliente (Bloque DISENO · R-H01)</span>
+            <span>Mockups y Aprobación de Arte</span>
           </p>
         </div>
         <div className={styles.detailHeaderRight}>

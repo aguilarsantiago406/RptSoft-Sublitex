@@ -1,9 +1,13 @@
 "use client";
 
 import { useTransition, useState } from "react";
-import { CheckCircle2, CircleAlert, ArrowRight, ShieldCheck } from "lucide-react";
+import { CheckCircle2, CircleAlert, ArrowRight } from "lucide-react";
 import type { PedidoDetalle, EstadoPedido } from "../types/pedido";
+import type { ResumenProduccionItem } from "../api/comercial.api";
+import type { BloquePedidoItem } from "../types/bloque";
 import { actionActualizarEstadoPedido } from "../actions/pedidos.actions";
+import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
+import { evaluarBloquesReales } from "../utils/bloques.utils";
 import styles from "./pedidoGuiaEtapa.module.css";
 
 interface CheckItem {
@@ -21,8 +25,10 @@ interface EtapaConfig {
   getChecks: (
     pedido: PedidoDetalle,
     disenos: Array<{ id: string; estado: string }>,
-    datosEnvio: { ciudad?: string | null; direccion?: string | null } | null,
-    totalPrendas: number
+    datosEnvio: { ciudad?: string | null; direccion?: string | null; agencia?: string | null } | null,
+    totalPrendas: number,
+    resumenProduccion?: ResumenProduccionItem | null,
+    bloques?: BloquePedidoItem[]
   ) => CheckItem[];
 }
 
@@ -61,14 +67,30 @@ const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
   },
   EN_REVISION: {
     numero: 4,
-    titulo: "Revisión · Control de Calidad y Aprobación",
-    objetivo: "El diseño debe estar aprobado por el cliente y los datos de envío configurados.",
+    titulo: "Revisión · Control de Calidad y Gobernanza de Bloques",
+    objetivo: "Los 3 bloques operativos (Diseño, Lista y Comercial) deben estar CERRADOS en el sistema antes de enviar al taller.",
     siguiente: "EN_PRODUCCION",
     siguienteLabel: "Enviar a Producción (Taller)",
-    getChecks: (_, disenos, envio) => [
-      { id: "dis", label: "Mockup / Arte aprobado por cliente", ok: disenos.some((d) => d.estado === "APROBADO") },
-      { id: "env", label: "Agencia o datos de despacho asignados", ok: Boolean(envio?.ciudad || envio?.direccion) },
-    ],
+    getChecks: (_p, _disenos, _envio, _total, _resumen, bloques) => {
+      const g = evaluarBloquesReales(bloques || []);
+      return [
+        {
+          id: "blk-diseno",
+          label: `Bloque Diseño: ${g.diseno.cerrado ? "CERRADO (Aprobado formalmente)" : "ABIERTO (Pendiente cierre)"}`,
+          ok: g.diseno.cerrado,
+        },
+        {
+          id: "blk-lista",
+          label: `Bloque Lista: ${g.lista.cerrado ? "CERRADO (Prendas completas)" : "ABIERTO (Pendiente cierre)"}`,
+          ok: g.lista.cerrado,
+        },
+        {
+          id: "blk-comercial",
+          label: `Bloque Comercial: ${g.comercial.cerrado ? "CERRADO (Confirmación emitida)" : "ABIERTO (Pendiente cierre)"}`,
+          ok: g.comercial.cerrado,
+        },
+      ];
+    },
   },
   EN_PRODUCCION: {
     numero: 5,
@@ -107,8 +129,10 @@ const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
 interface PedidoGuiaEtapaProps {
   pedido: PedidoDetalle;
   disenos?: Array<{ id: string; estado: string }>;
-  datosEnvio?: { ciudad?: string | null; direccion?: string | null } | null;
+  datosEnvio?: { ciudad?: string | null; direccion?: string | null; agencia?: string | null } | null;
   totalPrendas: number;
+  resumenProduccion?: ResumenProduccionItem | null;
+  bloques?: BloquePedidoItem[];
 }
 
 export function PedidoGuiaEtapa({
@@ -116,24 +140,37 @@ export function PedidoGuiaEtapa({
   disenos = [],
   datosEnvio = null,
   totalPrendas,
+  resumenProduccion = null,
+  bloques = [],
 }: PedidoGuiaEtapaProps) {
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   const config = ETAPAS_CONFIG[pedido.estado] || ETAPAS_CONFIG.BORRADOR;
-  const checks = config.getChecks(pedido, disenos, datosEnvio, totalPrendas);
+  const checks = config.getChecks(pedido, disenos, datosEnvio, totalPrendas, resumenProduccion, bloques);
   const faltantes = checks.filter((c) => !c.ok);
   const puedeAvanzar = faltantes.length === 0 && Boolean(config.siguiente);
 
-  function handleAvanzar() {
+  function ejecutarAvanzar() {
     if (!puedeAvanzar || !config.siguiente) return;
     setErrorMsg(null);
     startTransition(async () => {
       const res = await actionActualizarEstadoPedido(pedido.id, config.siguiente!);
+      setIsConfirmModalOpen(false);
       if (!res.ok) {
         setErrorMsg(res.error || "No se pudo actualizar el estado del pedido.");
       }
     });
+  }
+
+  function handleAvanzarClick() {
+    if (!puedeAvanzar || !config.siguiente) return;
+    if (config.siguiente === "EN_PRODUCCION") {
+      setIsConfirmModalOpen(true);
+      return;
+    }
+    ejecutarAvanzar();
   }
 
   if (pedido.estado === "CERRADO" || pedido.estado === "CANCELADO") {
@@ -145,10 +182,7 @@ export function PedidoGuiaEtapa({
       <div className={styles.guiaHeader}>
         <div className={styles.guiaTitleRow}>
           <span className={styles.etapaBadge}>Etapa {config.numero}</span>
-          <div>
-            <h2 className={styles.guiaTitle}>{config.titulo}</h2>
-            <p className={styles.guiaSubtitle}>{config.objetivo}</p>
-          </div>
+          <h2 className={styles.guiaTitle}>{config.titulo}</h2>
         </div>
       </div>
 
@@ -173,7 +207,7 @@ export function PedidoGuiaEtapa({
             <button
               type="button"
               className={styles.advanceButton}
-              onClick={handleAvanzar}
+              onClick={handleAvanzarClick}
               disabled={!puedeAvanzar || isPending}
               title={puedeAvanzar ? config.siguienteLabel : "Completa los requisitos pendientes"}
             >
@@ -193,6 +227,27 @@ export function PedidoGuiaEtapa({
           {errorMsg && <span className={styles.advanceHelper}>{errorMsg}</span>}
         </div>
       </div>
+
+      <ModalConfirmacion
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={ejecutarAvanzar}
+        title="¿Enviar orden a Producción?"
+        description={
+          <div>
+            <p>
+              Estás a punto de enviar el pedido <strong>{pedido.codigo}</strong> al taller.
+            </p>
+            <p style={{ marginTop: "10px", fontSize: "0.85rem", color: "#64748b" }}>
+              Los 3 bloques operativos (Diseño, Lista de Prendas y Comercial) han sido validados. Al confirmar, la ficha técnica se congelará para corte y confección.
+            </p>
+          </div>
+        }
+        confirmText="Confirmar Envío a Taller"
+        cancelText="Volver a Revisar"
+        variant="success"
+        isPending={isPending}
+      />
     </div>
   );
 }

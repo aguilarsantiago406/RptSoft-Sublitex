@@ -22,10 +22,10 @@ export function NuevoParticipanteModal({
   const [mounted, setMounted] = useState(false);
   const [nombrePersona, setNombrePersona] = useState("");
   const [grupoId, setGrupoId] = useState(grupos[0]?.id ?? "");
+  const [tipoPrenda, setTipoPrenda] = useState<"VENTA" | "OBSEQUIO" | "MUESTRA">("VENTA");
+  const [esArquero, setEsArquero] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createdToken, setCreatedToken] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -39,55 +39,32 @@ export function NuevoParticipanteModal({
 
   if (!isOpen || !mounted) return null;
 
+  function handleResetAndClose() {
+    setNombrePersona("");
+    setTipoPrenda("VENTA");
+    setEsArquero(false);
+    setError(null);
+    onClose();
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!nombrePersona.trim() || !grupoId) return;
-
     setLoading(true);
     setError(null);
-
-    const selectedGrupo = grupos.find((g) => g.id === grupoId);
-    const tipoProductoId = selectedGrupo?.tipoProducto?.id;
-
+    const tipoProductoId = grupos.find((g) => g.id === grupoId)?.tipoProducto?.id;
     const res = await actionCrearParticipante(
       grupoId,
       nombrePersona,
       pedidoId,
-      tipoProductoId
+      tipoProductoId ? { tipoProductoId, tipoPrenda, esArquero } : undefined
     );
     setLoading(false);
-
     if (!res.ok || !res.participante) {
       setError(res.error ?? "Ocurrió un error al registrar al participante.");
       return;
     }
-
-    setCreatedToken(res.participante.enlaceToken);
-  }
-
-  function handleCopy() {
-    if (!createdToken) return;
-    const url = `${window.location.origin}/participante/${createdToken}`;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  function handleOpenWhatsApp() {
-    if (!createdToken) return;
-    const url = `${window.location.origin}/participante/${createdToken}`;
-    const wa = `https://wa.me/?text=${encodeURIComponent(
-      `Hola ${nombrePersona}, completa tus datos para tu prenda de Sublitex en este enlace: ${url}`
-    )}`;
-    window.open(wa, "_blank", "noreferrer");
-  }
-
-  function handleResetAndClose() {
-    setNombrePersona("");
-    setCreatedToken(null);
-    setError(null);
-    setCopied(false);
-    onClose();
+    handleResetAndClose();
   }
 
   const sinGrupos = grupos.length === 0;
@@ -98,138 +75,68 @@ export function NuevoParticipanteModal({
         <div className={styles.modalHeader}>
           <div>
             <h2 className={styles.modalTitle}>Nuevo Participante</h2>
-            <p className={styles.modalSubtitle}>
-              {createdToken
-                ? "Participante registrado con éxito"
-                : "Registra a un participante y genera su enlace de WhatsApp"}
-            </p>
+            <p className={styles.modalSubtitle}>Registra al participante en el pedido</p>
           </div>
-          <button
-            type="button"
-            className={styles.modalClose}
-            onClick={handleResetAndClose}
-            aria-label="Cerrar"
-          >
-            ✕
-          </button>
+          <button type="button" className={styles.modalClose} onClick={handleResetAndClose} aria-label="Cerrar">✕</button>
         </div>
 
-        {createdToken ? (
-          <div>
-            <div className={styles.successBox}>
-              <p className={styles.successTitle}>Enlace generado para {nombrePersona}</p>
-              <div className={styles.linkUrlRow}>
-                <span>/participante/{createdToken}</span>
-              </div>
+        <form onSubmit={handleSubmit}>
+          {sinGrupos && (
+            <div className={styles.noGroupsAlert} role="alert">
+              <h4 className={styles.noGroupsAlertTitle}>Este pedido aún no tiene grupos técnicos</h4>
+              <p className={styles.noGroupsAlertText}>Agrega al menos un grupo en la sección 2 del pedido para poder registrar participantes.</p>
             </div>
-
-            <div style={{ display: "flex", gap: "10px", marginTop: "18px" }}>
-              <button
-                type="button"
-                className={styles.copyButton}
-                onClick={handleCopy}
-                style={{ flex: 1, padding: "9px 12px", justifyContent: "center" }}
-              >
-                {copied ? "¡Copiado!" : "Copiar enlace"}
-              </button>
-              <button
-                type="button"
-                onClick={handleOpenWhatsApp}
-                className={styles.whatsappButton}
-                style={{ flex: 1, padding: "9px 12px", justifyContent: "center" }}
-              >
-                Enviar WhatsApp
-              </button>
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button
-                type="button"
-                className={styles.primaryButton}
-                onClick={handleResetAndClose}
-              >
-                Finalizar
-              </button>
-            </div>
+          )}
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel} htmlFor="nombrePersona">Participante</label>
+            <input
+              id="nombrePersona"
+              type="text"
+              className={styles.formInput}
+              placeholder="Ej. Lucas Gómez"
+              value={nombrePersona}
+              onChange={(e) => setNombrePersona(e.target.value)}
+              required
+              autoFocus={!sinGrupos}
+              disabled={sinGrupos}
+            />
           </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            {sinGrupos && (
-              <div className={styles.noGroupsAlert} role="alert">
-                <h4 className={styles.noGroupsAlertTitle}>Este pedido aún no tiene grupos técnicos</h4>
-                <p className={styles.noGroupsAlertText}>
-                  Cada participante debe estar asignado a un grupo de confección (ej: Polos, Casacas). Primero agrega al menos un grupo en la sección 2 del pedido para poder registrar participantes.
-                </p>
-              </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel} htmlFor="grupoId">Grupo</label>
+            {sinGrupos ? (
+              <select id="grupoId" className={styles.formSelect} disabled value=""><option value="">Sin grupos técnicos configurados</option></select>
+            ) : (
+              <select id="grupoId" className={styles.formSelect} value={grupoId} onChange={(e) => setGrupoId(e.target.value)} required>
+                {grupos.map((g) => (
+                  <option key={g.id} value={g.id}>{g.nombre} ({g.tipoProducto?.nombre ?? "Producto"})</option>
+                ))}
+              </select>
             )}
+          </div>
 
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel} htmlFor="nombrePersona">
-                Nombre de la persona
-              </label>
-              <input
-                id="nombrePersona"
-                type="text"
-                className={styles.formInput}
-                placeholder="Ej. Lucas Gómez"
-                value={nombrePersona}
-                onChange={(e) => setNombrePersona(e.target.value)}
-                required
-                autoFocus={!sinGrupos}
-                disabled={sinGrupos}
-              />
-            </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel} htmlFor="tipoPrenda">Tipo</label>
+            <select id="tipoPrenda" className={styles.formSelect} value={tipoPrenda} onChange={(e) => setTipoPrenda(e.target.value as any)}>
+              <option value="VENTA">Venta</option>
+              <option value="OBSEQUIO">Obsequio</option>
+              <option value="MUESTRA">Muestra</option>
+            </select>
+          </div>
 
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel} htmlFor="grupoId">
-                Grupo técnico
-              </label>
-              {sinGrupos ? (
-                <select id="grupoId" className={styles.formSelect} disabled value="">
-                  <option value="">Sin grupos técnicos configurados en este pedido</option>
-                </select>
-              ) : (
-                <select
-                  id="grupoId"
-                  className={styles.formSelect}
-                  value={grupoId}
-                  onChange={(e) => setGrupoId(e.target.value)}
-                  required
-                >
-                  {grupos.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.nombre} ({g.tipoProducto?.nombre ?? "Producto"})
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
+          <div style={{ margin: "6px 0 14px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <input id="arqCheckNuevo" type="checkbox" checked={esArquero} onChange={(e) => setEsArquero(e.target.checked)} style={{ cursor: "pointer", width: 16, height: 16 }} />
+            <label htmlFor="arqCheckNuevo" style={{ fontSize: "0.85rem", fontWeight: 600, cursor: "pointer" }}>¿Es arquero?</label>
+          </div>
 
-            {error && (
-              <p style={{ color: "#b3261e", fontSize: "0.82rem", fontWeight: 700, margin: "8px 0" }}>
-                {error}
-              </p>
-            )}
-
-            <div className={styles.modalFooter}>
-              <button
-                type="button"
-                className={styles.cancelButton}
-                onClick={handleResetAndClose}
-                disabled={loading}
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className={styles.primaryButton}
-                disabled={loading || sinGrupos || !nombrePersona.trim()}
-              >
-                {loading ? "Generando…" : sinGrupos ? "Requiere Grupo Técnico" : "Generar Enlace"}
-              </button>
-            </div>
-          </form>
-        )}
+          {error && <p style={{ color: "#b3261e", fontSize: "0.82rem", fontWeight: 700, margin: "8px 0" }}>{error}</p>}
+          <div className={styles.modalFooter}>
+            <button type="button" className={styles.cancelButton} onClick={handleResetAndClose} disabled={loading}>Cancelar</button>
+            <button type="submit" className={styles.primaryButton} disabled={loading || sinGrupos || !nombrePersona.trim()}>
+              {loading ? "Guardando…" : "Registrar Participante"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>,
     document.body

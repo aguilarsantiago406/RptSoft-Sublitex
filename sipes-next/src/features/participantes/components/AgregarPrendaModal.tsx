@@ -100,16 +100,16 @@ export function AgregarPrendaModal({
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel} htmlFor="tipoPrenda">Destino Comercial</label>
+              <label className={styles.formLabel} htmlFor="tipoPrenda">Tipo</label>
               <select id="tipoPrenda" className={styles.formSelect} value={tipoPrenda} onChange={(e) => setTipoPrenda(e.target.value as any)}>
-                <option value="VENTA">Venta regular</option>
-                <option value="OBSEQUIO">Obsequio / Bonificada (R-K02)</option>
-                <option value="MUESTRA">Muestra textil</option>
+                <option value="VENTA">Venta</option>
+                <option value="OBSEQUIO">Obsequio</option>
+                <option value="MUESTRA">Muestra</option>
               </select>
             </div>
             {colores.length > 0 && (
               <div className={styles.formGroup}>
-                <label className={styles.formLabel} htmlFor="colorP">Color autorizado</label>
+                <label className={styles.formLabel} htmlFor="colorP">Color</label>
                 <select id="colorP" className={styles.formSelect} value={colorId} onChange={(e) => setColorId(e.target.value)}>
                   {colores.map((c) => (<option key={c.id} value={c.id}>{c.nombre}</option>))}
                 </select>
@@ -119,18 +119,18 @@ export function AgregarPrendaModal({
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel} htmlFor="numP">Dorsal (Opcional)</label>
+              <label className={styles.formLabel} htmlFor="numP">Número</label>
               <input id="numP" type="text" className={styles.formInput} placeholder="Ej. 10 o S/N" value={numero} onChange={(e) => setNumero(e.target.value)} />
             </div>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel} htmlFor="apodoP">Apodo en Prenda (Opcional)</label>
+              <label className={styles.formLabel} htmlFor="apodoP">Apodo</label>
               <input id="apodoP" type="text" className={styles.formInput} placeholder="Ej. L. GÓMEZ" value={nombreEnPrenda} onChange={(e) => setNombreEnPrenda(e.target.value)} />
             </div>
           </div>
 
           <div style={{ margin: "8px 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}>
             <input id="arqCheck" type="checkbox" checked={esArquero} onChange={(e) => setEsArquero(e.target.checked)} style={{ cursor: "pointer", width: 16, height: 16 }} />
-            <label htmlFor="arqCheck" style={{ fontSize: "0.85rem", fontWeight: 600, cursor: "pointer" }}>Es prenda de arquero</label>
+            <label htmlFor="arqCheck" style={{ fontSize: "0.85rem", fontWeight: 600, cursor: "pointer" }}>¿Es arquero?</label>
           </div>
 
           {error && <p style={{ color: "#b3261e", fontSize: "0.82rem", fontWeight: 700, margin: "8px 0" }}>{error}</p>}

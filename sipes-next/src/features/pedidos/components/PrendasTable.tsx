@@ -3,6 +3,7 @@
 import { useTableState } from "@/lib/useTableState";
 import { Pagination } from "@/components/ui/table/Pagination";
 import { SortableTh } from "@/components/ui/table/SortableTh";
+import type { UbicacionPersonalizacionCatalogo } from "@/features/catalogos/types/catalogo";
 import type { AtributoCatalogoItem, TallaCatalogoItem } from "../api/pedidos.api";
 import type { PrendaDetalle } from "../types/pedido";
 import { PrendaRow } from "./PrendaRow";
@@ -14,9 +15,17 @@ interface PrendasTableProps {
   tallas: TallaCatalogoItem[];
   atributos: AtributoCatalogoItem[];
   colores?: Array<{ id: string; nombre: string; codigoHex: string }>;
+  ubicaciones?: UbicacionPersonalizacionCatalogo[];
 }
 
-export function PrendasTable({ prendas, pedidoId, tallas, atributos, colores }: PrendasTableProps) {
+export function PrendasTable({
+  prendas,
+  pedidoId,
+  tallas,
+  atributos,
+  colores,
+  ubicaciones,
+}: PrendasTableProps) {
   const table = useTableState<PrendaDetalle>(prendas);
   const offset = (table.page - 1) * table.pageSize;
 
@@ -36,15 +45,16 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos, colores }: 
         <table className={styles.prendasTable}>
           <colgroup>
             <col style={{ width: "44px" }} />
-            <col style={{ width: "200px" }} />
-            <col style={{ width: "140px" }} />
+            <col style={{ width: "170px" }} />
+            <col style={{ width: "110px" }} />
             <col style={{ width: "60px" }} />
-            <col style={{ width: "70px" }} />
+            <col style={{ width: "55px" }} />
+            <col style={{ width: "75px" }} />
+            <col style={{ width: "105px" }} />
             <col style={{ width: "90px" }} />
             <col style={{ width: "130px" }} />
-            <col style={{ width: "90px" }} />
-            <col style={{ width: "120px" }} />
-            <col style={{ width: "76px" }} />
+            <col style={{ width: "100px" }} />
+            <col style={{ width: "80px" }} />
           </colgroup>
           <thead>
             <tr>
@@ -58,7 +68,7 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos, colores }: 
                 onSort={table.toggleSort}
               />
               <SortableTh<PrendaDetalle>
-                label="N°"
+                label="Número"
                 sortKey="numero"
                 activeKey={table.sortKey}
                 dir={table.sortDir}
@@ -66,7 +76,7 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos, colores }: 
               />
               <th>Talla</th>
               <SortableTh<PrendaDetalle>
-                label="Corte"
+                label="Género"
                 sortKey="genero"
                 activeKey={table.sortKey}
                 dir={table.sortDir}
@@ -80,6 +90,7 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos, colores }: 
                 dir={table.sortDir}
                 onSort={table.toggleSort}
               />
+              <th>Estampados</th>
               <th>Excepciones</th>
               <th>Acción</th>
             </tr>
@@ -98,6 +109,7 @@ export function PrendasTable({ prendas, pedidoId, tallas, atributos, colores }: 
                   tallasDisponibles={tallasPrenda.length > 0 ? tallasPrenda : tallas}
                   atributosCatalogo={atributos}
                   coloresDisponibles={colores}
+                  ubicacionesCatalogo={ubicaciones}
                 />
               );
             })}

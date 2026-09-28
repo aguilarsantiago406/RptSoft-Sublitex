@@ -66,10 +66,12 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
     <section className={styles.sectionBlock}>
       <div className={styles.sectionHeaderRow}>
         <div>
-          <h2 className={styles.sectionTitle}>4 · APROBACIÓN DE DISEÑO Y MOCKUPS</h2>
-          <p className={styles.sectionSubtitle}>
-            {disenoActivo ? `Versión activa v${disenoActivo.version} · ` : ""}Control de arte gráfico y candado R-H02
-          </p>
+          <h2 className={styles.sectionTitle}>Arte y Mockup Activo</h2>
+          {disenoActivo && (
+            <p className={styles.sectionSubtitle}>
+              Versión activa v{disenoActivo.version}
+            </p>
+          )}
         </div>
         {badgeInfo && (
           <span style={{ fontSize: "0.78rem", fontWeight: 650, padding: "4px 10px", borderRadius: "999px", color: badgeInfo.color, background: badgeInfo.bg }}>

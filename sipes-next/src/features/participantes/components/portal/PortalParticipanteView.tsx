@@ -256,14 +256,14 @@ export function PortalParticipanteView({
                       <option value="">-- Seleccioná tu talla --</option>
                       {tallasOpciones.map((t) => (
                         <option key={t.id} value={t.id}>
-                          {t.codigo} {t.etiqueta ? `(${t.etiqueta})` : ""}
+                          {t.etiqueta && t.etiqueta !== t.codigo ? `${t.codigo} (${t.etiqueta})` : t.codigo}
                         </option>
                       ))}
                     </select>
                   </div>
 
                   <div className={styles.fieldGroup}>
-                    <label className={styles.label}>Corte / Género</label>
+                    <label className={styles.label}>Género</label>
                     <select
                       className={styles.select}
                       value={p.genero}
@@ -272,16 +272,16 @@ export function PortalParticipanteView({
                         handleFieldChange(idx, "genero", e.target.value as any)
                       }
                     >
-                      <option value="SIN_ESPECIFICAR">Unisex / Estándar</option>
-                      <option value="HOMBRE">Hombre (Corte Recto)</option>
-                      <option value="MUJER">Mujer (Corte Entallado)</option>
+                      <option value="SIN_ESPECIFICAR">Estándar</option>
+                      <option value="HOMBRE">Hombre</option>
+                      <option value="MUJER">Mujer</option>
                       <option value="NINO">Niño</option>
                       <option value="NINA">Niña</option>
                     </select>
                   </div>
 
                   <div className={styles.fieldGroup}>
-                    <label className={styles.label}>Número en la Espalda</label>
+                    <label className={styles.label}>Número</label>
                     <input
                       type="text"
                       className={styles.input}
@@ -296,7 +296,7 @@ export function PortalParticipanteView({
                   </div>
 
                   <div className={styles.fieldGroup}>
-                    <label className={styles.label}>Nombre o Apodo en Prenda</label>
+                    <label className={styles.label}>Apodo</label>
                     <input
                       type="text"
                       className={styles.input}
