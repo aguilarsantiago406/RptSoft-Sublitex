@@ -39,6 +39,38 @@
   color: var(--sky-dark);
 }
 
+.progresoBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 650;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.toggleCollapseBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.toggleCollapseBtn:hover {
+  color: var(--navy);
+  border-color: var(--navy);
+  background: var(--sky-soft);
+}
+
 .guiaTitle {
   font-size: 0.96rem;
   font-weight: 700;

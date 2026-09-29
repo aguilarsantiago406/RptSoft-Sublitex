@@ -10,6 +10,7 @@ const routeLabels: Record<string, string> = {
   "/pedidos": "Pedidos",
   "/clientes": "Clientes",
   "/catalogos": "Catálogos",
+  "/taller": "Taller y Producción",
   "/usuarios": "Usuarios",
   "/auditoria": "Auditoría",
 };

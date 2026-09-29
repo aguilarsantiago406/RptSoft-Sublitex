@@ -1,6 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import {
   getPedido,
   getParticipantesGrupo,
@@ -13,6 +11,7 @@ import { getResumenProduccion } from "@/features/pedidos/api/comercial.api";
 import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
 import { PedidoRecoleccionCard } from "@/features/pedidos/components/PedidoRecoleccionCard";
 import { PrendasView } from "@/features/pedidos/components/PrendasView";
+import { PedidoTabs } from "@/features/pedidos/components/PedidoTabs";
 import type { PrendaDetalle } from "@/features/pedidos/types/pedido";
 import styles from "@/features/pedidos/components/pedidos.module.css";
 
@@ -142,30 +141,19 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
 
   return (
     <main>
-      <header className={styles.detailHeader} style={{ marginBottom: "20px" }}>
+      <header className={styles.detailHeader} style={{ marginBottom: "14px" }}>
         <div className={styles.detailHeaderMain}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-            <Link
-              href={`/pedidos/${pedido.codigo}`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                color: "var(--muted)",
-                fontSize: "0.84rem",
-                textDecoration: "none",
-                fontWeight: 500,
-              }}
-            >
-              <ArrowLeft size={16} /> Volver a datos del pedido
-            </Link>
-          </div>
           <h1 className={styles.detailHeaderTitle}>
             PRENDAS <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
           </h1>
+          <p className={styles.detailHeaderSubtitle}>
+            <span>Matriz de Prendas, Tallas y Excepciones</span>
+          </p>
         </div>
         <EstadoPedidoBadge estado={pedido.estado} size="lg" />
       </header>
+
+      <PedidoTabs pedidoCodigo={pedido.codigo} totalPrendas={totalPrendas} />
 
       <div style={{ marginBottom: "24px" }}>
         <PedidoRecoleccionCard pedido={pedido} totalPrendas={totalPrendas} resumen={resumenProduccion} />

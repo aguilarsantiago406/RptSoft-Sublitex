@@ -62,10 +62,11 @@ export async function actionActualizarCliente(
     revalidatePath("/pedidos");
 
     return { ok: true, data: cliente };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "No se pudo actualizar el cliente.";
     return {
       ok: false,
-      error: error?.message || "No se pudo actualizar el cliente.",
+      error: message,
     };
   }
 }
@@ -78,10 +79,11 @@ export async function actionEliminarCliente(id: string): Promise<ActionResult> {
     revalidatePath("/pedidos");
 
     return { ok: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "No se pudo eliminar el cliente.";
     return {
       ok: false,
-      error: error?.message || "No se pudo eliminar el cliente.",
+      error: message,
     };
   }
 }

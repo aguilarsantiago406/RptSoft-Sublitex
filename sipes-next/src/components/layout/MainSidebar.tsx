@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, type ComponentType } from "react";
 import { ShoppingBag, Users, Layers, BookOpen, UserCheck, History } from "lucide-react";
 import { actionLogout } from "@/features/auth/actions/auth.actions";
@@ -39,6 +39,7 @@ const sections: NavSectionData[] = [
 ];
 
 export function MainSidebar() {
+  const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -103,7 +104,8 @@ export function MainSidebar() {
           type="button"
           onClick={() => {
             void actionLogout().finally(() => {
-              window.location.assign("/login");
+              router.push("/login");
+              router.refresh();
             });
           }}
         >

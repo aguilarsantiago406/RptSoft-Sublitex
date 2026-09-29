@@ -14,6 +14,7 @@ import { PedidoDisenoCard } from "@/features/pedidos/components/PedidoDisenoCard
 import { PedidoColores } from "@/features/pedidos/components/PedidoColores";
 import { PedidoRevision } from "@/features/pedidos/components/PedidoRevision";
 import { PedidoGuiaEtapa } from "@/features/pedidos/components/PedidoGuiaEtapa";
+import { PedidoTabs } from "@/features/pedidos/components/PedidoTabs";
 import guiaStyles from "@/features/pedidos/components/pedidoGuiaEtapa.module.css";
 import { BarraAuditoriaPedido } from "@/features/pedidos/components/BarraAuditoriaPedido";
 import styles from "@/features/pedidos/components/pedidos.module.css";
@@ -110,6 +111,11 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   return (
     <main>
       <PedidoHeader pedido={pedido} />
+      <PedidoTabs
+        pedidoCodigo={pedido.codigo}
+        totalPrendas={totalPrendas}
+        disenoVersion={disenos[0]?.version}
+      />
       <BarraAuditoriaPedido pedidoId={pedido.id} codigo={pedido.codigo} />
       <AlertaReaperturaTaller
         pedidoId={pedido.id}

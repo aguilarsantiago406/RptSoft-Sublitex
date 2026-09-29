@@ -11,16 +11,18 @@ interface ClientePageProps {
 export default async function ClientePage({ params }: ClientePageProps) {
   const { id } = await params;
 
+  let cliente;
   try {
-    const cliente = await getCliente(id);
-    if (!cliente) return notFound();
-
-    return (
-      <main>
-        <ClienteDetalleView cliente={cliente} />
-      </main>
-    );
+    cliente = await getCliente(id);
   } catch {
     return notFound();
   }
+
+  if (!cliente) return notFound();
+
+  return (
+    <main>
+      <ClienteDetalleView cliente={cliente} />
+    </main>
+  );
 }

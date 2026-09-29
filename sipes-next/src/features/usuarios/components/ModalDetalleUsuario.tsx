@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/lib/useIsClient";
 import { formatDate } from "@/lib/format/date";
 import type { UsuarioItem } from "../types/usuario";
 import styles from "./usuarios.module.css";
@@ -19,14 +20,10 @@ export function ModalDetalleUsuario({
   usuario,
   onEdit,
 }: ModalDetalleUsuarioProps) {
-  const [mounted, setMounted] = useState(false);
+  const isClient = useIsClient();
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !usuario || !mounted) return null;
+  if (!isOpen || !usuario || !isClient) return null;
 
   function handleCopyId() {
     if (!usuario) return;

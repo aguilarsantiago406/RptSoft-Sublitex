@@ -60,9 +60,34 @@
 .table tbody tr { transition: background-color var(--duration-fast) var(--ease-out); }
 .table tbody tr:hover { background: var(--sky-soft); }
 .code { color: var(--navy); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 550; }
-.actionCell { text-align: right; }
+.actionCell { text-align: right; white-space: nowrap; }
 .linkButton { color: var(--sky-dark); font-size: 0.86rem; font-weight: 550; text-decoration: none; }
 .linkButton:hover { text-decoration: underline; }
+.tableActions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.actionIconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+.actionIconBtn:hover {
+  color: var(--sky-dark);
+  background: var(--sky-soft);
+  border-color: #bae6fd;
+}
+
 
 .badge {
   display: inline-flex;

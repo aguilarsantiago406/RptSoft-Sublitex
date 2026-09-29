@@ -260,6 +260,26 @@ export function PortalParticipanteView({
                         </option>
                       ))}
                     </select>
+
+                    {/* Selector rápido táctil para celulares */}
+                    {tallasOpciones.length > 0 && tallasOpciones.length <= 16 && (
+                      <div className={styles.chipsContainer} aria-label="Selección rápida de talla">
+                        {tallasOpciones.map((t) => {
+                          const isSelected = p.tallaId === t.id;
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              className={`${styles.chip} ${isSelected ? styles.chipActive : ""}`}
+                              disabled={isConfirmed || saving || confirming}
+                              onClick={() => handleFieldChange(idx, "tallaId", t.id)}
+                            >
+                              {t.codigo}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   <div className={styles.fieldGroup}>
@@ -284,13 +304,19 @@ export function PortalParticipanteView({
                     <label className={styles.label}>Número</label>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       className={styles.input}
                       placeholder="Ej: 10 (opcional)"
                       maxLength={4}
                       value={p.numero}
                       disabled={isConfirmed || saving || confirming}
                       onChange={(e) =>
-                        handleFieldChange(idx, "numero", e.target.value)
+                        handleFieldChange(
+                          idx,
+                          "numero",
+                          e.target.value.replace(/[^0-9]/g, "")
+                        )
                       }
                     />
                   </div>

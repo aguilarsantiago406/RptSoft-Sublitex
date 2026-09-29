@@ -7,6 +7,7 @@ import type { ClienteDetalle, TipoCliente } from "../types/cliente";
 import type { EstadoPedido } from "@/features/pedidos/types/pedido";
 import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
 import { ModalEditarCliente } from "./ModalEditarCliente";
+import { ModalNuevoPedido } from "@/features/pedidos/components/ModalNuevoPedido";
 import styles from "./clientes.module.css";
 
 interface ClienteDetalleViewProps {
@@ -48,6 +49,7 @@ function getTipoLabel(tipo: TipoCliente): string {
 
 export function ClienteDetalleView({ cliente }: ClienteDetalleViewProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isNuevoPedidoModalOpen, setIsNuevoPedidoModalOpen] = useState(false);
 
   const totalPedidos = cliente.pedidos.length;
   const pedidosEnCurso = cliente.pedidos.filter(
@@ -74,13 +76,22 @@ export function ClienteDetalleView({ cliente }: ClienteDetalleViewProps) {
           </p>
         </div>
 
-        <button
-          type="button"
-          className={styles.btnSubmit}
-          onClick={() => setIsEditModalOpen(true)}
-        >
-          Editar Datos
-        </button>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <button
+            type="button"
+            className={styles.btnCancel}
+            onClick={() => setIsEditModalOpen(true)}
+          >
+            Editar Datos
+          </button>
+          <button
+            type="button"
+            className={styles.btnSubmit}
+            onClick={() => setIsNuevoPedidoModalOpen(true)}
+          >
+            + Crear Pedido para este Cliente
+          </button>
+        </div>
       </div>
 
       <div className={styles.detailKpiGrid}>
@@ -190,6 +201,23 @@ export function ClienteDetalleView({ cliente }: ClienteDetalleViewProps) {
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           cliente={cliente}
+        />
+      )}
+
+      {isNuevoPedidoModalOpen && (
+        <ModalNuevoPedido
+          isOpen={isNuevoPedidoModalOpen}
+          onClose={() => setIsNuevoPedidoModalOpen(false)}
+          clientesIniciales={[
+            {
+              id: cliente.id,
+              nombre: cliente.nombre,
+              tipo: cliente.tipo,
+              ciudad: cliente.ciudad ?? null,
+              telefono: cliente.telefono ?? null,
+            },
+          ]}
+          clientePreseleccionadoId={cliente.id}
         />
       )}
     </div>

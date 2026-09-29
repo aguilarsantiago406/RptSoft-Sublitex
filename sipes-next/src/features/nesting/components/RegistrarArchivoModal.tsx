@@ -45,8 +45,8 @@ export const RegistrarArchivoModal: React.FC<Props> = ({ nestingId, isOpen, onCl
       setLargoM(0);
       onRegistered();
       onClose();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al registrar el archivo');
     } finally {
       setSubmitting(false);
     }

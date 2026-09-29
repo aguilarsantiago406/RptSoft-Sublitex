@@ -1,11 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { actionLogin } from "../actions/auth.actions";
 import styles from "./login.module.css";
 
 export function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +26,8 @@ export function LoginForm() {
         return;
       }
 
-      window.location.assign("/pedidos");
+      router.push("/pedidos");
+      router.refresh();
     } catch {
       setError("No pudimos conectarnos con el servidor. Inténtalo de nuevo.");
     } finally {

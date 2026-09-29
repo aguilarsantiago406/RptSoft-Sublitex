@@ -13,13 +13,17 @@ export const nestingApi = {
   getTelas: async (): Promise<AtributoTela[]> => {
     const res = await fetch(`${API_BASE}/catalogos/atributos`);
     if (!res.ok) throw new Error('Error al obtener la lista de telas');
-    const atributos = await res.json();
-    const telaAttr = atributos.find((a: any) => a.codigo === 'TELA');
-    return (telaAttr?.valores ?? []).map((v: any) => ({
+    const atributos: unknown = await res.json();
+    interface AtributoRaw {
+      codigo?: string;
+      valores?: Array<{ id: string; etiqueta?: string; valor?: string; codigo?: string }>;
+    }
+    const telaAttr = (atributos as AtributoRaw[]).find((a) => a.codigo === 'TELA');
+    return (telaAttr?.valores ?? []).map((v) => ({
       id: v.id,
-      nombre: v.etiqueta || v.valor || v.codigo,
-      codigo: v.codigo,
-      etiqueta: v.etiqueta,
+      nombre: v.etiqueta || v.valor || v.codigo || '',
+      codigo: v.codigo || '',
+      etiqueta: v.etiqueta || '',
     }));
   },
 

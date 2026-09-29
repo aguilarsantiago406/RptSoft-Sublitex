@@ -137,15 +137,21 @@ export function TallerNestingView() {
   }, [sesionId, recargarDetalle]);
 
   useEffect(() => {
-    void recargar();
-  }, []);
+    const timer = setTimeout(() => {
+      void recargar();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [recargar]);
 
   useEffect(() => {
-    if (sesionId) {
-      void recargarDetalle(sesionId);
-    } else {
-      setSesionDetalle(null);
-    }
+    const timer = setTimeout(() => {
+      if (sesionId) {
+        void recargarDetalle(sesionId);
+      } else {
+        setSesionDetalle(null);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [sesionId, recargarDetalle]);
 
   async function crearSesion(e: FormEvent<HTMLFormElement>) {

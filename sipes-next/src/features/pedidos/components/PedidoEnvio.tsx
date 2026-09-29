@@ -40,10 +40,9 @@ export function PedidoEnvio({ pedidoId, datosEnvio }: PedidoEnvioProps) {
     <section className={styles.sectionBlock}>
       <div className={styles.sectionHeaderRow}>
         <div>
-          <h2 className={styles.sectionTitle}>ENVÍO A PROVINCIA (R-K08)</h2>
+          <h2 className={styles.sectionTitle}>LOGÍSTICA Y DESPACHO</h2>
           <p className={styles.sectionSubtitle}>
-            Los siete datos de rotulado de la matriz comercial · se usan para el despacho a
-            provincia
+            Datos de rotulado y agencia de transporte para la entrega del pedido
           </p>
         </div>
         <div className={styles.groupsHeaderActions}>

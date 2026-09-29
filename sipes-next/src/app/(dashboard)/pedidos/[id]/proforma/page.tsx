@@ -3,6 +3,7 @@ import { getPedido, getParticipantesGrupo, getTallasCatalogo } from "@/features/
 import { getTarifasVigentes, getDatosEnvio, getConfirmaciones } from "@/features/pedidos/api/comercial.api";
 import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
+import { PedidoTabs } from "@/features/pedidos/components/PedidoTabs";
 import { ProformaView } from "@/features/pedidos/components/proforma/ProformaView";
 import type { PrendaProformaItem } from "@/features/pedidos/utils/proforma.utils";
 import styles from "@/features/pedidos/components/pedidos.module.css";
@@ -102,17 +103,19 @@ export default async function ProformaPage({ params }: ProformaPageProps) {
 
   return (
     <main>
-      <header className={styles.detailHeader}>
+      <header className={styles.detailHeader} style={{ marginBottom: "14px" }}>
         <div className={styles.detailHeaderMain}>
           <h1 className={styles.detailHeaderTitle}>
             PROFORMA <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
           </h1>
           <p className={styles.detailHeaderSubtitle}>
-            <span>Cotización Comercial Oficial</span>
+            <span>Cotización Comercial Oficial y Confirmaciones</span>
           </p>
         </div>
         <EstadoPedidoBadge estado={pedido.estado} size="lg" />
       </header>
+
+      <PedidoTabs pedidoCodigo={pedido.codigo} />
 
       <ProformaView
         pedido={pedido}

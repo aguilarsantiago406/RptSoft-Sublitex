@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/lib/useIsClient";
 import type { Cliente, TipoCliente } from "../types/cliente";
 import { actionActualizarCliente } from "../actions/clientes.actions";
 import styles from "./clientes.module.css";
@@ -25,29 +26,25 @@ export function ModalEditarCliente({
   onClose,
   cliente,
 }: ModalEditarClienteProps) {
-  const [nombre, setNombre] = useState("");
-  const [tipo, setTipo] = useState<TipoCliente>("PROMOCION");
-  const [ciudad, setCiudad] = useState("");
-  const [telefono, setTelefono] = useState("");
+  const isClient = useIsClient();
+  const [nombre, setNombre] = useState(cliente?.nombre ?? "");
+  const [tipo, setTipo] = useState<TipoCliente>(cliente?.tipo ?? "PROMOCION");
+  const [ciudad, setCiudad] = useState(cliente?.ciudad ?? "");
+  const [telefono, setTelefono] = useState(cliente?.telefono ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [prevClienteId, setPrevClienteId] = useState(cliente?.id);
+  if (cliente && cliente.id !== prevClienteId) {
+    setPrevClienteId(cliente.id);
+    setNombre(cliente.nombre);
+    setTipo(cliente.tipo);
+    setCiudad(cliente.ciudad || "");
+    setTelefono(cliente.telefono || "");
+    setError(null);
+  }
 
-  useEffect(() => {
-    if (cliente) {
-      setNombre(cliente.nombre);
-      setTipo(cliente.tipo);
-      setCiudad(cliente.ciudad || "");
-      setTelefono(cliente.telefono || "");
-      setError(null);
-    }
-  }, [cliente]);
-
-  if (!isOpen || !mounted || !cliente) return null;
+  if (!isOpen || !isClient || !cliente) return null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

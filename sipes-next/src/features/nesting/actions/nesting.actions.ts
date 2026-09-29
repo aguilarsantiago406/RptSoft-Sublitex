@@ -10,7 +10,6 @@ import {
   obtenerSesion,
   obtenerTelasCatalogo,
   vincularArchivoTif,
-  type ArchivoTifItem,
   type ConsumoResponse,
   type NestingSession,
   type ParteAsignada,

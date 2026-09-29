@@ -4,7 +4,7 @@ import { formatDate } from "@/lib/format/date";
 import { useTableState } from "@/lib/useTableState";
 import { Pagination } from "@/components/ui/table/Pagination";
 import { SortableTh } from "@/components/ui/table/SortableTh";
-import type { UsuarioItem, RolUsuario } from "../types/usuario";
+import type { UsuarioItem } from "../types/usuario";
 import styles from "./usuarios.module.css";
 
 interface UsuariosTableProps {

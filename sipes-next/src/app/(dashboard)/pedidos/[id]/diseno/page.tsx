@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Palette } from "lucide-react";
+import { Palette } from "lucide-react";
 import { getPedido } from "@/features/pedidos/api/pedidos.api";
 import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { PedidoDiseno } from "@/features/pedidos/components/PedidoDiseno";
+import { PedidoTabs } from "@/features/pedidos/components/PedidoTabs";
 import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
 import { loadData } from "@/lib/api/loadData";
 import { SipesApiError } from "@/lib/api/http";
@@ -38,24 +38,8 @@ export default async function DisenoPage({ params }: DisenoPageProps) {
 
   return (
     <main>
-      <div className={styles.detailHeader} style={{ marginBottom: "20px" }}>
+      <div className={styles.detailHeader} style={{ marginBottom: "14px" }}>
         <div className={styles.detailHeaderMain}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-            <Link
-              href={`/pedidos/${pedido.codigo}`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                color: "var(--muted)",
-                fontSize: "0.84rem",
-                textDecoration: "none",
-                fontWeight: 500,
-              }}
-            >
-              <ArrowLeft size={16} /> Volver a datos del pedido
-            </Link>
-          </div>
           <h1 className={styles.detailHeaderTitle} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <Palette size={26} color="var(--sky-dark)" />
             TALLER DE DISEÑO & MOCKUPS <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
@@ -68,6 +52,8 @@ export default async function DisenoPage({ params }: DisenoPageProps) {
           <EstadoPedidoBadge estado={pedido.estado} size="lg" />
         </div>
       </div>
+
+      <PedidoTabs pedidoCodigo={pedido.codigo} disenoVersion={disenos[0]?.version} />
 
       <div style={{ maxWidth: "1000px" }}>
         <PedidoDiseno pedidoId={pedido.id} disenos={disenos} />

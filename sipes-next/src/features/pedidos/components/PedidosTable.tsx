@@ -6,6 +6,7 @@ import { useTableState } from "@/lib/useTableState";
 import { Pagination } from "@/components/ui/table/Pagination";
 import { SortableTh } from "@/components/ui/table/SortableTh";
 import shared from "@/components/ui/table/tableShared.module.css";
+import { Shirt, Palette, FileText } from "lucide-react";
 import type { PedidoResumen } from "../types/pedido";
 import { EstadoPedidoBadge } from "./EstadoPedidoBadge";
 import styles from "./pedidos.module.css";
@@ -68,9 +69,7 @@ export function PedidosTable({ pedidos, error }: PedidosTableProps) {
                     dir={table.sortDir}
                     onSort={table.toggleSort}
                   />
-                  <th>
-                    <span className="srOnly">Acción</span>
-                  </th>
+                  <th style={{ textAlign: "right" }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -115,9 +114,39 @@ export function PedidosTable({ pedidos, error }: PedidosTableProps) {
                       )}
                     </td>
                     <td className={styles.actionCell}>
-                      <Link className={styles.linkButton} href={`/pedidos/${pedido.codigo}`}>
-                        Ver detalle
-                      </Link>
+                      <div className={styles.tableActions}>
+                        <Link
+                          className={styles.actionIconBtn}
+                          href={`/pedidos/${encodeURIComponent(pedido.codigo)}/prendas`}
+                          title="Ir directo a Matriz de Prendas y Tallas"
+                          aria-label="Prendas y Tallas"
+                        >
+                          <Shirt size={15} />
+                        </Link>
+                        <Link
+                          className={styles.actionIconBtn}
+                          href={`/pedidos/${encodeURIComponent(pedido.codigo)}/diseno`}
+                          title="Ir directo a Taller de Diseño y Mockup"
+                          aria-label="Diseño"
+                        >
+                          <Palette size={15} />
+                        </Link>
+                        <Link
+                          className={styles.actionIconBtn}
+                          href={`/pedidos/${encodeURIComponent(pedido.codigo)}/proforma`}
+                          title="Ir directo a Cotización y Proforma"
+                          aria-label="Proforma"
+                        >
+                          <FileText size={15} />
+                        </Link>
+                        <Link
+                          className={styles.linkButton}
+                          href={`/pedidos/${encodeURIComponent(pedido.codigo)}`}
+                          style={{ marginLeft: "4px" }}
+                        >
+                          Detalle →
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}

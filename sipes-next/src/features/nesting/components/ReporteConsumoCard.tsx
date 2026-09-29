@@ -18,8 +18,8 @@ export const ReporteConsumoCard: React.FC = () => {
       setError(null);
       const data = await nestingApi.getConsumoTelaByPedido(cleanId);
       setConsumo(data);
-    } catch (err: any) {
-      setError(err.message || "No se encontró información para este pedido.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "No se encontró información para este pedido.");
       setConsumo(null);
     } finally {
       setLoading(false);

@@ -41,7 +41,7 @@ const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
     siguienteLabel: "Avanzar a Configuración",
     getChecks: (p) => [
       { id: "cli", label: "Cliente asignado", ok: Boolean(p.cliente?.nombre) },
-      { id: "fec", label: "Fecha compromiso definida (R-A09)", ok: Boolean(p.fechaCompromiso) },
+      { id: "fec", label: "Fecha compromiso de entrega acordada", ok: Boolean(p.fechaCompromiso) },
     ],
   },
   EN_CONFIGURACION: {
@@ -51,7 +51,7 @@ const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
     siguiente: "EN_RECOLECCION",
     siguienteLabel: "Abrir Recolección de Tallas",
     getChecks: (p) => [
-      { id: "grp", label: "Al menos 1 grupo de prendas creado (R-B02)", ok: (p.grupos?.length ?? 0) > 0 },
+      { id: "grp", label: "Estructura de prendas base y tela definida", ok: (p.grupos?.length ?? 0) > 0 },
       { id: "col", label: "Colores del pedido definidos", ok: (p.colores?.length ?? 0) > 0 },
     ],
   },
@@ -67,8 +67,8 @@ const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
   },
   EN_REVISION: {
     numero: 4,
-    titulo: "Revisión · Control de Calidad y Gobernanza de Bloques",
-    objetivo: "Los 3 bloques operativos (Diseño, Lista y Comercial) deben estar CERRADOS en el sistema antes de enviar al taller.",
+    titulo: "Revisión · Control de Calidad y Bloques",
+    objetivo: "Los 3 bloques de control (Diseño, Lista y Comercial) deben estar validados y cerrados antes de autorizar el corte.",
     siguiente: "EN_PRODUCCION",
     siguienteLabel: "Enviar a Producción (Taller)",
     getChecks: (_p, _disenos, _envio, _total, _resumen, bloques) => {
@@ -76,17 +76,17 @@ const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
       return [
         {
           id: "blk-diseno",
-          label: `Bloque Diseño: ${g.diseno.cerrado ? "CERRADO (Aprobado formalmente)" : "ABIERTO (Pendiente cierre)"}`,
+          label: `Diseño: ${g.diseno.cerrado ? "Cerrado (Arte y colores aprobados)" : "Abierto (Pendiente aprobación)"}`,
           ok: g.diseno.cerrado,
         },
         {
           id: "blk-lista",
-          label: `Bloque Lista: ${g.lista.cerrado ? "CERRADO (Prendas completas)" : "ABIERTO (Pendiente cierre)"}`,
+          label: `Lista: ${g.lista.cerrado ? "Cerrada (Tallas y dorsales completos)" : "Abierta (Pendiente confirmación)"}`,
           ok: g.lista.cerrado,
         },
         {
           id: "blk-comercial",
-          label: `Bloque Comercial: ${g.comercial.cerrado ? "CERRADO (Confirmación emitida)" : "ABIERTO (Pendiente cierre)"}`,
+          label: `Comercial: ${g.comercial.cerrado ? "Cerrado (Proforma conciliada)" : "Abierto (Pendiente emisión)"}`,
           ok: g.comercial.cerrado,
         },
       ];
@@ -146,6 +146,7 @@ export function PedidoGuiaEtapa({
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [colapsado, setColapsado] = useState(false);
 
   const config = ETAPAS_CONFIG[pedido.estado] || ETAPAS_CONFIG.BORRADOR;
   const checks = config.getChecks(pedido, disenos, datosEnvio, totalPrendas, resumenProduccion, bloques);
@@ -183,26 +184,14 @@ export function PedidoGuiaEtapa({
         <div className={styles.guiaTitleRow}>
           <span className={styles.etapaBadge}>Etapa {config.numero}</span>
           <h2 className={styles.guiaTitle}>{config.titulo}</h2>
-        </div>
-      </div>
-
-      <div className={styles.guiaContent}>
-        <div className={styles.checklistSection}>
-          <h3 className={styles.checklistTitle}>Requisitos para avanzar a la siguiente etapa:</h3>
-          <div className={styles.checkItems}>
-            {checks.map((item) => (
-              <span
-                key={item.id}
-                className={`${styles.checkItem} ${item.ok ? styles.checkItemOk : styles.checkItemPending}`}
-              >
-                {item.ok ? <CheckCircle2 size={15} /> : <CircleAlert size={15} />}
-                {item.label}
-              </span>
-            ))}
-          </div>
+          {checks.length > 0 && (
+            <span className={styles.progresoBadge}>
+              {checks.filter((c) => c.ok).length}/{checks.length} requisitos listos
+            </span>
+          )}
         </div>
 
-        <div className={styles.actionsSection}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
           {config.siguiente && (
             <button
               type="button"
@@ -219,6 +208,35 @@ export function PedidoGuiaEtapa({
               )}
             </button>
           )}
+
+          {checks.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setColapsado(!colapsado)}
+              className={styles.toggleCollapseBtn}
+              aria-label={colapsado ? "Expandir requisitos" : "Colapsar requisitos"}
+            >
+              {colapsado ? "Ver requisitos ▾" : "Ocultar ▴"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!colapsado && checks.length > 0 && (
+        <div className={styles.guiaContent}>
+          <div className={styles.checklistSection}>
+            <div className={styles.checkItems}>
+              {checks.map((item) => (
+                <span
+                  key={item.id}
+                  className={`${styles.checkItem} ${item.ok ? styles.checkItemOk : styles.checkItemPending}`}
+                >
+                  {item.ok ? <CheckCircle2 size={15} /> : <CircleAlert size={15} />}
+                  {item.label}
+                </span>
+              ))}
+            </div>
+          </div>
           {!puedeAvanzar && faltantes.length > 0 && (
             <span className={styles.advanceHelper}>
               Faltan {faltantes.length} requisito(s) obligatorio(s)
@@ -226,7 +244,7 @@ export function PedidoGuiaEtapa({
           )}
           {errorMsg && <span className={styles.advanceHelper}>{errorMsg}</span>}
         </div>
-      </div>
+      )}
 
       <ModalConfirmacion
         isOpen={isConfirmModalOpen}

@@ -130,6 +130,41 @@ export function UsuariosView({ usuarios, error }: UsuariosViewProps) {
         usuario={passwordUser}
         onClose={() => setPasswordUser(null)}
       />
+
+      <ModalDetalleUsuario
+        isOpen={viewingUser !== null}
+        usuario={viewingUser}
+        onClose={() => setViewingUser(null)}
+        onEdit={(usr) => {
+          setViewingUser(null);
+          setEditingUser(usr);
+        }}
+      />
+
+      <ModalConfirmacion
+        isOpen={deletingUser !== null}
+        title="Desactivar o Eliminar Usuario"
+        description={
+          <div>
+            <p>
+              ¿Estás seguro de que deseas eliminar a <strong>{deletingUser?.nombre}</strong> ({deletingUser?.email})?
+            </p>
+            {deleteError && (
+              <p style={{ color: "#e11d48", fontWeight: 600, marginTop: "8px" }}>
+                {deleteError}
+              </p>
+            )}
+          </div>
+        }
+        confirmText={isDeleting ? "Eliminando..." : "Eliminar Usuario"}
+        variant="danger"
+        isPending={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onClose={() => {
+          setDeletingUser(null);
+          setDeleteError(null);
+        }}
+      />
     </div>
   );
 }
