@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useIsClient } from "@/lib/useIsClient";
 import { actionCrearUsuario } from "../actions/usuarios.actions";
-import { ROLES_DISPONIBLES, type RolUsuario } from "../types/usuario";
+import { ROLES_DISPONIBLES, ROLES_CONFIG, type RolUsuario } from "../types/usuario";
 import styles from "./usuarios.module.css";
 
 interface ModalNuevoUsuarioProps {
@@ -23,6 +23,8 @@ export function ModalNuevoUsuario({ isOpen, onClose }: ModalNuevoUsuarioProps) {
   const [isPending, startTransition] = useTransition();
 
   if (!isOpen || !isClient) return null;
+
+  const rolActual = ROLES_CONFIG[rol];
 
   function handleReset() {
     setNombre("");
@@ -75,7 +77,7 @@ export function ModalNuevoUsuario({ isOpen, onClose }: ModalNuevoUsuarioProps) {
           <div>
             <h3 className={styles.modalTitle}>Registrar Usuario</h3>
             <p className={styles.modalSubtitle}>
-              Alta de operador, vendedor o personal de taller en SIPES
+              Alta de operador, asesor comercial o personal técnico en SIPES
             </p>
           </div>
           <button
@@ -161,6 +163,20 @@ export function ModalNuevoUsuario({ isOpen, onClose }: ModalNuevoUsuarioProps) {
                 </option>
               ))}
             </select>
+
+            {rolActual && (
+              <div className={styles.permisosBox}>
+                <p className={styles.permisosTitulo}>Alcance y Permisos del Perfil:</p>
+                <p className={styles.permisosDesc}>{rolActual.descripcion}</p>
+                <div className={styles.permisosChips}>
+                  {rolActual.permisos.map((p) => (
+                    <span key={p} className={styles.permisoChip}>
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <label className={styles.checkboxRow}>

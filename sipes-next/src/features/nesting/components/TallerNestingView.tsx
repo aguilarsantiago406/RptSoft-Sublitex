@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/Button/Button";
 import {
   actionAsignarParte,
   actionCrearSesion,
+  actionListarPedidosProduccion,
   actionListarSesiones,
   actionObtenerConsumo,
   actionObtenerSesion,
   actionObtenerTelasCatalogo,
   actionVincularArchivoTif,
   type ActionResult,
+  type PedidoProduccionItem,
 } from "../actions/nesting.actions";
 import type { ConsumoResponse, NestingSession } from "../services/nestingService";
 import type { ValorAtributoCatalogo } from "@/features/catalogos/types/catalogo";
@@ -67,6 +69,7 @@ function esTif(nombre: string): boolean {
 export function TallerNestingView() {
   const [sesiones, setSesiones] = useState<NestingSession[]>([]);
   const [telas, setTelas] = useState<ValorAtributoCatalogo[]>([]);
+  const [pedidosProduccion, setPedidosProduccion] = useState<PedidoProduccionItem[]>([]);
   const [sesionId, setSesionId] = useState("");
   const [sesionDetalle, setSesionDetalle] = useState<NestingSession | null>(null);
   const [cargandoLista, setCargandoLista] = useState(true);
@@ -81,6 +84,7 @@ export function TallerNestingView() {
   const [telaId, setTelaId] = useState("");
 
   const [pedidoId, setPedidoId] = useState("");
+  const [modoManualPedido, setModoManualPedido] = useState(false);
   const [anchoCm, setAnchoCm] = useState("");
   const [largoCm, setLargoCm] = useState("");
   const [esRib, setEsRib] = useState(false);
@@ -107,13 +111,18 @@ export function TallerNestingView() {
     setCargandoLista(true);
     setAvisoLista(null);
     try {
-      const [resSesiones, resTelas] = await Promise.all([
+      const [resSesiones, resTelas, resPedidos] = await Promise.all([
         actionListarSesiones(),
         actionObtenerTelasCatalogo(),
+        actionListarPedidosProduccion(),
       ]);
 
       if (resTelas.ok) {
         setTelas(resTelas.data);
+      }
+
+      if (resPedidos.ok) {
+        setPedidosProduccion(resPedidos.data);
       }
 
       if (!resSesiones.ok) {
@@ -154,7 +163,7 @@ export function TallerNestingView() {
 
     const creada = await config.ejecutar(
       () => actionCrearSesion(codigoSesion.trim().toUpperCase(), telaId),
-      "Sesión de nesting creada correctamente.",
+      "Sesión de corte y rollo creada correctamente.",
     );
     if (creada) {
       setCodigoSesion("");
@@ -175,7 +184,6 @@ export function TallerNestingView() {
       "Parte asignada al rollo correctamente.",
     );
     if (ok) {
-      setPedidoId("");
       setAnchoCm("");
       setLargoCm("");
       setEsRib(false);
@@ -201,7 +209,7 @@ export function TallerNestingView() {
     formData.append("archivo", archivo);
     const ok = await tif.ejecutar(
       () => actionVincularArchivoTif(sesionId, formData),
-      "Archivo TIF vinculado y registrado en el nesting.",
+      "Archivo de impresión TIF vinculado y registrado en el rollo.",
     );
     if (ok) {
       setArchivo(null);
@@ -221,11 +229,16 @@ export function TallerNestingView() {
     if (data) setResultadoConsumo(data);
   }
 
+  const anchoNumerico = Number(anchoCm);
+  const anchoValido = Number.isFinite(anchoNumerico) && anchoNumerico > 0 && anchoNumerico <= 180;
+  const porcentajeOcupado = anchoValido ? ((anchoNumerico / 180) * 100).toFixed(1) : "0";
+  const desperdicioEstimado = anchoValido ? 180 - anchoNumerico : 0;
+
   return (
     <div className={styles.root}>
       <Card as="section" className={styles.toolbar}>
         <div className={styles.field}>
-          <label htmlFor="sesion-select">Sesión de nesting activa</label>
+          <label htmlFor="sesion-select">Sesión de rollo de tela activa</label>
           <select
             id="sesion-select"
             className={styles.input}
@@ -233,7 +246,7 @@ export function TallerNestingView() {
             disabled={cargandoLista}
             onChange={(e) => setSesionId(e.target.value)}
           >
-            <option value="">{cargandoLista ? "Cargando sesiones…" : "Selecciona una sesión de nesting"}</option>
+            <option value="">{cargandoLista ? "Cargando sesiones…" : "Selecciona una sesión de tela"}</option>
             {sesiones.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.codigo} · {s.tela?.etiqueta ?? "Tela base"}
@@ -245,7 +258,7 @@ export function TallerNestingView() {
         {sesionDetalle && (
           <div className={styles.estadoBox}>
             <span className={`${styles.badge} ${styles.badgeProceso}`}>
-              {sesionDetalle.codigo} · {sesionDetalle.tela?.etiqueta ?? "Tela"} (Ancho {sesionDetalle.anchoImpresionM ?? 1.8} m)
+              {sesionDetalle.codigo} · {sesionDetalle.tela?.etiqueta ?? "Tela"} (Ancho estándar {sesionDetalle.anchoImpresionM ?? 1.8} m)
             </span>
           </div>
         )}
@@ -256,10 +269,10 @@ export function TallerNestingView() {
 
       <div className={styles.grid}>
         <Card as="section" className={styles.seccion}>
-          <h2>1. Nueva sesión de nesting (R-K11)</h2>
+          <h2>1. Configuración de rollo de tela</h2>
           <form onSubmit={crearSesion} className={styles.form}>
             <div className={styles.field}>
-              <label htmlFor="nesting-codigo">Código de sesión</label>
+              <label htmlFor="nesting-codigo">Código del rollo / sesión</label>
               <input
                 id="nesting-codigo"
                 className={styles.input}
@@ -271,7 +284,7 @@ export function TallerNestingView() {
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor="nesting-tela">Tela (Atributo)</label>
+              <label htmlFor="nesting-tela">Tipo de tela</label>
               <select
                 id="nesting-tela"
                 className={styles.input}
@@ -287,32 +300,67 @@ export function TallerNestingView() {
                 ))}
               </select>
             </div>
-            <p className={styles.ayuda}>Ancho de impresión estándar: 1.80 m (R-K12).</p>
+            <p className={styles.ayuda}>Ancho industrial estándar de impresión: 1.80 metros.</p>
             <Button type="submit" disabled={config.cargando}>
-              {config.cargando ? "Creando…" : "Crear sesión"}
+              {config.cargando ? "Creando…" : "Crear sesión de rollo"}
             </Button>
           </form>
           <AvisoInline aviso={config.aviso} />
         </Card>
 
         <Card as="section" className={styles.seccion}>
-          <h2>2. Asignación de partes (R-K11, R-H04)</h2>
-          {!sesionDetalle && <p className={styles.ayuda}>Selecciona una sesión de nesting para registrar partes.</p>}
+          <h2>2. Asignación de partes por pedido</h2>
+          {!sesionDetalle && <p className={styles.ayuda}>Selecciona una sesión de rollo para registrar partes.</p>}
           <form onSubmit={asignarParte} className={styles.form}>
             <div className={styles.field}>
-              <label htmlFor="nesting-pedido">ID o código de pedido</label>
-              <input
-                id="nesting-pedido"
-                className={styles.input}
-                placeholder="UUID del pedido"
-                value={pedidoId}
-                onChange={(e) => setPedidoId(e.target.value)}
-                disabled={!sesionDetalle}
-                required
-              />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label htmlFor="nesting-pedido">Pedido asignado</label>
+                <button
+                  type="button"
+                  className={styles.selectorToggle}
+                  onClick={() => setModoManualPedido(!modoManualPedido)}
+                >
+                  {modoManualPedido ? "Elegir de lista de pedidos" : "Ingresar ID manual"}
+                </button>
+              </div>
+
+              {!modoManualPedido && pedidosProduccion.length > 0 ? (
+                <select
+                  id="nesting-pedido"
+                  className={styles.input}
+                  value={pedidoId}
+                  disabled={!sesionDetalle}
+                  onChange={(e) => {
+                    setPedidoId(e.target.value);
+                    if (e.target.value) setConsumoPedidoId(e.target.value);
+                  }}
+                  required
+                >
+                  <option value="">Selecciona un pedido para corte</option>
+                  {pedidosProduccion.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      [{p.codigo}] {p.clienteNombre} · {p.totalPrendas} prendas {p.bloquesListos ? "(Listo para corte)" : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  id="nesting-pedido"
+                  className={styles.input}
+                  placeholder="ID o código del pedido"
+                  value={pedidoId}
+                  onChange={(e) => {
+                    setPedidoId(e.target.value);
+                    if (e.target.value) setConsumoPedidoId(e.target.value);
+                  }}
+                  disabled={!sesionDetalle}
+                  required
+                />
+              )}
             </div>
+
             <div className={styles.field}>
-              <label htmlFor="nesting-ancho">Ancho utilizado en cm (1 a 180)</label>
+              <label htmlFor="nesting-ancho">Ancho ocupado en centímetros (máximo 180 cm)</label>
               <input
                 id="nesting-ancho"
                 className={styles.input}
@@ -326,8 +374,22 @@ export function TallerNestingView() {
                 required
               />
             </div>
+
+            {anchoValido && (
+              <div className={styles.medidorContainer}>
+                <div className={styles.medidorLeyenda}>
+                  <span>Ancho ocupado: {anchoNumerico} cm ({porcentajeOcupado}%)</span>
+                  <span>Margen lateral: {desperdicioEstimado} cm</span>
+                </div>
+                <div className={styles.medidorBarra}>
+                  <div className={styles.medidorOcupado} style={{ width: `${porcentajeOcupado}%` }} />
+                  <div className={styles.medidorDesperdicio} style={{ width: `${100 - Number(porcentajeOcupado)}%` }} />
+                </div>
+              </div>
+            )}
+
             <div className={styles.field}>
-              <label htmlFor="nesting-largo">Largo ocupado en cm</label>
+              <label htmlFor="nesting-largo">Largo ocupado en centímetros</label>
               <input
                 id="nesting-largo"
                 className={styles.input}
@@ -340,6 +402,7 @@ export function TallerNestingView() {
                 required
               />
             </div>
+
             <label className={styles.checkboxRow}>
               <input
                 type="checkbox"
@@ -347,8 +410,9 @@ export function TallerNestingView() {
                 onChange={(e) => setEsRib(e.target.checked)}
                 disabled={!sesionDetalle}
               />
-              <span>Es corte de Rib (se reporta de forma independiente)</span>
+              <span>Es corte de Rib / Cuello tejido (se computa independiente de la tela base)</span>
             </label>
+
             <Button type="submit" disabled={!sesionDetalle || asignacion.cargando}>
               {asignacion.cargando ? "Asignando…" : "Asignar parte al rollo"}
             </Button>
@@ -369,13 +433,13 @@ export function TallerNestingView() {
         </Card>
 
         <Card as="section" className={styles.seccion}>
-          <h2>3. Vincular archivo TIF (R-K13)</h2>
+          <h2>3. Archivos de impresión TIF (Particionado)</h2>
           <p className={styles.ayuda}>
-            Formato: SUBLITEX_&#123;PEDIDO&#125;_&#123;TELA&#125;_&#123;ANCHO&#125;x_&#123;LARGO&#125;_&#123;orden&#125;de&#123;total&#125;.tif (máx. 5.0 m).
+            Formato técnico: SUBLITEX_PEDIDO_TELA_ANCHO_LARGO_ORDENdeTOTAL.tif (máximo 5 metros continuos por pieza).
           </p>
           <form onSubmit={vincularTif} className={styles.form}>
             <div className={styles.field}>
-              <label htmlFor="nesting-tif">Archivo TIF</label>
+              <label htmlFor="nesting-tif">Archivo TIF exportado</label>
               <input
                 key={inputKey}
                 id="nesting-tif"
@@ -398,7 +462,7 @@ export function TallerNestingView() {
               {sesionDetalle.archivos.map((a) => (
                 <li key={a.id}>
                   <span>
-                    {a.nombre} · {a.largoM} m ({a.ordenEnSerie} de {a.totalSerie})
+                    <strong>Pieza {a.ordenEnSerie} de {a.totalSerie}:</strong> {a.nombre} · {a.largoM} m
                   </span>
                 </li>
               ))}
@@ -407,21 +471,38 @@ export function TallerNestingView() {
         </Card>
 
         <Card as="section" className={styles.seccion}>
-          <h2>4. Reporte de consumo y merma (R-K12, R-K15)</h2>
+          <h2>4. Reporte de consumo y rendimiento textil</h2>
           <form onSubmit={consultarConsumo} className={styles.form}>
             <div className={styles.field}>
-              <label htmlFor="consumo-pedido">ID del pedido</label>
-              <input
-                id="consumo-pedido"
-                className={styles.input}
-                placeholder="UUID del pedido a consultar"
-                value={consumoPedidoId}
-                onChange={(e) => setConsumoPedidoId(e.target.value)}
-                required
-              />
+              <label htmlFor="consumo-pedido">Pedido a consultar</label>
+              {pedidosProduccion.length > 0 ? (
+                <select
+                  id="consumo-pedido"
+                  className={styles.input}
+                  value={consumoPedidoId}
+                  onChange={(e) => setConsumoPedidoId(e.target.value)}
+                  required
+                >
+                  <option value="">Selecciona el pedido</option>
+                  {pedidosProduccion.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      [{p.codigo}] {p.clienteNombre}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  id="consumo-pedido"
+                  className={styles.input}
+                  placeholder="ID o código del pedido"
+                  value={consumoPedidoId}
+                  onChange={(e) => setConsumoPedidoId(e.target.value)}
+                  required
+                />
+              )}
             </div>
             <Button type="submit" disabled={consumo.cargando}>
-              {consumo.cargando ? "Calculando…" : "Consultar consumo"}
+              {consumo.cargando ? "Calculando…" : "Consultar rendimiento"}
             </Button>
           </form>
           <AvisoInline aviso={consumo.aviso} />
@@ -434,15 +515,15 @@ export function TallerNestingView() {
                   <dd>{(Number(resultadoConsumo.metrosTela) || 0).toFixed(2)} m</dd>
                 </div>
                 <div>
-                  <dt>Metros Rib</dt>
+                  <dt>Metros Rib / Cuello</dt>
                   <dd>{(Number(resultadoConsumo.metrosRib) || 0).toFixed(2)} m</dd>
                 </div>
                 <div>
-                  <dt>Total Metros Lineales</dt>
+                  <dt>Metros Lineales Totales</dt>
                   <dd>{(Number(resultadoConsumo.metrosLineales) || 0).toFixed(2)} m</dd>
                 </div>
                 <div>
-                  <dt>Aprovechamiento Ancho</dt>
+                  <dt>Aprovechamiento de Ancho</dt>
                   <dd>{resultadoConsumo.porcentajeAprovechamientoAncho !== null && resultadoConsumo.porcentajeAprovechamientoAncho !== undefined ? `${resultadoConsumo.porcentajeAprovechamientoAncho}%` : "-"}</dd>
                 </div>
                 <div>
@@ -450,8 +531,8 @@ export function TallerNestingView() {
                   <dd>{resultadoConsumo.desperdicioLateralCm !== null && resultadoConsumo.desperdicioLateralCm !== undefined ? `${resultadoConsumo.desperdicioLateralCm} cm` : "-"}</dd>
                 </div>
                 <div>
-                  <dt>Costo Impresión</dt>
-                  <dd>{resultadoConsumo.costoImpresion !== null && resultadoConsumo.costoImpresion !== undefined ? `S/ ${resultadoConsumo.costoImpresion.toFixed(2)}` : "Sin tarifa"}</dd>
+                  <dt>Costo de Impresión</dt>
+                  <dd>{resultadoConsumo.costoImpresion !== null && resultadoConsumo.costoImpresion !== undefined ? `S/ ${resultadoConsumo.costoImpresion.toFixed(2)}` : "Sin tarifa vigente"}</dd>
                 </div>
               </dl>
               {resultadoConsumo.desglosePorTela && resultadoConsumo.desglosePorTela.length > 0 && (

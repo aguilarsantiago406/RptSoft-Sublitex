@@ -72,10 +72,9 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
     <section className={styles.tarifasSection}>
       <div className={styles.tarifasHeader}>
         <div>
-          <h3 className={styles.standardsTitle}>Catálogo de Tarifas (R-K10)</h3>
+          <h3 className={styles.standardsTitle}>Catálogo de Tarifas Comerciales</h3>
           <p className={styles.standardsDesc}>
-            Costos de impresión y confección, precios de venta y recargos · los conceptos
-            vigentes se usan para cotización automática en proformas
+            Costos de impresión y confección, precios de venta y recargos oficiales para cotización automática en proformas
           </p>
         </div>
         <div className={styles.tarifasHeaderActions}>

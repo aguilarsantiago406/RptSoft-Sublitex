@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useIsClient } from "@/lib/useIsClient";
 import { actionActualizarUsuario, actionCambiarPasswordUsuario } from "../actions/usuarios.actions";
-import { ROLES_DISPONIBLES, type UsuarioItem, type RolUsuario } from "../types/usuario";
+import { ROLES_DISPONIBLES, ROLES_CONFIG, type UsuarioItem, type RolUsuario } from "../types/usuario";
 import styles from "./usuarios.module.css";
 
 interface ModalEditarUsuarioProps {
@@ -27,6 +27,8 @@ export function ModalEditarUsuario({
   const [isPending, startTransition] = useTransition();
 
   if (!isOpen || !usuario || !isClient) return null;
+
+  const rolActual = ROLES_CONFIG[rol];
 
   function handleClose() {
     setNewPassword("");
@@ -98,26 +100,39 @@ export function ModalEditarUsuario({
               disabled={isPending}
             >
               {ROLES_DISPONIBLES.map((r) => (
-                <option key={r.rol} value={r.rol}>{r.label}</option>
+                <option key={r.rol} value={r.rol}>
+                  {r.label}
+                </option>
               ))}
             </select>
+
+            {rolActual && (
+              <div className={styles.permisosBox}>
+                <p className={styles.permisosTitulo}>Alcance y Permisos del Perfil:</p>
+                <p className={styles.permisosDesc}>{rolActual.descripcion}</p>
+                <div className={styles.permisosChips}>
+                  {rolActual.permisos.map((p) => (
+                    <span key={p} className={styles.permisoChip}>
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="edit-usr-pwd" className={styles.label}>Restablecer Contraseña (Opcional)</label>
+            <label htmlFor="edit-usr-pass" className={styles.label}>Nueva Contraseña (opcional)</label>
             <input
-              id="edit-usr-pwd"
+              id="edit-usr-pass"
               type="password"
-              placeholder="Dejar vacío para no modificar"
+              minLength={6}
               className={styles.input}
+              placeholder="Dejar en blanco para conservar actual"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               disabled={isPending}
-              autoComplete="new-password"
             />
-            <span style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "4px", display: "block" }}>
-              Blanqueo administrativo directo (mínimo 6 caracteres).
-            </span>
           </div>
 
           <label className={styles.checkboxRow}>
@@ -127,15 +142,24 @@ export function ModalEditarUsuario({
               onChange={(e) => setActivo(e.target.checked)}
               disabled={isPending}
             />
-            <span>Usuario habilitado / activo</span>
+            <span>Cuenta activa (habilitada para acceder al sistema)</span>
           </label>
 
           <footer className={styles.modalFooter}>
-            <button type="button" className={styles.secondaryButton} onClick={handleClose} disabled={isPending}>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={handleClose}
+              disabled={isPending}
+            >
               Cancelar
             </button>
-            <button type="submit" className={styles.submitButton} disabled={isPending}>
-              {isPending ? "Guardando..." : "Actualizar Usuario"}
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={isPending}
+            >
+              {isPending ? "Guardando..." : "Guardar Cambios"}
             </button>
           </footer>
         </form>
