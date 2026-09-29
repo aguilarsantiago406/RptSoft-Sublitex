@@ -42,7 +42,7 @@ export function ModalNuevoTipoProducto({ isOpen, onClose }: ModalNuevoTipoProduc
       return;
     }
     if (totalPiezas <= 0) {
-      setError("Debe asignar al menos una pieza física (camiseta, short o medias) por regla R-K03.");
+      setError("Debe asignar al menos una pieza física (camiseta, short o medias) para la confección.");
       return;
     }
 
@@ -60,7 +60,6 @@ export function ModalNuevoTipoProducto({ isOpen, onClose }: ModalNuevoTipoProduc
         return;
       }
 
-      // Limpiar y cerrar
       setCodigo("");
       setNombre("");
       setCamisetas(1);
@@ -79,7 +78,7 @@ export function ModalNuevoTipoProducto({ isOpen, onClose }: ModalNuevoTipoProduc
             <div>
               <h2 className={styles.modalTitle}>Nuevo Tipo de Prenda / Producto</h2>
               <p className={styles.modalSubtitle}>
-                Catálogo base y configuración de piezas físicas para taller (R-K03).
+                Catálogo base y configuración de piezas físicas para taller de confección.
               </p>
             </div>
           </div>

@@ -8,12 +8,29 @@ import { formatDate } from "@/lib/format/date";
 import styles from "./auditoria.module.css";
 import cardStyles from "@/features/pedidos/components/pedidos.module.css";
 
-const ORIGEN_LABELS: Record<string, { label: string; badgeClass: string }> = {
-  USUARIO: { label: "Panel Interno", badgeClass: cardStyles.timelineBadge_USUARIO },
-  PARTICIPANTE: { label: "WhatsApp", badgeClass: cardStyles.timelineBadge_PARTICIPANTE },
-  SISTEMA: { label: "Sistema", badgeClass: cardStyles.timelineBadge_SISTEMA },
-  GHL: { label: "GoHighLevel", badgeClass: cardStyles.timelineBadge_GHL },
+const ORIGEN_CONFIG: Record<string, { label: string; badgeClass: string }> = {
+  USUARIO: { label: "Oficina / Vendedora", badgeClass: cardStyles.timelineBadge_USUARIO },
+  PARTICIPANTE: { label: "Cliente / WhatsApp", badgeClass: cardStyles.timelineBadge_PARTICIPANTE },
+  SISTEMA: { label: "Sistema Automático", badgeClass: cardStyles.timelineBadge_SISTEMA },
+  GHL: { label: "Integración Externa", badgeClass: cardStyles.timelineBadge_GHL },
 };
+
+function formatFechaRelativa(dateStr: string): string {
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "";
+  const ahora = new Date();
+  const diffMs = ahora.getTime() - d.getTime();
+  const diffSeg = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSeg / 60);
+  const diffHoras = Math.floor(diffMin / 60);
+  const horaStr = d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
+
+  if (diffSeg < 60) return "Hace un momento";
+  if (diffMin < 60) return `Hace ${diffMin} min`;
+  if (diffHoras < 24 && ahora.getDate() === d.getDate()) return `Hoy a las ${horaStr}`;
+  if (diffHoras < 48) return `Ayer a las ${horaStr}`;
+  return `${formatDate(dateStr)} ${horaStr}`;
+}
 
 export default function AuditoriaGlobalPage() {
   const [registros, setRegistros] = useState<RegistroCambioItem[]>([]);
@@ -71,7 +88,7 @@ export default function AuditoriaGlobalPage() {
     const rows = tarjetasFiltradas.map((card) => {
       const fecha = formatDate(card.creadoEn);
       const hora = new Date(card.creadoEn).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
-      const origen = ORIGEN_LABELS[card.origen]?.label || card.origen;
+      const origen = ORIGEN_CONFIG[card.origen]?.label || card.origen;
       const cambiosStr = card.cambios
         .map((c) => {
           if (c.campo === "creacion") return `${c.campoLabel}: Creado (${c.valorNuevo || "VENTA"})`;
@@ -115,7 +132,7 @@ export default function AuditoriaGlobalPage() {
       <div className={styles.header}>
         <h1 className={styles.title}>Bitácora Global de Auditoría</h1>
         <p className={styles.subtitle}>
-          Historial inmutable de trazabilidad operativa y cambios en pedidos (R-I01..R-I05)
+          Historial inmutable de trazabilidad operativa y cambios registrados en pedidos
         </p>
       </div>
 
@@ -177,14 +194,14 @@ export default function AuditoriaGlobalPage() {
             className={`${styles.filterChip} ${filtro === "WHATSAPP" ? styles.filterChipActive : ""}`}
             onClick={() => { setFiltro("WHATSAPP"); setVisibles(24); }}
           >
-            WhatsApp
+            Cliente / WhatsApp
           </button>
           <button
             type="button"
             className={`${styles.filterChip} ${filtro === "USUARIO" ? styles.filterChipActive : ""}`}
             onClick={() => { setFiltro("USUARIO"); setVisibles(24); }}
           >
-            Panel Interno
+            Oficina / Vendedora
           </button>
         </div>
       </div>
@@ -204,7 +221,7 @@ export default function AuditoriaGlobalPage() {
         <>
           <div className={styles.listGrid}>
             {tarjetasAMostrar.map((card) => {
-              const origenConfig = ORIGEN_LABELS[card.origen] || ORIGEN_LABELS.USUARIO;
+              const origenConfig = ORIGEN_CONFIG[card.origen] || ORIGEN_CONFIG.USUARIO;
 
               return (
                 <div key={card.id} className={cardStyles.auditCard}>
@@ -225,11 +242,11 @@ export default function AuditoriaGlobalPage() {
                         <div className={cardStyles.auditCardChangeValues}>
                           {c.campo === "creacion" ? (
                             <span className={cardStyles.timelineValueNew}>
-                              Tipo: {c.valorNuevo || "VENTA"}
+                              Alta: {c.valorNuevo || "Registrado"}
                             </span>
                           ) : c.campo === "eliminacion" ? (
                             <span className={cardStyles.timelineValueOld}>
-                              Tipo: {c.valorAnterior || "VENTA"}
+                              Baja: {c.valorAnterior || "Eliminado"}
                             </span>
                           ) : (
                             <>
@@ -249,8 +266,8 @@ export default function AuditoriaGlobalPage() {
 
                   <div className={cardStyles.auditCardFooter}>
                     <span>Por: <strong>{card.autorNombre}</strong></span>
-                    <span suppressHydrationWarning>
-                      {formatDate(card.creadoEn)} {new Date(card.creadoEn).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}
+                    <span suppressHydrationWarning title={card.creadoEn}>
+                      {formatFechaRelativa(card.creadoEn)}
                     </span>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { SipesApiError } from "@/lib/api/http";
+import { apiGet, SipesApiError } from "@/lib/api/http";
 import {
   asignarParte,
   crearSesion,
@@ -16,6 +16,15 @@ import {
   type ResultadoVinculacionTif,
 } from "../services/nestingService";
 import type { ValorAtributoCatalogo } from "@/features/catalogos/types/catalogo";
+
+export interface PedidoProduccionItem {
+  id: string;
+  codigo: string;
+  clienteNombre: string;
+  totalPrendas: number;
+  estado: string;
+  bloquesListos: boolean;
+}
 
 export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -88,4 +97,27 @@ export async function actionObtenerConsumo(
 
 export async function actionObtenerTelasCatalogo(): Promise<ActionResult<ValorAtributoCatalogo[]>> {
   return run(() => obtenerTelasCatalogo(), "No se pudieron cargar las telas del catálogo.");
+}
+
+export async function actionListarPedidosProduccion(): Promise<ActionResult<PedidoProduccionItem[]>> {
+  return run(async () => {
+    const pedidos = await apiGet<any[]>("/api/pedidos");
+    return (pedidos ?? []).map((p: any) => {
+      const diseno = p.bloques?.find((b: any) => b.tipo === "DISENO");
+      const lista = p.bloques?.find((b: any) => b.tipo === "LISTA");
+      const bloquesListos = diseno?.estado === "CERRADO" && lista?.estado === "CERRADO";
+      const totalPrendas = (p.grupos ?? []).reduce(
+        (acc: number, g: any) => acc + (g.cantidadContratada ?? 0),
+        0,
+      );
+      return {
+        id: p.id,
+        codigo: p.codigo,
+        clienteNombre: p.cliente?.nombre ?? "Sin cliente",
+        totalPrendas,
+        estado: p.estado,
+        bloquesListos,
+      };
+    });
+  }, "No se pudieron cargar los pedidos para producción.");
 }

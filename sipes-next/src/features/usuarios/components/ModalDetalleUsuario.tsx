@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useIsClient } from "@/lib/useIsClient";
 import { formatDate } from "@/lib/format/date";
 import type { UsuarioItem } from "../types/usuario";
+import { ROLES_CONFIG } from "../types/usuario";
 import styles from "./usuarios.module.css";
 
 interface ModalDetalleUsuarioProps {
@@ -25,6 +26,8 @@ export function ModalDetalleUsuario({
 
   if (!isOpen || !usuario || !isClient) return null;
 
+  const rolInfo = ROLES_CONFIG[usuario.rol];
+
   function handleCopyId() {
     if (!usuario) return;
     navigator.clipboard.writeText(usuario.id);
@@ -34,7 +37,7 @@ export function ModalDetalleUsuario({
 
   return createPortal(
     <div className={styles.modalBackdrop} onClick={onClose}>
-      <div className={styles.modalCard} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
+      <div className={styles.modalCard} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "520px" }}>
         <header className={styles.modalHeader}>
           <div>
             <h3 className={styles.modalTitle}>Ficha de Usuario</h3>
@@ -63,7 +66,9 @@ export function ModalDetalleUsuario({
             <div style={{ padding: "8px 12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
               <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Rol Operativo</span>
               <div style={{ marginTop: "4px" }}>
-                <span className={styles.roleBadge} style={{ display: "inline-block" }}>{usuario.rol}</span>
+                <span className={styles.roleBadge} style={{ display: "inline-block" }}>
+                  {rolInfo?.label ?? usuario.rol}
+                </span>
               </div>
             </div>
             <div style={{ padding: "8px 12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
@@ -74,9 +79,23 @@ export function ModalDetalleUsuario({
             </div>
           </div>
 
+          {rolInfo && (
+            <div className={styles.permisosBox} style={{ margin: 0 }}>
+              <p className={styles.permisosTitulo}>Permisos y Funciones Asignadas:</p>
+              <p className={styles.permisosDesc}>{rolInfo.descripcion}</p>
+              <div className={styles.permisosChips}>
+                {rolInfo.permisos.map((p) => (
+                  <span key={p} className={styles.permisoChip}>
+                    {p}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={{ padding: "8px 12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Identificador CUID</span>
+              <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Identificador de Usuario</span>
               <button
                 type="button"
                 onClick={handleCopyId}

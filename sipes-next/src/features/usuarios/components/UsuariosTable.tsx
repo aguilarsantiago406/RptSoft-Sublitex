@@ -26,13 +26,13 @@ const ROLE_BADGE_MAP: Record<string, string> = {
 };
 
 const ROLE_LABELS: Record<string, string> = {
-  ADMINISTRADOR: "Administrador",
-  COORDINADOR_OPERATIVO: "Coord. Operativo",
-  VENDEDOR: "Vendedor",
-  VENDEDORA: "Vendedora",
-  DISENO: "Diseño",
-  PRODUCCION: "Producción",
-  COORDINADOR_CLIENTE: "Coord. Cliente",
+  ADMINISTRADOR: "Administración General",
+  COORDINADOR_OPERATIVO: "Coordinación Operativa",
+  VENDEDOR: "Ventas y Comercial",
+  VENDEDORA: "Ventas y Comercial",
+  DISENO: "Diseño Gráfico",
+  PRODUCCION: "Taller de Producción",
+  COORDINADOR_CLIENTE: "Enlace con Cliente",
 };
 
 export function UsuariosTable({
