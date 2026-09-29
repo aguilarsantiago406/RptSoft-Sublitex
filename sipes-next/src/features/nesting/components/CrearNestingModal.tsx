@@ -1,4 +1,3 @@
-// src/features/nesting/components/CrearNestingModal.tsx
 import React, { useState } from 'react';
 import { nestingApi } from '../api';
 import { AtributoTela } from '../types';
@@ -75,7 +74,7 @@ export const CrearNestingModal: React.FC<Props> = ({ isOpen, onClose, telas, onC
               <option value="">-- Seleccionar Tela --</option>
               {telas.map((tela) => (
                 <option key={tela.id} value={tela.id}>
-                  {tela.nombre} {tela.codigo ? `(${tela.codigo})` : ''}
+                  {tela.nombre || tela.etiqueta} {tela.codigo ? `(${tela.codigo})` : ''}
                 </option>
               ))}
             </select>

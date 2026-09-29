@@ -3,15 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { ShoppingBag, Users, Layers, BookOpen, UserCheck, History, type LucideIcon } from "lucide-react";
+import { useState, type ComponentType } from "react";
+import { ShoppingBag, Users, Layers, BookOpen, UserCheck, History } from "lucide-react";
 import { actionLogout } from "@/features/auth/actions/auth.actions";
 import styles from "./layout.module.css";
 
 interface NavItemData {
   label: string;
   href?: string;
-  icon: LucideIcon;
+  icon: ComponentType<{ size?: number | string; className?: string }>;
 }
 
 interface NavSectionData {  
@@ -25,7 +25,7 @@ const sections: NavSectionData[] = [
     items: [
       { label: "Pedidos", href: "/pedidos", icon: ShoppingBag },
       { label: "Clientes", href: "/clientes", icon: Users },
-      { label: "Producción", href: "/taller", icon: Layers }, // Habilitado con la ruta /nesting
+      { label: "Producción", href: "/taller", icon: Layers },
     ],
   },
   {

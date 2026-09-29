@@ -1,11 +1,10 @@
-import type { ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
+import type { ReactNode, ComponentType } from "react";
 import styles from "./statCard.module.css";
 
 interface StatCardProps {
   label: string;
   value: ReactNode;
-  icon?: LucideIcon;
+  icon?: ComponentType<{ size?: number | string; className?: string }>;
   accent?: "sky" | "green" | "amber" | "violet" | "slate";
 }
 

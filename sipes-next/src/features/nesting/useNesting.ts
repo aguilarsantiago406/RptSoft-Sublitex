@@ -1,7 +1,6 @@
-// src/features/nesting/useNesting.ts
 import { useState, useEffect, useCallback } from 'react';
 import { nestingApi } from './api';
-import { NestingSesion, AtributoTela, ConsumoTelaPedido } from './types';
+import { NestingSesion, AtributoTela } from './types';
 
 export function useNesting() {
   const [sesiones, setSesiones] = useState<NestingSesion[]>([]);
@@ -27,7 +26,7 @@ export function useNesting() {
       const data = await nestingApi.getTelas();
       setTelas(data);
     } catch (err: any) {
-      console.error('Error cargando telas:', err);
+      console.error(err);
     }
   }, []);
 

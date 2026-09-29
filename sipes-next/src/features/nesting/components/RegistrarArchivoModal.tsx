@@ -1,4 +1,3 @@
-// src/features/nesting/components/RegistrarArchivoModal.tsx
 import React, { useState } from 'react';
 import { nestingApi } from '../api';
 
@@ -24,7 +23,6 @@ export const RegistrarArchivoModal: React.FC<Props> = ({ nestingId, isOpen, onCl
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validaciones
     if (!TIF_REGEX.test(nombre)) {
       setError('El nombre debe tener el formato: SUBLITEX_[CLIENTE]_[TELA]_[ANCHO]x_[LARGO]_[ORDEN]de[TOTAL].tif');
       return;

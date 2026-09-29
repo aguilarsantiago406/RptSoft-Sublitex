@@ -1,4 +1,3 @@
-// src/features/nesting/components/ReporteConsumoCard.tsx
 import React, { useState } from 'react';
 import { nestingApi } from '../api';
 import { ConsumoTelaPedido } from '../types';
@@ -12,7 +11,7 @@ export const ReporteConsumoCard: React.FC = () => {
   const handleBuscar = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanId = pedidoId.trim();
-    if (!cleanId) return; // Evita peticiones vacías
+    if (!cleanId) return;
 
     try {
       setLoading(true);
