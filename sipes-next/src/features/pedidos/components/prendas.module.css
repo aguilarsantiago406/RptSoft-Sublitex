@@ -117,7 +117,7 @@
 
 .tableCard {
   margin-top: 20px;
-  background: var(--background);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);

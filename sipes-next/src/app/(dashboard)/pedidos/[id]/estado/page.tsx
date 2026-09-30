@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getPedido } from "@/features/pedidos/api/pedidos.api";
 import { getDatosEnvio, getResumenProduccion } from "@/features/pedidos/api/comercial.api";
 import { getBloquesPedido, getVersionesPendientesAcuse } from "@/features/pedidos/api/bloques.api";
+import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { PedidoHeader } from "@/features/pedidos/components/PedidoHeader";
 import { AlertaReaperturaTaller } from "@/features/pedidos/components/AlertaReaperturaTaller";
 import { PedidoStepper } from "@/features/pedidos/components/PedidoStepper";
@@ -25,22 +26,25 @@ export default async function PedidoEstadoPage({ params }: EstadoPageProps) {
   let resumenRes;
   let bloquesRes;
   let versionesPendientesRes;
+  let disenosRes;
 
   try {
     pedido = await getPedido(id);
     const pedidoRealId = pedido.id;
 
-    const [envioResult, resumenResult, bloquesResult, versionesResult] =
+    const [envioResult, resumenResult, bloquesResult, versionesResult, disenosResult] =
       await Promise.all([
         loadData(() => getDatosEnvio(pedidoRealId)),
         loadData(() => getResumenProduccion(pedidoRealId)),
         loadData(() => getBloquesPedido(pedidoRealId)),
         loadData(() => getVersionesPendientesAcuse(pedidoRealId)),
+        loadData(() => getDisenosPedido(pedidoRealId)),
       ]);
     envioRes = envioResult;
     resumenRes = resumenResult;
     bloquesRes = bloquesResult;
     versionesPendientesRes = versionesResult;
+    disenosRes = disenosResult;
   } catch (error) {
     if (error instanceof SipesApiError && error.status === 404) notFound();
     throw error;
@@ -50,12 +54,14 @@ export default async function PedidoEstadoPage({ params }: EstadoPageProps) {
   const resumenProduccion = resumenRes.data;
   const bloques = bloquesRes?.data ?? [];
   const versionesPendientes = versionesPendientesRes?.data?.versiones ?? [];
+  const disenos = disenosRes?.data ?? [];
 
   const totalPrendas = pedido.grupos.reduce((acc, g) => acc + g.cantidadContratada, 0);
 
   const avisos = [
     bloquesRes?.error ? `Bloques: ${bloquesRes.error}` : null,
     versionesPendientesRes?.error ? `Alertas de reapertura: ${versionesPendientesRes.error}` : null,
+    disenosRes?.error ? `Diseños: ${disenosRes.error}` : null,
   ].filter((m): m is string => m !== null);
 
   return (
@@ -81,6 +87,7 @@ export default async function PedidoEstadoPage({ params }: EstadoPageProps) {
 
       <PedidoGuiaEtapa
         pedido={pedido}
+        disenos={disenos}
         datosEnvio={datosEnvio}
         totalPrendas={totalPrendas}
         resumenProduccion={resumenProduccion}

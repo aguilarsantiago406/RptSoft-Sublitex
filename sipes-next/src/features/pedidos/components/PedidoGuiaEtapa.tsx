@@ -2,122 +2,13 @@
 
 import { useTransition, useState } from "react";
 import { CheckCircle2, CircleAlert, ArrowRight } from "lucide-react";
-import type { PedidoDetalle, EstadoPedido } from "../types/pedido";
+import type { PedidoDetalle } from "../types/pedido";
 import type { ResumenProduccionItem } from "../api/comercial.api";
 import type { BloquePedidoItem } from "../types/bloque";
 import { actionActualizarEstadoPedido } from "../actions/pedidos.actions";
 import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
-import { evaluarBloquesReales } from "../utils/bloques.utils";
+import { ETAPAS_CONFIG } from "../utils/etapasConfig";
 import styles from "./pedidoGuiaEtapa.module.css";
-
-interface CheckItem {
-  id: string;
-  label: string;
-  ok: boolean;
-  codigo?: string;
-}
-
-interface EtapaConfig {
-  numero: number;
-  titulo: string;
-  detalle: string;
-  siguiente?: EstadoPedido;
-  siguienteLabel?: string;
-  checksEnTarjetas?: boolean;
-  resumenFaltantes?: (faltantes: number) => string;
-  getChecks: (
-    pedido: PedidoDetalle,
-    disenos: Array<{ id: string; estado: string }>,
-    datosEnvio: { ciudad?: string | null; direccion?: string | null; agencia?: string | null } | null,
-    totalPrendas: number,
-    resumenProduccion?: ResumenProduccionItem | null,
-    bloques?: BloquePedidoItem[]
-  ) => CheckItem[];
-}
-
-const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
-  BORRADOR: {
-    numero: 1,
-    titulo: "Datos y fecha de entrega",
-    detalle: "Asigná el cliente y pactá la fecha de entrega.",
-    siguiente: "EN_CONFIGURACION",
-    siguienteLabel: "Ir a Configuración",
-    getChecks: (p) => [
-      { id: "cli", label: "Cliente asignado", ok: Boolean(p.cliente?.nombre) },
-      { id: "fec", label: "Fecha de entrega pactada", codigo: "R-A09", ok: Boolean(p.fechaCompromiso) },
-    ],
-  },
-  EN_CONFIGURACION: {
-    numero: 2,
-    titulo: "Grupos y colores",
-    detalle: "Creá al menos un grupo de prendas y la paleta de colores.",
-    siguiente: "EN_RECOLECCION",
-    siguienteLabel: "Abrir recolección de tallas",
-    getChecks: (p) => [
-      { id: "grp", label: "Al menos 1 grupo de prendas", codigo: "R-B02", ok: (p.grupos?.length ?? 0) > 0 },
-      { id: "col", label: "Colores definidos", ok: (p.colores?.length ?? 0) > 0 },
-    ],
-  },
-  EN_RECOLECCION: {
-    numero: 3,
-    titulo: "Tallas y participantes",
-    detalle: "Cargá tallas, dorsales y nombres de las prendas.",
-    siguiente: "EN_REVISION",
-    siguienteLabel: "Pasar a Revisión",
-    getChecks: (_, __, ___, total) => [
-      { id: "pre", label: "Prendas o participantes registrados", ok: total > 0 },
-    ],
-  },
-  EN_REVISION: {
-    numero: 4,
-    titulo: "Auditoría de calidad",
-    detalle: "Cerrá los 3 bloques para liberar el pedido al taller.",
-    siguiente: "EN_PRODUCCION",
-    siguienteLabel: "Enviar a Producción",
-    checksEnTarjetas: true,
-    resumenFaltantes: (n) => `Falta cerrar ${n} de 3 bloques`,
-    getChecks: (_p, _disenos, _envio, _total, _resumen, bloques) => {
-      const g = evaluarBloquesReales(bloques || []);
-      return [
-        { id: "blk-diseno", label: "Diseño", ok: g.diseno.cerrado },
-        { id: "blk-lista", label: "Lista de prendas", codigo: "R-H03", ok: g.lista.cerrado },
-        { id: "blk-comercial", label: "Comercial", codigo: "R-H03", ok: g.comercial.cerrado },
-      ];
-    },
-  },
-  EN_PRODUCCION: {
-    numero: 5,
-    titulo: "Taller",
-    detalle: "Corte, sublimación y armado. La ficha técnica queda congelada.",
-    siguiente: "ENTREGADO",
-    siguienteLabel: "Marcar como Entregado",
-    getChecks: () => [
-      { id: "pro", label: "Lote fabricado y verificado en empaque", ok: true },
-    ],
-  },
-  ENTREGADO: {
-    numero: 6,
-    titulo: "Entrega",
-    detalle: "Verificá la proforma comercial antes del cierre.",
-    siguiente: "CERRADO",
-    siguienteLabel: "Cerrar Pedido",
-    getChecks: () => [
-      { id: "liq", label: "Recepción confirmada y cobranza 100%", ok: true },
-    ],
-  },
-  CERRADO: {
-    numero: 7,
-    titulo: "Completado",
-    detalle: "El pedido cerró su ciclo.",
-    getChecks: () => [],
-  },
-  CANCELADO: {
-    numero: 0,
-    titulo: "Cancelado",
-    detalle: "Salió del flujo de producción.",
-    getChecks: () => [],
-  },
-};
 
 interface PedidoGuiaEtapaProps {
   pedido: PedidoDetalle;

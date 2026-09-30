@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getPedido, getTiposProducto, getAtributosCatalogo } from "@/features/pedidos/api/pedidos.api";
 import { getDatosEnvio } from "@/features/pedidos/api/comercial.api";
 import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
+import { getUsuarios } from "@/features/usuarios/api/usuarios.api";
 import { PedidoHeader } from "@/features/pedidos/components/PedidoHeader";
 import { PedidoIdentificacion } from "@/features/pedidos/components/PedidoIdentificacion";
 import { PedidoGrupos } from "@/features/pedidos/components/PedidoGrupos";
@@ -26,21 +27,24 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   let envioRes;
   let atributosRes;
   let disenosRes;
+  let usuariosRes;
 
   try {
     pedido = await getPedido(id);
     const pedidoRealId = pedido.id;
 
-    const [tiposRes, envioResult, atributosResult, disenosResult] = await Promise.all([
+    const [tiposRes, envioResult, atributosResult, disenosResult, uRes] = await Promise.all([
       loadData(() => getTiposProducto()),
       loadData(() => getDatosEnvio(pedidoRealId)),
       loadData(() => getAtributosCatalogo()),
       loadData(() => getDisenosPedido(pedidoRealId)),
+      loadData(() => getUsuarios()),
     ]);
     tiposProductoRes = tiposRes;
     envioRes = envioResult;
     atributosRes = atributosResult;
     disenosRes = disenosResult;
+    usuariosRes = uRes;
   } catch (error) {
     if (error instanceof SipesApiError && error.status === 404) notFound();
     throw error;
@@ -50,6 +54,17 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   const datosEnvio = envioRes.data;
   const atributosCatalogo = atributosRes.data ?? [];
   const disenos = disenosRes.data ?? [];
+  const usuarios = usuariosRes?.data ?? [];
+
+  let vendedoras = usuarios
+    .filter((u) => u.activo && (u.rol === "VENDEDORA" || u.rol === "VENDEDOR"))
+    .map((u) => ({ id: u.id, nombre: u.nombre }));
+
+  if (vendedoras.length === 0) {
+    vendedoras = usuarios
+      .filter((u) => u.activo && (u.rol === "ADMINISTRADOR" || u.rol === "COORDINADOR_OPERATIVO"))
+      .map((u) => ({ id: u.id, nombre: u.nombre }));
+  }
 
   const avisos = [
     tiposProductoRes.error ? `Tipos de producto: ${tiposProductoRes.error}` : null,
@@ -69,7 +84,7 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
 
       <div className={styles.sheetContainer}>
         <div className={styles.splitRow}>
-          <PedidoIdentificacion pedido={pedido} />
+          <PedidoIdentificacion pedido={pedido} vendedoras={vendedoras} />
           <PedidoEnvio pedidoId={pedido.id} datosEnvio={datosEnvio} />
         </div>
         <PedidoGrupos
