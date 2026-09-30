@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { getPedido, getParticipantesGrupo } from "@/features/pedidos/api/pedidos.api";
 import { getTiposProducto } from "@/features/catalogos/api/catalogos.api";
-import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
 import { ParticipantesView, type ItemParticipante } from "@/features/participantes/components/ParticipantesView";
 import styles from "@/features/pedidos/components/pedidos.module.css";
 
@@ -66,14 +65,11 @@ export default async function ParticipantesPage({ params }: ParticipantesPagePro
     <main>
       <header className={styles.detailHeader}>
         <div className={styles.detailHeaderMain}>
-          <h1 className={styles.detailHeaderTitle}>
-            PARTICIPANTES <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
-          </h1>
+          <h1 className={styles.detailHeaderTitle}>PARTICIPANTES</h1>
           <p className={styles.detailHeaderSubtitle}>
             <span>Gestión de Participantes</span>
           </p>
         </div>
-        <EstadoPedidoBadge estado={pedido.estado} size="lg" />
       </header>
 
       <ParticipantesView

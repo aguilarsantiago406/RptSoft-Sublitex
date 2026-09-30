@@ -112,7 +112,7 @@ export function ModalEnvioForm({ isOpen, onClose, pedidoId, initial }: ModalEnvi
               {initial ? "Editar datos de envío" : "Registrar datos de envío"}
             </h3>
             <p className={styles.modalSubtitle}>
-              Los siete datos de rotulado para despacho a provincia (R-K08) · Sin los siete no se
+              Los siete datos de rotulado para despacho a provincia · Sin los siete no se
               despacha
             </p>
           </div>

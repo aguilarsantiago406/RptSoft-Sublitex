@@ -1,152 +1,87 @@
 "use client";
 
 import { useState } from "react";
+import { Clock } from "lucide-react";
 import type { PedidoDetalle } from "../types/pedido";
-import type { DisenoItem } from "../types/diseno";
 import { formatDate } from "@/lib/format/date";
 import { ModalEditarPedido } from "./ModalEditarPedido";
 import styles from "./pedidos.module.css";
 
 interface PedidoIdentificacionProps {
   pedido: PedidoDetalle;
-  vendedoras?: Array<{ id: string; nombre: string }>;
-  disenos?: DisenoItem[];
 }
 
-export function PedidoIdentificacion({
-  pedido,
-  vendedoras = [],
-  disenos = [],
-}: PedidoIdentificacionProps) {
+export function PedidoIdentificacion({ pedido }: PedidoIdentificacionProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isZoomOpen, setIsZoomOpen] = useState(false);
-
-  const disenoOficial = disenos.find((d) => d.estado === "APROBADO") ?? disenos[0] ?? null;
 
   return (
-    <section className={styles.sectionBlock}>
+    <section className={`${styles.sectionBlock} ${styles.sectionBlockCompacta}`}>
       <div className={styles.sectionHeaderRow}>
-        <div>
-          <h2 className={styles.sectionTitle}>1 · IDENTIFICACIÓN</h2>
-          <p className={styles.sectionSubtitle}>Datos generales de la orden y contacto comercial</p>
+        <div className={styles.sectionTitleRow}>
+          <span className={styles.cardIcon}>
+            <Clock size={16} />
+          </span>
+          <h2 className={styles.sectionTitle}>Identificación</h2>
         </div>
         <button
           type="button"
-          className={styles.envioEditButton}
+          className={styles.cardActionGhost}
           onClick={() => setIsEditOpen(true)}
-          title="Modificar fecha de entrega, asesor u observaciones"
+          title="Modificar fecha de entrega u observaciones"
         >
-          Editar identificación
+          Editar
         </button>
       </div>
 
-      <div className={styles.identificacionLayout}>
-        <div className={styles.identificacionGrid}>
-          <dl className={styles.dataGrid4}>
-            <div>
-              <dt>N° de pedido</dt>
-              <dd className={styles.code}>{pedido.codigo}</dd>
-            </div>
-            <div>
-              <dt>Fecha de registro</dt>
-              <dd suppressHydrationWarning>{formatDate(pedido.fechaPedido)}</dd>
-            </div>
-            <div>
-              <dt>Fecha de entrega / compromiso</dt>
-              <dd suppressHydrationWarning>{formatDate(pedido.fechaCompromiso)}</dd>
-            </div>
-            <div>
-              <dt>Asesora comercial</dt>
-              <dd>{pedido.vendedora?.nombre || "Sin asignar"}</dd>
-            </div>
-            <div>
-              <dt>Cliente</dt>
-              <dd>{pedido.cliente.nombre}</dd>
-            </div>
-            <div>
-              <dt>Teléfono</dt>
-              <dd>{pedido.cliente.telefono || "No registrado"}</dd>
-            </div>
-            <div>
-              <dt>Ciudad / Destino</dt>
-              <dd>{pedido.cliente.ciudad || "No registrada"}</dd>
-            </div>
-            {pedido.observaciones && (
-              <div style={{ gridColumn: "span 2" }}>
-                <dt>Observaciones / Detalles técnicos</dt>
-                <dd>{pedido.observaciones}</dd>
-              </div>
-            )}
-          </dl>
+      <dl className={styles.idFields}>
+        <div>
+          <dt>N° de pedido</dt>
+          <dd className={styles.code}>{pedido.codigo}</dd>
         </div>
-
-        <div className={styles.disenoThumbnailContainer}>
-          {disenoOficial?.imagenUrl ? (
-            <>
-              <div
-                className={styles.disenoThumbnailCard}
-                onClick={() => setIsZoomOpen(true)}
-                title="Clic para ver diseño en tamaño completo"
-              >
-                <img
-                  src={disenoOficial.imagenUrl}
-                  alt={`Diseño ${disenoOficial.estado}`}
-                  className={styles.disenoThumbnailImg}
-                />
-              </div>
-              <span
-                className={
-                  disenoOficial.estado === "APROBADO"
-                    ? styles.disenoThumbnailBadge
-                    : styles.disenoThumbnailBadgeBorrador
-                }
-              >
-                {disenoOficial.estado === "APROBADO" ? "✓ Aprobado" : `v${disenoOficial.version} ${disenoOficial.estado}`}
-              </span>
-            </>
-          ) : (
-            <div className={styles.disenoThumbnailEmpty}>
-              <span style={{ fontSize: "1.4rem" }}>👕</span>
-              <span>Sin diseño acordado</span>
-            </div>
-          )}
+        <div>
+          <dt>Fecha de registro</dt>
+          <dd suppressHydrationWarning>{formatDate(pedido.fechaPedido)}</dd>
         </div>
-      </div>
+        <div>
+          <dt>Fecha de entrega pactada</dt>
+          <dd suppressHydrationWarning>{formatDate(pedido.fechaCompromiso)}</dd>
+        </div>
+        <div>
+          <dt>Asesora comercial</dt>
+          <dd className={pedido.vendedora?.nombre ? undefined : styles.valueMuted}>
+            {pedido.vendedora?.nombre || "Sin asignar"}
+          </dd>
+        </div>
+        <div>
+          <dt>Cliente</dt>
+          <dd>{pedido.cliente.nombre}</dd>
+        </div>
+        <div>
+          <dt>Teléfono</dt>
+          <dd className={pedido.cliente.telefono ? undefined : styles.valueMuted}>
+            {pedido.cliente.telefono || "No registrado"}
+          </dd>
+        </div>
+        <div>
+          <dt>Ciudad / destino</dt>
+          <dd className={pedido.cliente.ciudad ? undefined : styles.valueMuted}>
+            {pedido.cliente.ciudad || "No registrada"}
+          </dd>
+        </div>
+        {pedido.observaciones && (
+          <div className={styles.idFieldAncho}>
+            <dt>Observaciones</dt>
+            <dd>{pedido.observaciones}</dd>
+          </div>
+        )}
+      </dl>
 
       {isEditOpen && (
         <ModalEditarPedido
           isOpen={isEditOpen}
           onClose={() => setIsEditOpen(false)}
           pedido={pedido}
-          vendedoras={vendedoras}
         />
-      )}
-
-      {isZoomOpen && disenoOficial?.imagenUrl && (
-        <div className={styles.lightboxOverlay} onClick={() => setIsZoomOpen(false)}>
-          <div className={styles.lightboxCard} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.lightboxHeader}>
-              <h3 className={styles.lightboxTitle}>
-                Diseño Acordado — Versión {disenoOficial.version} ({disenoOficial.estado})
-              </h3>
-              <button
-                type="button"
-                className={styles.lightboxClose}
-                onClick={() => setIsZoomOpen(false)}
-                aria-label="Cerrar"
-              >
-                ✕
-              </button>
-            </div>
-            <div className={styles.lightboxBody}>
-              <img
-                src={disenoOficial.imagenUrl}
-                alt="Diseño en tamaño completo"
-                className={styles.lightboxImg}
-              />
-            </div>
-          </div>
-        </div>
       )}
     </section>
   );

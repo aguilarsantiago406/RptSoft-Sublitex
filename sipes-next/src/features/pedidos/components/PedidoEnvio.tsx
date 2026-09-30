@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { MapPin, CircleAlert } from "lucide-react";
 import type { DatosEnvioItem } from "../api/comercial.api";
 import { actionEliminarDatosEnvio } from "../actions/envio.actions";
 import { ModalEnvioForm } from "./ModalEnvioForm";
@@ -39,66 +40,70 @@ export function PedidoEnvio({ pedidoId, datosEnvio }: PedidoEnvioProps) {
   return (
     <section className={styles.sectionBlock}>
       <div className={styles.sectionHeaderRow}>
-        <div>
-          <h2 className={styles.sectionTitle}>ENVÍO A PROVINCIA (R-K08)</h2>
-          <p className={styles.sectionSubtitle}>
-            Los siete datos de rotulado de la matriz comercial · se usan para el despacho a
-            provincia
-          </p>
+        <div className={styles.sectionTitleRow}>
+          <span className={styles.cardIcon}>
+            <MapPin size={16} />
+          </span>
+          <h2 className={styles.sectionTitle}>Envío a provincia</h2>
         </div>
-        <div className={styles.groupsHeaderActions}>
-          {datosEnvio ? (
-            <button
-              type="button"
-              className={styles.envioEditButton}
-              onClick={() => setIsModalOpen(true)}
-            >
-              Editar datos de envío
-            </button>
-          ) : (
-            <button
-              type="button"
-              className={styles.addGrupoButton}
-              onClick={() => setIsModalOpen(true)}
-            >
-              + Registrar envío
-            </button>
-          )}
-        </div>
+        <button
+          type="button"
+          className={datosEnvio ? styles.cardActionGhost : styles.cardAction}
+          onClick={() => setIsModalOpen(true)}
+        >
+          {datosEnvio ? "Editar" : "+ Registrar"}
+        </button>
       </div>
 
       {datosEnvio === null ? (
-        <p className="notice">Este pedido todavía no tiene datos de envío registrados.</p>
+        <div className={styles.emptyNote}>
+          <CircleAlert size={16} />
+          <span>Este pedido todavía no tiene datos de envío registrados.</span>
+        </div>
       ) : (
         <>
           <dl className={styles.dataGrid4}>
             <div>
               <dt>Nombre completo</dt>
-              <dd>{datosEnvio.nombreCompleto || "—"}</dd>
+              <dd className={datosEnvio.nombreCompleto ? undefined : styles.valueMuted}>
+                {datosEnvio.nombreCompleto || "Sin completar"}
+              </dd>
             </div>
             <div>
               <dt>DNI</dt>
-              <dd>{datosEnvio.dni || "—"}</dd>
+              <dd className={datosEnvio.dni ? undefined : styles.valueMuted}>
+                {datosEnvio.dni || "Sin completar"}
+              </dd>
             </div>
             <div>
               <dt>Celular</dt>
-              <dd>{datosEnvio.celular || "—"}</dd>
+              <dd className={datosEnvio.celular ? undefined : styles.valueMuted}>
+                {datosEnvio.celular || "Sin completar"}
+              </dd>
             </div>
             <div>
               <dt>Ciudad</dt>
-              <dd>{datosEnvio.ciudad || "—"}</dd>
+              <dd className={datosEnvio.ciudad ? undefined : styles.valueMuted}>
+                {datosEnvio.ciudad || "Sin completar"}
+              </dd>
             </div>
             <div>
               <dt>Agencia</dt>
-              <dd>{datosEnvio.agencia || "—"}</dd>
+              <dd className={datosEnvio.agencia ? undefined : styles.valueMuted}>
+                {datosEnvio.agencia || "Sin completar"}
+              </dd>
             </div>
             <div>
               <dt>Referencia</dt>
-              <dd>{datosEnvio.referencia || "—"}</dd>
+              <dd className={datosEnvio.referencia ? undefined : styles.valueMuted}>
+                {datosEnvio.referencia || "Sin completar"}
+              </dd>
             </div>
             <div>
               <dt>Correo</dt>
-              <dd>{datosEnvio.correo || "—"}</dd>
+              <dd className={datosEnvio.correo ? undefined : styles.valueMuted}>
+                {datosEnvio.correo || "Sin completar"}
+              </dd>
             </div>
           </dl>
 

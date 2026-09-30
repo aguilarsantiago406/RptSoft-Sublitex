@@ -1,10 +1,7 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Palette } from "lucide-react";
 import { getPedido } from "@/features/pedidos/api/pedidos.api";
 import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { PedidoDiseno } from "@/features/pedidos/components/PedidoDiseno";
-import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
 import { loadData } from "@/lib/api/loadData";
 import { SipesApiError } from "@/lib/api/http";
 import styles from "@/features/pedidos/components/pedidos.module.css";
@@ -40,32 +37,10 @@ export default async function DisenoPage({ params }: DisenoPageProps) {
     <main>
       <div className={styles.detailHeader} style={{ marginBottom: "20px" }}>
         <div className={styles.detailHeaderMain}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-            <Link
-              href={`/pedidos/${pedido.codigo}`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                color: "var(--muted)",
-                fontSize: "0.84rem",
-                textDecoration: "none",
-                fontWeight: 500,
-              }}
-            >
-              <ArrowLeft size={16} /> Volver a datos del pedido
-            </Link>
-          </div>
-          <h1 className={styles.detailHeaderTitle} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <Palette size={26} color="var(--sky-dark)" />
-            TALLER DE DISEÑO & MOCKUPS <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
-          </h1>
+          <h1 className={styles.detailHeaderTitle}>TALLER DE DISEÑO &amp; MOCKUPS</h1>
           <p className={styles.detailHeaderSubtitle}>
             <span>Mockups y Aprobación de Arte</span>
           </p>
-        </div>
-        <div className={styles.detailHeaderRight}>
-          <EstadoPedidoBadge estado={pedido.estado} size="lg" />
         </div>
       </div>
 
