@@ -210,10 +210,18 @@
 .panel { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); padding: 22px; box-shadow: var(--shadow-md); }
 .panelHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .panelHeader h2 { margin: 0; font-size: 1rem; }
+/* Dos columnas: con una sola, la página crece linealmente con cada grupo.
+   El estirado por defecto de grid iguala las alturas dentro de cada fila. */
 .groupList {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 700px) {
+  .groupList {
+    grid-template-columns: 1fr;
+  }
 }
 .groupCard { border: 1px solid var(--border-soft); border-radius: 14px; padding: 16px; background: #fbfdfc; }
 .groupTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
@@ -250,12 +258,13 @@
 .groupCardMinimal {
   border: 1px solid #e2e8f0;
   border-radius: 16px;
-  padding: 20px 22px;
+  padding: 16px 18px;
   background: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  min-width: 0;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -285,18 +294,17 @@
 
 .groupName {
   margin: 0;
-  font-size: 1.05rem;
-  font-weight: 600;
+  font-size: 0.84rem;
+  font-weight: 400;
   color: var(--navy);
-  letter-spacing: -0.01em;
 }
 
 .productBadge {
   font-size: 0.7rem;
-  font-weight: 500;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 3px 9px;
+  padding: 2px 8px;
   border-radius: 999px;
   background: rgba(14, 165, 233, 0.12);
   color: #0369a1;
@@ -310,28 +318,28 @@
 }
 
 .policyBadge {
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   color: #64748b;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .policyLabel {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #64748b;
 }
 
 .policySelect {
-  height: 28px;
-  padding: 0 8px;
-  border-radius: 8px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 6px;
   border: 1px solid #e2e8f0;
   background: #ffffff;
   color: var(--navy);
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 400;
   cursor: pointer;
   outline: none;
   transition: border-color 0.15s ease;
@@ -362,109 +370,112 @@
 }
 
 .groupCountBlock {
-  text-align: right;
-  flex: 0 0 auto;
+  text-align: center;
+  flex: none;
   background: #f8fafc;
   border: 1px solid #f1f5f9;
-  border-radius: 12px;
-  padding: 6px 14px;
+  border-radius: 10px;
+  padding: 5px 12px;
 }
 
 .countNumber {
   display: block;
-  font-size: 1.35rem;
-  font-weight: 650;
+  font-size: 0.84rem;
+  font-weight: 400;
   color: var(--navy);
-  line-height: 1.1;
+  line-height: 1.2;
 }
 
 .countLabel {
   display: block;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #64748b;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .componentsRow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  padding: 9px 12px;
-  background: #f8fafc;
-  border-radius: 10px;
-  border: 1px solid #f1f5f9;
+  font-size: 0.82rem;
+  color: var(--muted);
 }
 
 .componentsLabel {
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: #475569;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--muted);
 }
 
-.componentsPills {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.pillItem {
-  font-size: 0.76rem;
-  font-weight: 500;
-  color: var(--navy);
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  padding: 3px 8px;
+.componentsPill {
+  font-size: 0.8rem;
+  padding: 2px 8px;
   border-radius: 6px;
+  border: 1px solid var(--border-soft);
+  background: #f8fafc;
+  font-weight: 400;
+  color: #475569;
+  white-space: nowrap;
 }
 
+
+/* Configuración del grupo: banda inferior con fondo propio y la grilla de
+   especificaciones en dos columnas (etiqueta arriba, valor abajo) del mockup. */
 .configSection {
   display: grid;
-  gap: 7px;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
 }
 
 .configSectionTitle {
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #94a3b8;
 }
 
-.configPillsGrid {
+.configTabla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 0;
+}
+
+@media (max-width: 420px) {
+  .configTabla {
+    grid-template-columns: 1fr;
+  }
+}
+
+.configFila {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.configLabel {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--muted);
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.configPill {
-  display: inline-flex;
   align-items: center;
-  border-radius: 7px;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  font-size: 0.74rem;
-  background: #ffffff;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
 }
 
-.configPillKey {
-  background: #f1f5f9;
-  color: #475569;
-  font-weight: 500;
-  padding: 3px 7px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  font-size: 0.66rem;
-}
-
-.configPillVal {
-  padding: 3px 8px;
+.configValor {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 400;
   color: var(--navy);
-  font-weight: 500;
+  overflow-wrap: anywhere;
 }
 
 .configEmpty {
@@ -547,6 +558,25 @@
   margin-top: 20px;
 }
 
+/* Split en columnas parejas: cada fila de cards ocupa el mismo ancho, así
+   ninguna queda con un vacío marcado al lado. */
+.splitRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.splitRow > * {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .splitRow {
+    grid-template-columns: 1fr;
+  }
+}
+
 .sectionBlock {
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -555,53 +585,226 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Variante densa para cards de solo lectura, donde el aire se convierte
+   en altura muerta al lado de una card con formulario. */
+.sectionBlockCompacta {
+  padding: 16px 18px;
+}
+
+.sectionBlockCompacta .sectionHeaderRow {
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
 .sectionHeaderRow {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 12px 16px;
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--border-soft);
   padding-bottom: 12px;
   margin-bottom: 16px;
 }
 
+/* Chip de icono en el encabezado de la card, patrón del mockup */
+.cardIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--sky-soft, #e0f2fe);
+  color: var(--sky-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Dos variantes de acción en el encabezado, igual que el mockup */
+.cardAction,
+.cardActionGhost {
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 6px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  flex: none;
+}
+
+.cardAction {
+  color: var(--sky-dark);
+  background: var(--sky-soft, #e0f2fe);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+}
+
+.cardAction:hover {
+  background: rgba(2, 132, 199, 0.16);
+}
+
+.cardActionGhost {
+  color: var(--ink-soft, #5b6472);
+  background: #ffffff;
+  border: 1px solid var(--border);
+}
+
+.cardActionGhost:hover {
+  border-color: #c9cdd5;
+  background: #fafbfc;
+}
+
+.countTag {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-soft, #5b6472);
+  white-space: nowrap;
+}
+
+/* Estado vacío con el tratamiento ámbar del mockup */
+.emptyNote {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--amber-soft, #fdf3e1);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.8rem;
+  color: #8a5c05;
+  line-height: 1.45;
+}
+
+.emptyNote svg {
+  flex: none;
+  margin-top: 1px;
+}
+
 .sectionTitle {
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--navy);
   margin: 0;
   letter-spacing: -0.01em;
 }
 
 .sectionSubtitle {
-  margin: 3px 0 0;
+  margin: 2px 0 0;
   font-size: 0.78rem;
   color: var(--muted);
 }
 
+/* Columna de lectura fija. Sin tope, las cards miden 1600px para 7 campos y
+   la pantalla aparenta tener mucho más trabajo del que tiene. */
+.paginaPedido {
+  max-width: 1000px;
+}
+
+/* Columnas explícitas, no auto-fit: a media página, tres columnas casi
+   llenan la última fila y empatan las alturas de Envío e Identificación. */
 .dataGrid4 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 18px;
 }
 
 .dataGrid4 div {
   display: grid;
-  gap: 3px;
+  gap: 2px;
+  min-width: 0;
 }
 
+/* Etiqueta sin versalitas: el tracking amplio es lo que envelvece el diseño */
 .dataGrid4 dt {
   color: var(--muted);
-  font-size: 0.73rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.72rem;
   font-weight: 500;
 }
 
 .dataGrid4 dd {
   margin: 0;
-  font-weight: 500;
-  font-size: 0.88rem;
+  font-weight: 700;
+  font-size: 0.875rem;
   color: var(--navy);
+  overflow-wrap: anywhere;
+}
+
+.dataGrid4 dd.valueMuted {
+  color: var(--muted);
+  font-weight: 500;
+  font-style: italic;
+}
+
+@media (max-width: 760px) {
+  .dataGrid4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .dataGrid4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Rejilla de la card de Identificación: con la card a media página, tres
+   columnas mantienen la altura baja y parejo con Envío. */
+.idFields {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px 18px;
+}
+
+.idFields div {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.idFields dt {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+
+.idFields dd {
+  margin: 0;
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: var(--navy);
+  overflow-wrap: anywhere;
+}
+
+.idFields dd.valueMuted {
+  color: var(--muted);
+  font-weight: 400;
+  font-style: italic;
+}
+
+.idFieldAncho {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 560px) {
+  .idFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .sectionBlock {
+    padding: 18px 16px;
+  }
 }
 
 .specTable {
@@ -693,12 +896,6 @@
   gap: 8px;
 }
 
-.detailHeaderCode {
-  color: #0284c7;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-weight: 600;
-}
-
 .detailHeaderSubtitle {
   margin: 0;
   color: #64748b;
@@ -719,13 +916,6 @@
   border-radius: 6px;
   color: var(--navy);
   font-weight: 500;
-}
-
-.detailHeaderRight {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
 }
 
 .stateActionsContainer {
@@ -928,7 +1118,7 @@
 .modalTitle {
   margin: 0;
   font-size: 1rem;
-  font-weight: 650;
+  font-weight: 400;
   color: var(--navy);
 }
 
@@ -962,7 +1152,7 @@
   border-radius: 8px;
   color: #be123c;
   font-size: 0.78rem;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .modalForm {
@@ -998,7 +1188,7 @@
 
 .formField label {
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: 400;
   color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -1043,7 +1233,7 @@
 .hexTextInput {
   flex: 1;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 0.04em;
 }
 
@@ -1075,7 +1265,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 9px;
   font-size: 0.84rem;
-  font-weight: 550;
+  font-weight: 400;
   color: #475569;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1092,7 +1282,7 @@
   border: none;
   border-radius: 9px;
   font-size: 0.84rem;
-  font-weight: 600;
+  font-weight: 400;
   color: #ffffff;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(2, 132, 199, 0.25);
@@ -1134,8 +1324,8 @@
 
 .groupHeaderRightBlock {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
 }
 
 .editGrupoButton {
@@ -1205,7 +1395,7 @@
   background: #f8fafc;
   border-left: 3px solid #cbd5e1;
   border-radius: 0 8px 8px 0;
-  font-size: 0.78rem;
+  font-size: 0.875rem;
   color: #475569;
 }
 
@@ -1263,166 +1453,303 @@
   color: #be123c;
 }
 
-/* Thumbnail del diseño acordado en Identificación */
-.identificacionLayout {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  justify-content: space-between;
+/* R-F06 · Observación es informativa, no llega a producción */
+.observacionBloque {
+  margin-top: 16px;
+  padding-left: 12px;
+  border-left: 3px solid var(--border-soft, #cbd5e1);
 }
 
-.identificacionGrid {
+.observacionTexto {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--navy);
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+/* R-B02 / R-B06 / R-I09 · Alerta bloqueante con su destino */
+.groupAlert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 14px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  border-radius: 10px;
+  background: rgba(217, 119, 6, 0.08);
+  color: #b45309;
+  font-size: 0.8rem;
+}
+
+.groupAlert svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.groupAlertList {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+
+.groupAlertAction {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 400;
+  color: #ffffff;
+  background: #b45309;
+  border: none;
+  cursor: pointer;
+}
+
+.groupAlertAction:hover {
+  opacity: 0.9;
+}
+
+/* R-C08 · Atributo clave para producción, resaltado sutilmente */
+.criticoDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0284c7;
+  display: inline-block;
+  margin-right: 2px;
+}
+
+.configFilaDestacada {
+  padding: 4px 8px;
+  background: rgba(2, 132, 199, 0.05);
+  border-radius: 6px;
+  border-left: 2px solid #0284c7;
+}
+
+.configValorDestacado {
+  color: #0369a1;
+}
+
+/* Avance de recolección: sin card, es un bloque de datos dentro de la page.
+   Los grupos van en columnas acotadas para que no se estiren de lado a lado. */
+.recoleccion {
+  display: grid;
+  gap: 16px;
+}
+
+.recoleccionMetricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.recoleccionMetrica {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.recoleccionMetricaOk {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.recoleccionMetricaAlerta {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.recoleccionMetricaLabel {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.recoleccionMetricaOk .recoleccionMetricaLabel {
+  color: #166534;
+}
+
+.recoleccionMetricaAlerta .recoleccionMetricaLabel {
+  color: #92400e;
+}
+
+.recoleccionMetricaValor {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.recoleccionProgresoRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.recoleccionProgresoPct {
+  color: var(--sky-dark);
+}
+
+.recoleccionProgresoOk {
+  color: #16a34a;
+}
+
+.recoleccionProgresoTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.recoleccionProgresoBar {
+  height: 100%;
+  background: var(--sky-dark);
+  transition: width 0.3s ease;
+}
+
+.recoleccionProgresoBarOk {
+  background: #16a34a;
+}
+
+/* Ancla de identidad del pedido. Se renderiza dentro del contenido de la
+   page, así que el margen negativo cancela el padding de .content y la barra
+   ocupa todo el ancho. Las variables mantienen ambos valores sincronizados. */
+.pedidoTopbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 52px;
+  margin: calc(-1 * var(--contenido-pad-y)) calc(-1 * var(--contenido-pad-x)) 20px;
+  padding: 8px var(--contenido-pad-x);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 820px) {
+  /* Deja libre el botón de menú fijo. */
+  .pedidoTopbar {
+    padding-left: 68px;
+  }
+}
+
+.pedidoTopbarMain {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pedidoTopbarCodigo {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.pedidoTopbarSep {
+  width: 1px;
+  height: 14px;
+  background: var(--border);
+  flex: none;
+}
+
+.pedidoTopbarCliente {
+  font-size: 0.86rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.mockupBody {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mockupPreview {
+  position: relative;
+  flex: none;
+  width: 84px;
+  aspect-ratio: 3 / 4;
+  border-radius: 11px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #f0f1f4;
+}
+
+.mockupPreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mockupPreviewTag,
+.mockupPreviewTagAprobado {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: rgba(190, 18, 60, 0.92);
+  color: #ffffff;
+}
+
+.mockupPreviewTagAprobado {
+  background: rgba(22, 163, 74, 0.92);
+}
+
+.mockupPreviewEmpty {
+  flex: none;
+  width: 84px;
+  aspect-ratio: 3 / 4;
+  border-radius: 11px;
+  border: 1.5px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8px;
+}
+
+.mockupSideInfo {
   flex: 1;
   min-width: 0;
 }
 
-.disenoThumbnailContainer {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.disenoThumbnailCard {
-  width: 140px;
-  height: 140px;
-  border-radius: 12px;
-  border: 1px solid var(--border-soft, #e2e8f0);
-  background: #ffffff;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.disenoThumbnailCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  border-color: #3b82f6;
-}
-
-.disenoThumbnailImg {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-.disenoThumbnailEmpty {
-  width: 140px;
-  height: 140px;
-  border-radius: 12px;
-  border: 1.5px dashed #cbd5e1;
-  background: #f8fafc;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: #94a3b8;
-  font-size: 0.75rem;
-  text-align: center;
-  padding: 12px;
-}
-
-.disenoThumbnailBadge {
-  font-size: 0.70rem;
-  font-weight: 650;
-  color: #16a34a;
-  background: #dcfce7;
-  padding: 2px 8px;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.disenoThumbnailBadgeBorrador {
-  font-size: 0.70rem;
-  font-weight: 650;
-  color: #d97706;
-  background: #fef3c7;
-  padding: 2px 8px;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.lightboxOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(4px);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.lightboxCard {
-  background: #ffffff;
-  border-radius: 16px;
-  max-width: 720px;
-  width: 100%;
-  overflow: hidden;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-}
-
-.lightboxHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border-soft, #e2e8f0);
-}
-
-.lightboxTitle {
-  font-size: 0.94rem;
+.mockupSideTitle {
+  font-size: 0.84rem;
   font-weight: 700;
-  color: var(--navy, #0f172a);
-  margin: 0;
+  color: var(--navy);
+  margin-bottom: 3px;
 }
 
-.lightboxClose {
-  background: transparent;
-  border: none;
-  font-size: 1.2rem;
-  color: #64748b;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: background 0.15s;
-}
-
-.lightboxClose:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-}
-
-.lightboxBody {
-  padding: 20px;
-  background: #f8fafc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.lightboxImg {
-  max-width: 100%;
-  max-height: 520px;
-  object-fit: contain;
-  border-radius: 8px;
+.mockupSideDesc {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .timelineList {
@@ -2015,12 +2342,8 @@
 }
 
 @media (max-width: 768px) {
-  .identificacionLayout {
-    flex-direction: column-reverse;
-    align-items: center;
-  }
-  .disenoThumbnailContainer {
-    width: 100%;
-    margin-bottom: 16px;
+  .mockupBody {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

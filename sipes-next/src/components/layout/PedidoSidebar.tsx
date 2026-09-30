@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ClipboardList, Palette, Users, Shirt, FileText } from "lucide-react";
+import { Route, ClipboardList, Palette, Users, Shirt, FileText } from "lucide-react";
 import { actionLogout } from "@/features/auth/actions/auth.actions";
 import styles from "./layout.module.css";
 
@@ -20,6 +20,12 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
   const basePath = `/pedidos/${pedidoId}`;
 
   const navItems = [
+    {
+      label: "Estado del pedido",
+      href: `${basePath}/estado`,
+      icon: Route,
+      isActive: pathname.startsWith(`${basePath}/estado`),
+    },
     {
       label: "Datos del pedido",
       href: basePath,
@@ -64,8 +70,8 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
             <Image
               src="/logo.png"
               alt="Sublitex"
-              width={170}
-              height={32}
+              width={150}
+              height={28}
               priority
               className={styles.brandLogo}
             />
@@ -81,7 +87,7 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
               alignItems: "center",
               gap: "6px",
               color: "var(--sky-dark)",
-              fontSize: "0.82rem",
+              fontSize: "0.79rem",
               fontWeight: 700,
               textDecoration: "none",
             }}
@@ -102,7 +108,7 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
                   key={item.href}
                   onClick={() => setOpen(false)}
                 >
-                  <Icon size={18} />
+                  <Icon size={16} />
                   <span>{item.label}</span>
                 </Link>
               );

@@ -4,13 +4,11 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import {
   ShieldCheck,
-  FileText,
   Palette,
   ClipboardList,
   BadgeDollarSign,
   ArrowDown,
   ArrowRight,
-  CheckCircle,
   AlertTriangle,
   Lock,
   Unlock,
@@ -87,30 +85,22 @@ export function PedidoRevision({
   const bComercial = gobernanza.comercial.bloque;
 
   return (
-    <section className={sharedStyles.sectionBlock}>
+    <section id="bloques" className={sharedStyles.sectionBlock} style={{ scrollMarginTop: "16px" }}>
       <div className={sharedStyles.sectionHeaderRow}>
         <div>
           <h2 className={sharedStyles.sectionTitle} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <ShieldCheck size={20} color="var(--sky-dark)" />
-            GOBERNANZA DE BLOQUES OPERATIVOS (BASE DE DATOS)
+            BLOQUES DEL PEDIDO
           </h2>
           <p className={sharedStyles.sectionSubtitle}>
-            Control formal de los 3 candados de negocio en el backend antes de liberar a taller.
+            Los 3 deben quedar cerrados para liberar el pedido al taller.
           </p>
         </div>
-        <Link
-          href={`/pedidos/${pedido.codigo}/proforma`}
-          className={sharedStyles.linkButton}
-          style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-        >
-          <FileText size={16} />
-          Ver Proforma Comercial →
-        </Link>
       </div>
 
       <div className={styles.gridBloques}>
         {/* BLOQUE 1: DISEÑO */}
-        <div className={styles.bloqueCard}>
+        <div className={styles.bloqueCard} title="R-H01, R-H02">
           <div>
             <div className={styles.bloqueCardHeader}>
               <h3 className={styles.bloqueTitle}>
@@ -121,18 +111,12 @@ export function PedidoRevision({
                 {gobernanza.diseno.cerrado ? "CERRADO" : "ABIERTO"}
               </span>
             </div>
-            <p style={{ margin: "6px 0 10px", fontSize: "0.78rem", color: "var(--muted)" }}>
-              Aprobación final del arte y mockups gráficos (R-H01, R-H02).
-            </p>
+            <p className={styles.bloqueDescription}>Arte y mockups aprobados.</p>
 
-            {gobernanza.diseno.cerrado ? (
+            {gobernanza.diseno.cerrado && (
               <div className={styles.metaAuditoria}>
-                ✓ Cerrado formalmente {bDiseno?.cerradoPor?.nombre ? `por ${bDiseno.cerradoPor.nombre}` : ""}
-                {bDiseno?.versiones?.[0]?.numero ? ` · Versión #${bDiseno.versiones[0].numero}` : ""}
-              </div>
-            ) : (
-              <div className={styles.metaAuditoria}>
-                Estado: Abierto para edición y subida de propuestas gráficas.
+                ✓ {bDiseno?.cerradoPor?.nombre ?? "Sin autor"}
+                {bDiseno?.versiones?.[0]?.numero ? ` · v${bDiseno.versiones[0].numero}` : ""}
               </div>
             )}
 
@@ -153,7 +137,7 @@ export function PedidoRevision({
                   onClick={() => setReabrirTipo("DISENO")}
                   disabled={isPending}
                 >
-                  <Unlock size={13} /> Reabrir Bloque
+                  <Unlock size={13} /> Reabrir
                 </button>
               ) : (
                 <button
@@ -163,7 +147,7 @@ export function PedidoRevision({
                   disabled={isPending && bloquePendingTipo === "DISENO"}
                 >
                   <Lock size={13} />
-                  {isPending && bloquePendingTipo === "DISENO" ? "Validando..." : "Cerrar Bloque"}
+                  {isPending && bloquePendingTipo === "DISENO" ? "Validando..." : "Cerrar"}
                 </button>
               )}
 
@@ -179,7 +163,7 @@ export function PedidoRevision({
         </div>
 
         {/* BLOQUE 2: LISTA DE PRENDAS */}
-        <div className={styles.bloqueCard}>
+        <div className={styles.bloqueCard} title="R-B02, R-E03, R-G03, R-H03">
           <div>
             <div className={styles.bloqueCardHeader}>
               <h3 className={styles.bloqueTitle}>
@@ -190,18 +174,12 @@ export function PedidoRevision({
                 {gobernanza.lista.cerrado ? "CERRADO" : "ABIERTO"}
               </span>
             </div>
-            <p style={{ margin: "6px 0 10px", fontSize: "0.78rem", color: "var(--muted)" }}>
-              Asignación 100% de tallas, dorsales y excepciones (R-B02, R-H03).
-            </p>
+            <p className={styles.bloqueDescription}>Tallas, dorsales y excepciones completos.</p>
 
-            {gobernanza.lista.cerrado ? (
+            {gobernanza.lista.cerrado && (
               <div className={styles.metaAuditoria}>
-                ✓ Cerrado formalmente {bLista?.cerradoPor?.nombre ? `por ${bLista.cerradoPor.nombre}` : ""}
-                {bLista?.versiones?.[0]?.numero ? ` · Versión #${bLista.versiones[0].numero}` : ""}
-              </div>
-            ) : (
-              <div className={styles.metaAuditoria}>
-                Estado: Abierto. Se exige completar la cantidad contratada de cada grupo antes del cierre.
+                ✓ {bLista?.cerradoPor?.nombre ?? "Sin autor"}
+                {bLista?.versiones?.[0]?.numero ? ` · v${bLista.versiones[0].numero}` : ""}
               </div>
             )}
 
@@ -222,7 +200,7 @@ export function PedidoRevision({
                   onClick={() => setReabrirTipo("LISTA")}
                   disabled={isPending}
                 >
-                  <Unlock size={13} /> Reabrir Bloque
+                  <Unlock size={13} /> Reabrir
                 </button>
               ) : (
                 <button
@@ -232,7 +210,7 @@ export function PedidoRevision({
                   disabled={isPending && bloquePendingTipo === "LISTA"}
                 >
                   <Lock size={13} />
-                  {isPending && bloquePendingTipo === "LISTA" ? "Validando..." : "Cerrar Bloque"}
+                  {isPending && bloquePendingTipo === "LISTA" ? "Validando..." : "Cerrar"}
                 </button>
               )}
 
@@ -240,14 +218,14 @@ export function PedidoRevision({
                 href={`/pedidos/${pedido.codigo}/prendas`}
                 className={styles.bloqueLink}
               >
-                Ir a Matriz de Prendas <ArrowRight size={14} />
+                Ir a Prendas <ArrowRight size={14} />
               </Link>
             </div>
           </div>
         </div>
 
         {/* BLOQUE 3: COMERCIAL */}
-        <div className={styles.bloqueCard}>
+        <div className={styles.bloqueCard} title="R-A09, R-H03">
           <div>
             <div className={styles.bloqueCardHeader}>
               <h3 className={styles.bloqueTitle}>
@@ -258,18 +236,12 @@ export function PedidoRevision({
                 {gobernanza.comercial.cerrado ? "CERRADO" : "ABIERTO"}
               </span>
             </div>
-            <p style={{ margin: "6px 0 10px", fontSize: "0.78rem", color: "var(--muted)" }}>
-              Confirmación comercial, adelanto 50% y fecha pactada (R-A09, R-K06).
-            </p>
+            <p className={styles.bloqueDescription}>Confirmación y adelanto registrados.</p>
 
-            {gobernanza.comercial.cerrado ? (
+            {gobernanza.comercial.cerrado && (
               <div className={styles.metaAuditoria}>
-                ✓ Cerrado formalmente {bComercial?.cerradoPor?.nombre ? `por ${bComercial.cerradoPor.nombre}` : ""}
-                {bComercial?.versiones?.[0]?.numero ? ` · Versión #${bComercial.versiones[0].numero}` : ""}
-              </div>
-            ) : (
-              <div className={styles.metaAuditoria}>
-                Estado: Abierto. Requiere confirmación comercial con adelanto registrado.
+                ✓ {bComercial?.cerradoPor?.nombre ?? "Sin autor"}
+                {bComercial?.versiones?.[0]?.numero ? ` · v${bComercial.versiones[0].numero}` : ""}
               </div>
             )}
 
@@ -290,7 +262,7 @@ export function PedidoRevision({
                   onClick={() => setReabrirTipo("COMERCIAL")}
                   disabled={isPending}
                 >
-                  <Unlock size={13} /> Reabrir Bloque
+                  <Unlock size={13} /> Reabrir
                 </button>
               ) : (
                 <button
@@ -300,42 +272,17 @@ export function PedidoRevision({
                   disabled={isPending && bloquePendingTipo === "COMERCIAL"}
                 >
                   <Lock size={13} />
-                  {isPending && bloquePendingTipo === "COMERCIAL" ? "Validando..." : "Cerrar Bloque"}
+                  {isPending && bloquePendingTipo === "COMERCIAL" ? "Validando..." : "Cerrar"}
                 </button>
               )}
 
               <Link href={`/pedidos/${pedido.codigo}/proforma`} className={styles.bloqueLink}>
-                Ver Proforma →
+                Ir a Proforma <ArrowRight size={14} />
               </Link>
             </div>
           </div>
         </div>
       </div>
-
-      {/* ESTADO CONSOLIDADO PRE-TALLER */}
-      {gobernanza.listoParaProduccion ? (
-        <div className={styles.readinessBannerOk} role="status">
-          <CheckCircle size={20} />
-          <div>
-            <strong>✓ Candados verificados en base de datos: Pedido listo para producción</strong>
-            <div style={{ fontSize: "0.8rem", marginTop: "2px" }}>
-              Los 3 bloques operativos (Diseño, Lista y Comercial) están CERRADOS. Podés liberar la orden a taller desde la Guía de Etapa superior.
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className={styles.readinessBannerPending} role="alert">
-          <AlertTriangle size={20} />
-          <div>
-            <strong>Producción retenida por candados operativos</strong>
-            <div style={{ fontSize: "0.8rem", marginTop: "2px" }}>
-              En la base de datos, los siguientes bloques siguen en estado ABIERTO:{" "}
-              <strong>{gobernanza.bloquesPendientes.map((t) => NOMBRES_BLOQUE[t]).join(", ")}</strong>.
-              Deben cerrarse formalmente antes de liberar la ficha a corte.
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* MODAL REAPERTURA DE BLOQUE */}
       <ModalReabrirBloque

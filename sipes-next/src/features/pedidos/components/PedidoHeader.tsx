@@ -1,24 +1,23 @@
-import type { PedidoDetalle } from "../types/pedido";
-import { EstadoPedidoBadge } from "./EstadoPedidoBadge";
 import styles from "./pedidos.module.css";
 
 interface PedidoHeaderProps {
-  pedido: PedidoDetalle;
+  titulo?: string;
+  subtitulo?: string;
 }
 
-export function PedidoHeader({ pedido }: PedidoHeaderProps) {
+/* El código y el estado ya viven en la barra de pedido; el header de la
+   section solo aporta su título. */
+export function PedidoHeader({
+  titulo = "DATOS DEL PEDIDO",
+  subtitulo = "Ficha técnica operativa",
+}: PedidoHeaderProps) {
   return (
     <header className={styles.detailHeader}>
       <div className={styles.detailHeaderMain}>
-        <h1 className={styles.detailHeaderTitle}>
-          DATOS DEL PEDIDO <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
-        </h1>
+        <h1 className={styles.detailHeaderTitle}>{titulo}</h1>
         <p className={styles.detailHeaderSubtitle}>
-          <span>Ficha técnica operativa</span>
+          <span>{subtitulo}</span>
         </p>
-      </div>
-      <div className={styles.detailHeaderRight}>
-        <EstadoPedidoBadge estado={pedido.estado} size="lg" />
       </div>
     </header>
   );

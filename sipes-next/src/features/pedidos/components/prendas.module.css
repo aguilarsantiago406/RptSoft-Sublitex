@@ -1,11 +1,16 @@
-﻿.container {
+/* Más aire que en Participantes: ahí la columna derecha tiene dos filas
+   (botones + buscador) y ese alto ya despega la barra de la tabla. Aquí el
+   buscador es lo único que hay, así que el aire se da en el gap. */
+.container {
   display: grid;
-  gap: 18px;
+  gap: 32px;
 }
 
+/* Los filtros no se estiran: ocupan lo que necesitan y el buscador queda
+   a la derecha. */
 .actionBar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
@@ -16,6 +21,9 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  max-width: 100%;
+  /* Evita que un grupo con nombre largo estire la barra. */
+  min-width: 0;
 }
 
 .filterTab {
@@ -31,6 +39,13 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  max-width: 220px;
+}
+
+.filterTab > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .filterTab:hover {
@@ -57,9 +72,21 @@
   color: #ffffff;
 }
 
+/* Columna derecha alineada al borde, igual que en Participantes: las
+   acciones van en una fila y el buscador debajo. */
+.actionBarRight {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* Ancho fijo: sin esto el input se encoge al placeholder, porque en Prendas
+   la columna derecha solo lo contiene a él. */
 .searchBox {
   position: relative;
-  min-width: 240px;
+  width: 320px;
+  max-width: 100%;
 }
 
 .searchInput {
@@ -89,6 +116,7 @@
 }
 
 .tableCard {
+  margin-top: 20px;
   background: #ffffff;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -232,7 +260,7 @@
 
 .numeroBadge {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--navy);
   font-size: 0.88rem;
 }
@@ -301,7 +329,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--navy);
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
@@ -327,7 +355,7 @@
   border: 1px solid #fecdd3;
   border-radius: var(--radius-sm);
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--danger);
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);

@@ -8,10 +8,8 @@ import {
 } from "@/features/pedidos/api/pedidos.api";
 import { getUbicaciones } from "@/features/catalogos/api/catalogos.api";
 import { getResumenProduccion } from "@/features/pedidos/api/comercial.api";
-import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
 import { PedidoRecoleccionCard } from "@/features/pedidos/components/PedidoRecoleccionCard";
 import { PrendasView } from "@/features/pedidos/components/PrendasView";
-import { PedidoTabs } from "@/features/pedidos/components/PedidoTabs";
 import type { PrendaDetalle } from "@/features/pedidos/types/pedido";
 import styles from "@/features/pedidos/components/pedidos.module.css";
 
@@ -50,25 +48,21 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
     notFound();
   }
 
-  // Mapa de tallas del catálogo por id
   const mapaTallas = new Map<string, string>();
   for (const t of tallasCatalogo ?? []) {
     mapaTallas.set(t.id, t.codigo);
   }
 
-  // Mapa de colores del pedido por id
   const mapaColores = new Map<string, { nombre: string; codigoHex: string }>();
   for (const c of pedido.colores) {
     mapaColores.set(c.id, { nombre: c.nombre, codigoHex: c.codigoHex });
   }
 
-  // Mapa de grupos por id
   const mapaGrupos = new Map<string, { id: string; nombre: string; politicaNumeracion: string; configuracion?: Array<{ atributo: string; valor: string }> }>();
   for (const g of pedido.grupos) {
     mapaGrupos.set(g.id, { id: g.id, nombre: g.nombre, politicaNumeracion: g.politicaNumeracion, configuracion: g.configuracion });
   }
 
-  // Mapa de atributos y valores del catálogo para excepciones
   const mapaAtributos = new Map<string, { id: string; nombre: string; codigo: string }>();
   const mapaValores = new Map<string, { id: string; etiqueta: string; codigo: string }>();
   for (const a of atributosCatalogo ?? []) {
@@ -78,7 +72,6 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
     }
   }
 
-  // Consultar los participantes de cada grupo usando el endpoint oficial GET /api/grupos/:id/participantes
   const resultadosPorGrupo = await Promise.allSettled(
     pedido.grupos.map((g) => getParticipantesGrupo(g.id))
   );
@@ -96,7 +89,6 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
     }
   });
 
-  // Consolidar y aplanar las prendas
   const prendas: PrendaDetalle[] = [];
   for (const listaParticipantes of participantesPorGrupo) {
     for (const part of listaParticipantes) {
@@ -141,22 +133,14 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
 
   return (
     <main>
-      <header className={styles.detailHeader} style={{ marginBottom: "14px" }}>
+      <header className={styles.detailHeader} style={{ marginBottom: "20px" }}>
         <div className={styles.detailHeaderMain}>
-          <h1 className={styles.detailHeaderTitle}>
-            PRENDAS <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
-          </h1>
-          <p className={styles.detailHeaderSubtitle}>
-            <span>Matriz de Prendas, Tallas y Excepciones</span>
-          </p>
+          <h1 className={styles.detailHeaderTitle}>PRENDAS</h1>
         </div>
-        <EstadoPedidoBadge estado={pedido.estado} size="lg" />
       </header>
 
-      <PedidoTabs pedidoCodigo={pedido.codigo} totalPrendas={totalPrendas} />
-
       <div style={{ marginBottom: "24px" }}>
-        <PedidoRecoleccionCard pedido={pedido} totalPrendas={totalPrendas} resumen={resumenProduccion} />
+        <PedidoRecoleccionCard totalPrendas={totalPrendas} resumen={resumenProduccion} />
       </div>
 
       <PrendasView

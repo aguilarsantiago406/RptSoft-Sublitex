@@ -21,12 +21,14 @@ export async function actionActualizarEstadoPedido(
     });
 
     revalidatePath(`/pedidos/${pedidoId}`);
+    revalidatePath(`/pedidos/${pedidoId}/estado`);
+    revalidatePath(`/pedidos/${pedidoId}/participantes`);
+    revalidatePath(`/pedidos/${pedidoId}/prendas`);
+    revalidatePath(`/pedidos/${pedidoId}/diseno`);
     revalidatePath("/pedidos");
     return { ok: true };
   } catch (error) {
-    if (error instanceof SipesApiError) {
-      return { ok: false, error: error.message };
-    }
+    if (error instanceof SipesApiError) return { ok: false, error: error.message };
     return { ok: false, error: "No se pudo actualizar el estado del pedido." };
   }
 }

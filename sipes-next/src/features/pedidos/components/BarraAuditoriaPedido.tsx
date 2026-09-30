@@ -45,9 +45,10 @@ export function BarraAuditoriaPedido({
           />
           {primeraTarjeta ? (
             <span className={styles.barraAuditoriaTexto}>
-              <strong>Última actualización:</strong>{" "}
-              <span className={styles.barraAuditoriaPersona}>{primeraTarjeta.titulo}</span>{" "}
-              ({primeraTarjeta.cambios.map((c) => `${c.campoLabel}: ${c.valorAnterior || "vacío"} ➔ ${c.valorNuevo || "vacío"}`).join(", ")}){" "}
+              <strong>Último cambio:</strong>{" "}
+              <span className={styles.barraAuditoriaPersona}>
+                {primeraTarjeta.cambios.map((c) => c.campoLabel).join(", ")}
+              </span>{" "}
               por {primeraTarjeta.autorNombre}{" "}
               <span className={styles.barraAuditoriaFecha} suppressHydrationWarning>
                 · {formatDate(primeraTarjeta.creadoEn)} {new Date(primeraTarjeta.creadoEn).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}
@@ -55,7 +56,7 @@ export function BarraAuditoriaPedido({
             </span>
           ) : (
             <span className={styles.barraAuditoriaTexto}>
-              Registro de auditoría inmutable activo · Sin cambios posteriores a la apertura
+              Sin cambios registrados
             </span>
           )}
         </div>

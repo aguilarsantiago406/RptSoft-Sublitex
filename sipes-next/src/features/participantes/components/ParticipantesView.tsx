@@ -82,32 +82,53 @@ export function ParticipantesView({
   return (
     <div className={styles.container}>
       <div className={styles.actionBar}>
-        <div className={styles.filtersAndSearch}>
-          <div className={styles.filtersGroup}>
+        <div className={styles.filtersGroup}>
+          <button
+            type="button"
+            className={`${styles.filterTab} ${grupoActivo === "TODOS" ? styles.filterTabActive : ""}`}
+            onClick={() => setGrupoActivo("TODOS")}
+          >
+            <span>Todos</span>
+            <span className={styles.tabBadge}>{participantes.length}</span>
+          </button>
+
+          {grupos.map((g) => {
+            const count = conteoPorGrupo.get(g.id) ?? 0;
+            const activo = grupoActivo === g.id;
+            return (
+              <button
+                key={g.id}
+                type="button"
+                className={`${styles.filterTab} ${activo ? styles.filterTabActive : ""}`}
+                onClick={() => setGrupoActivo(g.id)}
+              >
+                <span>{g.nombre}</span>
+                <span className={styles.tabBadge}>{count}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className={styles.actionBarRight}>
+          <div className={styles.actionBarActions}>
             <button
               type="button"
-              className={`${styles.filterTab} ${grupoActivo === "TODOS" ? styles.filterTabActive : ""}`}
-              onClick={() => setGrupoActivo("TODOS")}
+              className={styles.secondaryAction}
+              onClick={handleCopiarEnlaces}
+              disabled={copiando || participantes.length === 0}
+              title="Copiar lista compilada de enlaces personales para compartir por WhatsApp"
             >
-              <span>Todos</span>
-              <span className={styles.tabBadge}>{participantes.length}</span>
+              {copiado ? <Check size={15} color="#16a34a" /> : <Copy size={15} />}
+              <span>{copiado ? "¡Enlaces copiados!" : copiando ? "Obteniendo…" : "Copiar todos los enlaces"}</span>
             </button>
 
-            {grupos.map((g) => {
-              const count = conteoPorGrupo.get(g.id) ?? 0;
-              const activo = grupoActivo === g.id;
-              return (
-                <button
-                  key={g.id}
-                  type="button"
-                  className={`${styles.filterTab} ${activo ? styles.filterTabActive : ""}`}
-                  onClick={() => setGrupoActivo(g.id)}
-                >
-                  <span>{g.nombre}</span>
-                  <span className={styles.tabBadge}>{count}</span>
-                </button>
-              );
-            })}
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => setIsModalOpen(true)}
+            >
+              <span>+ Nuevo Participante</span>
+            </button>
           </div>
 
           <div className={styles.searchBox}>
@@ -136,33 +157,6 @@ export function ParticipantesView({
             />
           </div>
         </div>
-
-        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
-          <button
-            type="button"
-            className={styles.filterTab}
-            onClick={handleCopiarEnlaces}
-            disabled={copiando || participantes.length === 0}
-            style={{
-              padding: "8px 14px",
-              fontWeight: 600,
-              color: "var(--navy)",
-              cursor: participantes.length === 0 ? "not-allowed" : "pointer",
-            }}
-            title="Copiar lista compilada de enlaces personales para compartir por WhatsApp"
-          >
-            {copiado ? <Check size={15} color="#16a34a" /> : <Copy size={15} />}
-            <span>{copiado ? "¡Enlaces copiados!" : copiando ? "Obteniendo…" : "Copiar todos los enlaces"}</span>
-          </button>
-
-          <button
-            type="button"
-            className={styles.primaryButton}
-            onClick={() => setIsModalOpen(true)}
-          >
-            <span>+ Nuevo Participante</span>
-          </button>
-        </div>
       </div>
 
       {errorGrupos.length > 0 && (
@@ -180,6 +174,7 @@ export function ParticipantesView({
         tiposProducto={tiposProducto}
         colores={colores}
       />
+
       <div className={styles.countSummary}>
         Mostrando <strong>{participantesFiltrados.length}</strong> de <strong>{participantes.length}</strong> participantes en total.
       </div>

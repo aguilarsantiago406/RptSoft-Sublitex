@@ -1,10 +1,7 @@
 import { notFound } from "next/navigation";
-import { Palette } from "lucide-react";
 import { getPedido } from "@/features/pedidos/api/pedidos.api";
 import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { PedidoDiseno } from "@/features/pedidos/components/PedidoDiseno";
-import { PedidoTabs } from "@/features/pedidos/components/PedidoTabs";
-import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
 import { loadData } from "@/lib/api/loadData";
 import { SipesApiError } from "@/lib/api/http";
 import styles from "@/features/pedidos/components/pedidos.module.css";
@@ -38,22 +35,14 @@ export default async function DisenoPage({ params }: DisenoPageProps) {
 
   return (
     <main>
-      <div className={styles.detailHeader} style={{ marginBottom: "14px" }}>
+      <div className={styles.detailHeader} style={{ marginBottom: "20px" }}>
         <div className={styles.detailHeaderMain}>
-          <h1 className={styles.detailHeaderTitle} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <Palette size={26} color="var(--sky-dark)" />
-            TALLER DE DISEÑO & MOCKUPS <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
-          </h1>
+          <h1 className={styles.detailHeaderTitle}>TALLER DE DISEÑO &amp; MOCKUPS</h1>
           <p className={styles.detailHeaderSubtitle}>
             <span>Mockups y Aprobación de Arte</span>
           </p>
         </div>
-        <div className={styles.detailHeaderRight}>
-          <EstadoPedidoBadge estado={pedido.estado} size="lg" />
-        </div>
       </div>
-
-      <PedidoTabs pedidoCodigo={pedido.codigo} disenoVersion={disenos[0]?.version} />
 
       <div style={{ maxWidth: "1000px" }}>
         <PedidoDiseno pedidoId={pedido.id} disenos={disenos} />

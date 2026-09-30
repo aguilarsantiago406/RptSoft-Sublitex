@@ -3,6 +3,8 @@
   gap: 18px;
 }
 
+/* Mismo acomodo que Prendas: tabs a la izquierda, buscador y acción
+   principal a la derecha. */
 .actionBar {
   display: flex;
   align-items: center;
@@ -11,10 +13,20 @@
   flex-wrap: wrap;
 }
 
-.filtersAndSearch {
+/* Columna derecha: acciones en una fila y buscador debajo, ambos alineados
+   al borde derecho, igual que en Prendas. */
+.actionBarRight {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.actionBarActions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: flex-end;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -23,6 +35,8 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .filterTab {
@@ -38,6 +52,13 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  max-width: 220px;
+}
+
+.filterTab > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .filterTab:hover {
@@ -64,9 +85,12 @@
   color: #ffffff;
 }
 
+/* Ancho fijo en ambos listados: así el buscador ocupa lo mismo en Prendas
+   y en Participantes, sin depender de lo que tenga la fila de encima. */
 .searchBox {
   position: relative;
-  min-width: 240px;
+  width: 320px;
+  max-width: 100%;
 }
 
 .searchInput {
@@ -426,6 +450,31 @@
   font-size: 0.8rem;
   color: #64748b;
   font-weight: 500;
+}
+
+.secondaryAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fafc;
+  color: var(--navy);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+
+.secondaryAction:hover:not(:disabled) {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.secondaryAction:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* Modal styles */
