@@ -121,7 +121,7 @@ export function ModalEditarGrupo({
 
           {atributosCatalogo.length > 0 && (
             <div style={{ marginTop: "8px" }}>
-              <label style={{ display: "block", marginBottom: "8px", fontWeight: 600, fontSize: "0.88rem", color: "var(--navy)" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: 400, fontSize: "0.88rem", color: "var(--navy)" }}>
                 Especificaciones base del grupo (telas, cuellos, acabados):
               </label>
               <div className={styles.twoColsLayout} style={{ gap: "10px" }}>

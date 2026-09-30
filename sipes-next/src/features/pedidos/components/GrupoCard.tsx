@@ -41,7 +41,7 @@ export function GrupoCard({
         <div className={styles.groupAlert} role="alert">
           <TriangleAlert size={15} />
           <div>
-            <strong>{faltantes.length === 1 ? "Bloquea el paso a recolección" : `Bloquea el paso a recolección (${faltantes.length})`}</strong>
+            <span style={{ fontWeight: 400 }}>{faltantes.length === 1 ? "Bloquea el paso a recolección" : `Bloquea el paso a recolección (${faltantes.length})`}</span>
             <ul className={styles.groupAlertList}>
               {faltantes.map((f) => (
                 <li key={f}>{f}</li>
@@ -136,12 +136,18 @@ export function GrupoCard({
                 (a) => normalizar(a.codigo) === normalizar(item.atributo) || normalizar(a.nombre) === normalizar(item.atributo)
               )?.criticoProduccion;
               return (
-                <div className={styles.configFila} key={`${item.atributo}-${item.valor}`}>
+                <div
+                  className={`${styles.configFila} ${critico ? styles.configFilaDestacada : ""}`}
+                  key={`${item.atributo}-${item.valor}`}
+                  title={critico ? "Parámetro técnico clave para moldería o taller" : undefined}
+                >
                   <dt className={styles.configLabel}>
+                    {critico && <span className={styles.criticoDot} aria-hidden="true" />}
                     {item.atributo}
-                    {critico && <span className={styles.criticoTag}>crítico</span>}
                   </dt>
-                  <dd className={styles.configValor}>{item.valor}</dd>
+                  <dd className={`${styles.configValor} ${critico ? styles.configValorDestacado : ""}`}>
+                    {item.valor}
+                  </dd>
                 </div>
               );
             })}

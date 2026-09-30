@@ -97,17 +97,17 @@ export function PrendaRow({
       <td>
         <span className={badgeClass}>{nombreGrupo}</span>
         {prenda.tipoPrenda === "OBSEQUIO" && (
-          <span style={{ marginLeft: "4px", padding: "1px 5px", borderRadius: "3px", fontSize: "0.68rem", fontWeight: 700, background: "#dcfce7", color: "#166534" }}>
+          <span style={{ marginLeft: "4px", padding: "1px 5px", borderRadius: "3px", fontSize: "0.68rem", fontWeight: 400, background: "#dcfce7", color: "#166534" }}>
             Obsequio
           </span>
         )}
         {prenda.tipoPrenda === "MUESTRA" && (
-          <span style={{ marginLeft: "4px", padding: "1px 5px", borderRadius: "3px", fontSize: "0.68rem", fontWeight: 700, background: "#e0f2fe", color: "#0369a1" }}>
+          <span style={{ marginLeft: "4px", padding: "1px 5px", borderRadius: "3px", fontSize: "0.68rem", fontWeight: 400, background: "#e0f2fe", color: "#0369a1" }}>
             Muestra
           </span>
         )}
         {prenda.esArquero && (
-          <span style={{ marginLeft: "4px", padding: "1px 5px", borderRadius: "3px", fontSize: "0.68rem", fontWeight: 700, background: "#fef9c3", color: "#854d0e" }}>
+          <span style={{ marginLeft: "4px", padding: "1px 5px", borderRadius: "3px", fontSize: "0.68rem", fontWeight: 400, background: "#fef9c3", color: "#854d0e" }}>
             Arquero
           </span>
         )}
@@ -118,7 +118,7 @@ export function PrendaRow({
             title={prenda.personalizaciones.map((p) => `${p.ubicacion?.etiqueta ?? "Estampado"}: "${p.contenido}"`).join(" · ")}
             style={{
               display: "inline-block", padding: "2px 6px", borderRadius: "4px", fontSize: "0.72rem",
-              fontWeight: 600, background: "#ccfbf1", color: "#0f766e", border: "1px solid #99f6e4",
+              fontWeight: 400, background: "#ccfbf1", color: "#0f766e", border: "1px solid #99f6e4",
               whiteSpace: "nowrap", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis",
             }}
           >
