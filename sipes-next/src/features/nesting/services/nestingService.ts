@@ -146,10 +146,10 @@ export async function registrarArchivoTif(
   metadatos: MetadatosArchivoTif,
 ): Promise<ArchivoTifItem> {
   if (metadatos.largoM > LARGO_MAXIMO_M) {
-    throw new SipesApiError(`El largo máximo por archivo TIF es de ${LARGO_MAXIMO_M} metros (R-K13).`, 422);
+    throw new SipesApiError(`El largo máximo por archivo TIF es de ${LARGO_MAXIMO_M} metros.`, 422);
   }
   if (metadatos.ordenEnSerie > metadatos.totalSerie) {
-    throw new SipesApiError("El orden en la serie no puede ser mayor que el total de la serie (R-K13).", 422);
+    throw new SipesApiError("El orden en la serie no puede ser mayor que el total de la serie.", 422);
   }
   return apiPost<ArchivoTifItem>(`/api/nestings/${encodeURIComponent(sesionId)}/archivos`, {
     nombre,
@@ -166,7 +166,7 @@ export async function vincularArchivoTif(
   const metadatos = metadatosDesdeNombre(archivo.name);
   if (!metadatos) {
     throw new SipesApiError(
-      "El nombre del archivo debe seguir el formato R-K13: SUBLITEX_{PEDIDO}_{TELA}_{ANCHO}x_{LARGO}_{orden}de{total}.tif (ej: SUBLITEX_PROMO2002_DRYFIT_180x400_1de3.tif).",
+      "El nombre del archivo debe seguir el formato: SUBLITEX_{PEDIDO}_{TELA}_{ANCHO}x_{LARGO}_{orden}de{total}.tif (ej: SUBLITEX_PROMO2002_DRYFIT_180x400_1de3.tif).",
       422,
     );
   }

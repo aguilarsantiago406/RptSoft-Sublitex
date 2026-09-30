@@ -72,7 +72,7 @@ export async function actionCrearExcepcionPrenda(
     return { ok: false, error: "Debes seleccionar un atributo y un valor para la excepción." };
   }
   if (!motivo) {
-    return { ok: false, error: "El motivo de la excepción es obligatorio para el taller (Regla R-C04)." };
+    return { ok: false, error: "El motivo de la excepción es obligatorio para el taller." };
   }
 
   try {

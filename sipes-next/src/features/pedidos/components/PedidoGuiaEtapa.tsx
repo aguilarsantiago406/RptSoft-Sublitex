@@ -37,10 +37,6 @@ export function PedidoGuiaEtapa({
   const puedeAvanzar = faltantes.length === 0 && Boolean(config.siguiente);
   const resumenFaltantes = config.resumenFaltantes ?? ((n: number) => `Falta ${n} requisito${n === 1 ? "" : "s"}`);
 
-  function irABloques() {
-    document.getElementById("bloques")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
   function ejecutarAvanzar() {
     if (!puedeAvanzar || !config.siguiente) return;
     setErrorMsg(null);
@@ -88,11 +84,6 @@ export function PedidoGuiaEtapa({
               </span>
               <span className={styles.bloqueoTexto}>
                 {resumenFaltantes(faltantes.length)}
-                {config.checksEnTarjetas && (
-                  <button type="button" className={styles.bloqueoLink} onClick={irABloques}>
-                    Ver abajo
-                  </button>
-                )}
               </span>
             </>
           ) : (
@@ -107,20 +98,20 @@ export function PedidoGuiaEtapa({
           )}
         </div>
 
-        {!config.checksEnTarjetas && checks.length > 0 && (
-          <ul className={styles.checkList}>
-            {checks.map((item) => (
+        {checks.length > 0 && (
+          <ol className={styles.checkList}>
+            {checks.map((item, idx) => (
               <li
                 key={item.id}
                 className={item.ok ? styles.checkItemOk : styles.checkItemPending}
-                title={item.codigo ? `Regla ${item.codigo}` : undefined}
               >
                 {item.ok ? <CheckCircle2 size={14} /> : <CircleAlert size={14} />}
-                <span>{item.label}</span>
-                {item.codigo && <code className={styles.checkCodigo}>{item.codigo}</code>}
+                <span>
+                  {idx + 1}. {item.label}
+                </span>
               </li>
             ))}
-          </ul>
+          </ol>
         )}
 
         {config.siguiente && (
@@ -152,7 +143,7 @@ export function PedidoGuiaEtapa({
         description={
           <div>
             <p>
-              Estás a punto de enviar el pedido <strong>{pedido.codigo}</strong> al taller.
+              Estás a punto de enviar el pedido {pedido.codigo} al taller.
             </p>
             <p style={{ marginTop: "10px", fontSize: "0.85rem", color: "#64748b" }}>
               Los 3 bloques están cerrados. Al confirmar, la ficha técnica queda congelada para corte y confección.

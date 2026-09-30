@@ -256,7 +256,7 @@ export function TallerNestingView() {
 
       <div className={styles.grid}>
         <Card as="section" className={styles.seccion}>
-          <h2>1. Nueva sesión de nesting (R-K11)</h2>
+          <h2>1. Nueva sesión de nesting</h2>
           <form onSubmit={crearSesion} className={styles.form}>
             <div className={styles.field}>
               <label htmlFor="nesting-codigo">Código de sesión</label>
@@ -287,7 +287,7 @@ export function TallerNestingView() {
                 ))}
               </select>
             </div>
-            <p className={styles.ayuda}>Ancho de impresión estándar: 1.80 m (R-K12).</p>
+            <p className={styles.ayuda}>Ancho de impresión estándar: 1.80 m.</p>
             <Button type="submit" disabled={config.cargando}>
               {config.cargando ? "Creando…" : "Crear sesión"}
             </Button>
@@ -296,7 +296,7 @@ export function TallerNestingView() {
         </Card>
 
         <Card as="section" className={styles.seccion}>
-          <h2>2. Asignación de partes (R-K11, R-H04)</h2>
+          <h2>2. Asignación de partes</h2>
           {!sesionDetalle && <p className={styles.ayuda}>Selecciona una sesión de nesting para registrar partes.</p>}
           <form onSubmit={asignarParte} className={styles.form}>
             <div className={styles.field}>
@@ -369,7 +369,7 @@ export function TallerNestingView() {
         </Card>
 
         <Card as="section" className={styles.seccion}>
-          <h2>3. Vincular archivo TIF (R-K13)</h2>
+          <h2>3. Vincular archivo TIF</h2>
           <p className={styles.ayuda}>
             Formato: SUBLITEX_&#123;PEDIDO&#125;_&#123;TELA&#125;_&#123;ANCHO&#125;x_&#123;LARGO&#125;_&#123;orden&#125;de&#123;total&#125;.tif (máx. 5.0 m).
           </p>
@@ -407,7 +407,7 @@ export function TallerNestingView() {
         </Card>
 
         <Card as="section" className={styles.seccion}>
-          <h2>4. Reporte de consumo y merma (R-K12, R-K15)</h2>
+          <h2>4. Reporte de consumo y merma</h2>
           <form onSubmit={consultarConsumo} className={styles.form}>
             <div className={styles.field}>
               <label htmlFor="consumo-pedido">ID del pedido</label>

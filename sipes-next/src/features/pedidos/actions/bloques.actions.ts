@@ -34,7 +34,7 @@ export async function actionReabrirBloque(
 ): Promise<BloqueActionResult> {
   const motivoLimpio = motivoReapertura.trim();
   if (motivoLimpio.length < 5) {
-    return { ok: false, error: "El motivo de reapertura debe tener al menos 5 caracteres (R-H13)." };
+    return { ok: false, error: "El motivo de reapertura debe tener al menos 5 caracteres." };
   }
 
   try {

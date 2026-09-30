@@ -7,7 +7,6 @@ export interface CheckItem {
   id: string;
   label: string;
   ok: boolean;
-  codigo?: string;
 }
 
 export interface EtapaConfig {
@@ -37,7 +36,7 @@ export const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
     siguienteLabel: "Ir a Configuración",
     getChecks: (p) => [
       { id: "cli", label: "Cliente asignado", ok: Boolean(p.cliente?.nombre) },
-      { id: "fec", label: "Fecha de entrega pactada", codigo: "R-A09", ok: Boolean(p.fechaCompromiso) },
+      { id: "fec", label: "Fecha de entrega pactada", ok: Boolean(p.fechaCompromiso) },
     ],
   },
   EN_CONFIGURACION: {
@@ -47,7 +46,7 @@ export const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
     siguiente: "EN_RECOLECCION",
     siguienteLabel: "Abrir recolección de tallas",
     getChecks: (p) => [
-      { id: "grp", label: "Al menos 1 grupo de prendas", codigo: "R-B02", ok: (p.grupos?.length ?? 0) > 0 },
+      { id: "grp", label: "Al menos 1 grupo de prendas", ok: (p.grupos?.length ?? 0) > 0 },
       { id: "col", label: "Colores definidos", ok: (p.colores?.length ?? 0) > 0 },
     ],
   },
@@ -66,13 +65,11 @@ export const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
         {
           id: "pre",
           label: `Prendas completas (${registradas}/${contratadas > 0 ? contratadas : "?"})`,
-          codigo: "R-B02",
           ok: completas,
         },
         {
           id: "dis",
           label: "Propuesta de diseño subida",
-          codigo: "R-H01",
           ok: hayDiseno,
         },
       ];
@@ -84,14 +81,13 @@ export const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
     detalle: "Cerrá los 3 bloques operativos (diseño, lista y comercial) para liberar a corte.",
     siguiente: "EN_PRODUCCION",
     siguienteLabel: "Enviar a Producción",
-    checksEnTarjetas: true,
     resumenFaltantes: (n) => `Falta cerrar ${n} de 3 bloques`,
     getChecks: (_p, _disenos, _envio, _total, _resumen, bloques) => {
       const g = evaluarBloquesReales(bloques || []);
       return [
-        { id: "blk-diseno", label: "Bloque Diseño", codigo: "R-H01", ok: g.diseno.cerrado },
-        { id: "blk-lista", label: "Bloque Lista de prendas", codigo: "R-B02", ok: g.lista.cerrado },
-        { id: "blk-comercial", label: "Bloque Comercial (50% anticipo + envío)", codigo: "R-K06", ok: g.comercial.cerrado },
+        { id: "blk-diseno", label: "Bloque Diseño", ok: g.diseno.cerrado },
+        { id: "blk-lista", label: "Bloque Lista de prendas", ok: g.lista.cerrado },
+        { id: "blk-comercial", label: "Bloque Comercial (50% anticipo + envío)", ok: g.comercial.cerrado },
       ];
     },
   },

@@ -118,7 +118,7 @@ export function CatalogosView({
         <div>
           <h3 className={styles.standardsTitle}>Catálogo de Prendas y Tipos de Producto</h3>
           <p className={styles.standardsDesc}>
-            Piezas físicas oficiales según regla R-K03, tallas autorizadas y precio de referencia
+            Piezas físicas oficiales, tallas autorizadas y precio de referencia
           </p>
         </div>
         <div className={styles.tarifasHeaderActions}>
@@ -388,7 +388,7 @@ export function CatalogosView({
         </div>
       </section>
 
-      {/* Gestion del Catalogo de Tarifas (R-K10) */}
+      {/* Gestion del Catalogo de Tarifas */}
       <TarifasView tarifas={tarifas} />
 
       {/* Modales de Creación Dinámica */}

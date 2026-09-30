@@ -7,7 +7,6 @@
   overflow: hidden;
   transition: all var(--duration-normal) var(--ease-out);
 }
-
 .guiaHeader {
   display: flex;
   align-items: baseline;
@@ -16,13 +15,11 @@
   border-bottom: 1px solid var(--border-soft);
   flex-wrap: wrap;
 }
-
 .guiaTitleRow {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .etapaBadge {
   display: inline-flex;
   align-items: center;
@@ -30,28 +27,24 @@
   padding: 3px 10px;
   border-radius: 999px;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   background: rgba(2, 132, 199, 0.12);
   color: var(--sky-dark);
   white-space: nowrap;
 }
-
 .guiaTitle {
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--navy);
   margin: 0;
 }
-
 .guiaSubtitle {
   margin: 0;
   font-size: 0.84rem;
   color: var(--muted);
 }
-
-/* Una sola fila: veredicto a la izquierda, lista de checks al centro, acción a la derecha */
 .guiaContent {
   padding: 14px 20px;
   display: grid;
@@ -59,47 +52,32 @@
   align-items: center;
   gap: 18px;
 }
-
 @media (max-width: 900px) {
-  .guiaContent {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
+  .guiaContent { grid-template-columns: 1fr; gap: 12px; }
+  .actionsSection { align-items: stretch; }
 }
-
 .estadoRow {
   display: flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
 }
-
-.bloqueoIcon,
-.listoIcon {
+.bloqueoIcon, .listoIcon {
   display: inline-flex;
   flex-shrink: 0;
 }
-
-.bloqueoIcon {
-  color: #b45309;
-}
-
-.listoIcon {
-  color: #15803d;
-}
-
+.bloqueoIcon { color: #b45309; }
+.listoIcon { color: #15803d; }
 .bloqueoTexto {
   font-size: 0.86rem;
-  font-weight: 600;
+  font-weight: 400;
   color: #b45309;
 }
-
 .listoTexto {
   font-size: 0.86rem;
-  font-weight: 600;
+  font-weight: 400;
   color: #15803d;
 }
-
 .bloqueoLink {
   background: none;
   border: none;
@@ -110,7 +88,6 @@
   text-decoration: underline;
   cursor: pointer;
 }
-
 .checkList {
   list-style: none;
   margin: 0;
@@ -119,49 +96,31 @@
   flex-wrap: wrap;
   gap: 6px 8px;
 }
-
 .checkList li {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 400;
   padding: 4px 9px;
   border-radius: 8px;
 }
-
 .checkItemOk {
   color: #15803d;
   background: rgba(22, 163, 74, 0.08);
   border: 1px solid rgba(22, 163, 74, 0.18);
 }
-
 .checkItemPending {
   color: #b45309;
   background: rgba(217, 119, 6, 0.08);
   border: 1px solid rgba(217, 119, 6, 0.22);
 }
-
-.checkCodigo {
-  font-size: 0.68rem;
-  font-weight: 600;
-  opacity: 0.6;
-  letter-spacing: 0.02em;
-}
-
 .actionsSection {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 6px;
 }
-
-@media (max-width: 900px) {
-  .actionsSection {
-    align-items: stretch;
-  }
-}
-
 .advanceButton {
   display: inline-flex;
   align-items: center;
@@ -170,7 +129,7 @@
   padding: 9px 16px;
   border-radius: 10px;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 400;
   color: #ffffff;
   background: var(--sky-dark);
   border: none;
@@ -179,32 +138,27 @@
   box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
   white-space: nowrap;
 }
-
 .advanceButton:hover:not(:disabled) {
   filter: brightness(1.1);
   transform: translateY(-1px);
 }
-
 .advanceButton:disabled {
   background: #94a3b8;
   cursor: not-allowed;
   box-shadow: none;
   opacity: 0.7;
 }
-
 .advanceHelper {
   font-size: 0.74rem;
   color: #b91c1c;
-  font-weight: 500;
+  font-weight: 400;
   text-align: right;
 }
-
 .activeSectionHighlight {
   border: 2px solid var(--sky-dark) !important;
   box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12) !important;
   position: relative;
 }
-
 .activeSectionBadge {
   position: absolute;
   top: -10px;
@@ -212,7 +166,7 @@
   background: var(--sky-dark);
   color: #ffffff;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 2px 10px;

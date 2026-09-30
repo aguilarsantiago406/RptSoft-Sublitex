@@ -26,8 +26,8 @@ export function SeccionPersonalizacionesPrenda({
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    if (!ubicacionId) { setError("Selecciona la ubicación del estampado (R-F03)."); return; }
-    if (!contenido.trim()) { setError("El texto del estampado no puede estar vacío (R-F04)."); return; }
+    if (!ubicacionId) { setError("Selecciona la ubicación del estampado."); return; }
+    if (!contenido.trim()) { setError("El texto del estampado no puede estar vacío."); return; }
     setError(null);
     startTransition(async () => {
       const res = await actionCrearPersonalizacion(pedidoId, { prendaId, ubicacionId, contenido: contenido.trim() });

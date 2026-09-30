@@ -115,7 +115,7 @@ export default function AuditoriaGlobalPage() {
       <div className={styles.header}>
         <h1 className={styles.title}>Bitácora Global de Auditoría</h1>
         <p className={styles.subtitle}>
-          Historial inmutable de trazabilidad operativa y cambios en pedidos (R-I01..R-I05)
+          Historial inmutable de trazabilidad operativa y cambios en pedidos
         </p>
       </div>
 

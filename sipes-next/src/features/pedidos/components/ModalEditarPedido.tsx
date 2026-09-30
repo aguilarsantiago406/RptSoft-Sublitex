@@ -43,11 +43,11 @@ export function ModalEditarPedido({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!fechaCompromiso) {
-      setError("La fecha de compromiso es obligatoria (R-A09).");
+      setError("La fecha de compromiso es obligatoria.");
       return;
     }
     if (minimo && fechaCompromiso < minimo) {
-      setError("La fecha de entrega debe ser posterior a la fecha del pedido (R-A09).");
+      setError("La fecha de entrega debe ser posterior a la fecha del pedido.");
       return;
     }
 
@@ -100,7 +100,7 @@ export function ModalEditarPedido({
               aria-describedby="edit-pedido-fecha-hint"
             />
             <small id="edit-pedido-fecha-hint" className={styles.formHint}>
-              Debe ser posterior al {formatDate(pedido.fechaPedido)} (R-A09).
+              Debe ser posterior al {formatDate(pedido.fechaPedido)}.
             </small>
           </div>
 
@@ -133,7 +133,7 @@ export function ModalEditarPedido({
               aria-describedby="edit-pedido-obs-hint"
             />
             <small id="edit-pedido-obs-hint" className={styles.formHint}>
-              No llegan a producción. Lo que deba esteemed el taller se registra como atributo o personalización (R-F06).
+              No llegan a producción. Lo que deba estimar el taller se registra como atributo o personalización.
             </small>
           </div>
 

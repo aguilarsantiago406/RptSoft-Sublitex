@@ -53,7 +53,7 @@ export function ModalNuevoPedido({
   function handleSubmitPedido(e: React.FormEvent) {
     e.preventDefault();
     if (!clienteId) return setError("Debes seleccionar un cliente para el pedido.");
-    if (!fechaCompromiso) return setError("La fecha de compromiso de entrega es obligatoria (Regla R-A09).");
+    if (!fechaCompromiso) return setError("La fecha de compromiso de entrega es obligatoria.");
 
     setError(null);
     startTransition(async () => {
@@ -80,7 +80,7 @@ export function ModalNuevoPedido({
         <div className={styles.modalHeader}>
           <div>
             <h3 className={styles.modalTitle}>Nuevo Pedido</h3>
-            <p className={styles.modalSubtitle}>Alta de orden técnica con código correlativo (Regla R-A03)</p>
+            <p className={styles.modalSubtitle}>Alta de orden técnica con código correlativo</p>
           </div>
           <button type="button" className={styles.modalCloseButton} onClick={handleReset} aria-label="Cerrar">✕</button>
         </div>
@@ -138,7 +138,7 @@ export function ModalNuevoPedido({
               onChange={(e) => setFechaCompromiso(e.target.value)}
               className={styles.formInput}
             />
-            <small className={styles.formHint}>Debe ser posterior a la fecha actual para salir de BORRADOR (Regla R-A09)</small>
+            <small className={styles.formHint}>Debe ser posterior a la fecha actual para salir de BORRADOR</small>
           </div>
 
           <div className={styles.formField}>

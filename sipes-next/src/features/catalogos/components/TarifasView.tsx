@@ -72,7 +72,7 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
     <section className={styles.tarifasSection}>
       <div className={styles.tarifasHeader}>
         <div>
-          <h3 className={styles.standardsTitle}>Catálogo de Tarifas (R-K10)</h3>
+          <h3 className={styles.standardsTitle}>Catálogo de Tarifas</h3>
           <p className={styles.standardsDesc}>
             Costos de impresión y confección, precios de venta y recargos · los conceptos
             vigentes se usan para cotización automática en proformas
@@ -215,10 +215,10 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
         description={
           tarifaAEliminar ? (
             <>
-              ¿Eliminar la tarifa <strong>{tarifaAEliminar.concepto}</strong>?
+              ¿Eliminar la tarifa {tarifaAEliminar.concepto}?
               <br />
               <br />
-              Esta acción borra el registro de tarifa asociado del catálogo (R-K10).
+              Esta acción borra el registro de tarifa asociado del catálogo.
             </>
           ) : ""
         }

@@ -126,7 +126,6 @@ export async function actionEliminarColorPedido(
   }
 }
 
-
 export interface CreatePedidoParams {
   clienteId: string;
   fechaCompromiso: string;
@@ -137,12 +136,8 @@ export interface CreatePedidoParams {
 export async function actionCrearPedido(
   data: CreatePedidoParams
 ): Promise<{ ok: boolean; error?: string; pedido?: { id: string; codigo: string } }> {
-  if (!data.clienteId) {
-    return { ok: false, error: "Debes seleccionar un cliente." };
-  }
-  if (!data.fechaCompromiso) {
-    return { ok: false, error: "La fecha de entrega / compromiso es obligatoria (Regla R-A09)." };
-  }
+  if (!data.clienteId) return { ok: false, error: "Debes seleccionar un cliente." };
+  if (!data.fechaCompromiso) return { ok: false, error: "La fecha de entrega / compromiso es obligatoria." };
 
   const compromisoDate = new Date(data.fechaCompromiso);
   if (isNaN(compromisoDate.getTime())) {
@@ -198,5 +193,3 @@ export async function actionCrearCliente(
     return { ok: false, error: "No se pudo registrar el cliente en el backend." };
   }
 }
-
-

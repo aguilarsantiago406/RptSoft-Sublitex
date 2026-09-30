@@ -36,7 +36,7 @@ export function SeccionExcepcionesPrenda({
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     if (!atributoId || !valorAtributoId) { setError("Selecciona el atributo y su valor."); return; }
-    if (!motivo.trim()) { setError("El motivo de la excepción es obligatorio para el taller (Regla R-C04)."); return; }
+    if (!motivo.trim()) { setError("El motivo de la excepción es obligatorio para el taller."); return; }
     setError(null);
     startTransition(async () => {
       const res = await actionCrearExcepcionPrenda(pedidoId, { prendaId, atributoId, valorAtributoId, motivo: motivo.trim() });
@@ -152,7 +152,7 @@ export function SeccionExcepcionesPrenda({
         </div>
 
         <div className={styles.formField}>
-          <label style={{ fontWeight: 400 }}>Motivo del cambio (obligatorio R-C04)</label>
+          <label style={{ fontWeight: 400 }}>Motivo del cambio (obligatorio)</label>
           <input
             type="text" placeholder="Ej: Contextura delgada, pedido especial de cliente..."
             value={motivo} onChange={(e) => setMotivo(e.target.value)}

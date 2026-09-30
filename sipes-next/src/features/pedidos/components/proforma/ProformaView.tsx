@@ -375,7 +375,7 @@ export function ProformaView({
             {datosEnvio ? (
               <div className={styles.shippingCard}>
                 <div className={styles.shippingTitle}>
-                  Datos de Rotulado y Envío a Provincia (R-K08)
+                  Datos de Rotulado y Envío a Provincia
                 </div>
                 <div style={{ fontSize: "0.82rem", display: "grid", gap: "4px" }}>
                   <div>
@@ -416,7 +416,7 @@ export function ProformaView({
               * Los precios no incluyen IGV (18%)
             </div>
 
-            {/* Matriz de Pagos R-K07 */}
+            {/* Matriz de Pagos */}
             <div className={styles.advanceBox}>
               <div className={styles.advanceTitle}>
                 <span>Adelanto sugerido (50%):</span>

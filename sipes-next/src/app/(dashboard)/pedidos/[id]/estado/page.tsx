@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getPedido } from "@/features/pedidos/api/pedidos.api";
-import { getDatosEnvio, getResumenProduccion } from "@/features/pedidos/api/comercial.api";
+import { getDatosEnvio, getResumenProduccion, getConfirmaciones } from "@/features/pedidos/api/comercial.api";
 import { getBloquesPedido, getVersionesPendientesAcuse } from "@/features/pedidos/api/bloques.api";
 import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { PedidoHeader } from "@/features/pedidos/components/PedidoHeader";
@@ -27,24 +27,27 @@ export default async function PedidoEstadoPage({ params }: EstadoPageProps) {
   let bloquesRes;
   let versionesPendientesRes;
   let disenosRes;
+  let confirmacionesRes;
 
   try {
     pedido = await getPedido(id);
     const pedidoRealId = pedido.id;
 
-    const [envioResult, resumenResult, bloquesResult, versionesResult, disenosResult] =
+    const [envioResult, resumenResult, bloquesResult, versionesResult, disenosResult, confirmResult] =
       await Promise.all([
         loadData(() => getDatosEnvio(pedidoRealId)),
         loadData(() => getResumenProduccion(pedidoRealId)),
         loadData(() => getBloquesPedido(pedidoRealId)),
         loadData(() => getVersionesPendientesAcuse(pedidoRealId)),
         loadData(() => getDisenosPedido(pedidoRealId)),
+        loadData(() => getConfirmaciones(pedidoRealId)),
       ]);
     envioRes = envioResult;
     resumenRes = resumenResult;
     bloquesRes = bloquesResult;
     versionesPendientesRes = versionesResult;
     disenosRes = disenosResult;
+    confirmacionesRes = confirmResult;
   } catch (error) {
     if (error instanceof SipesApiError && error.status === 404) notFound();
     throw error;
@@ -55,6 +58,7 @@ export default async function PedidoEstadoPage({ params }: EstadoPageProps) {
   const bloques = bloquesRes?.data ?? [];
   const versionesPendientes = versionesPendientesRes?.data?.versiones ?? [];
   const disenos = disenosRes?.data ?? [];
+  const confirmaciones = confirmacionesRes?.data ?? [];
 
   const totalPrendas = pedido.grupos.reduce((acc, g) => acc + g.cantidadContratada, 0);
 
@@ -98,6 +102,10 @@ export default async function PedidoEstadoPage({ params }: EstadoPageProps) {
         pedido={pedido}
         bloques={bloques}
         totalPrendas={totalPrendas}
+        disenos={disenos}
+        datosEnvio={datosEnvio}
+        resumenProduccion={resumenProduccion}
+        confirmaciones={confirmaciones}
       />
     </main>
   );

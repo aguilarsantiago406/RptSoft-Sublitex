@@ -44,7 +44,7 @@ export function ModalReabrirBloque({
 
   async function handleConfirm() {
     if (!esValido) {
-      setErrorLocal("El motivo debe tener al menos 5 caracteres (R-H13).");
+      setErrorLocal("El motivo debe tener al menos 5 caracteres.");
       return;
     }
     setErrorLocal(null);
@@ -63,7 +63,7 @@ export function ModalReabrirBloque({
             <div>
               <h2 className={styles.title}>Reabrir Bloque {NOMBRES_BLOQUE[tipo]}</h2>
               <p className={styles.subtitle}>
-                Esta acción creará una nueva versión auditable en la base de datos (R-H13).
+                Esta acción creará una nueva versión auditable en la base de datos.
               </p>
             </div>
           </div>
