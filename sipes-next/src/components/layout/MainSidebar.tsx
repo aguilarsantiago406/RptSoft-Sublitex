@@ -54,8 +54,8 @@ export function MainSidebar() {
             <Image
               src="/logo.png"
               alt="Sublitex"
-              width={170}
-              height={32}
+              width={150}
+              height={28}
               priority
               className={styles.brandLogo}
               style={{ height: "32px", width: "auto" }}
@@ -77,12 +77,12 @@ export function MainSidebar() {
                     key={item.label}
                     onClick={() => setOpen(false)}
                   >
-                    <Icon size={18} />
+                    <Icon size={16} />
                     <span>{item.label}</span>
                   </Link>
                 ) : (
                   <span className={`${styles.navItem} ${styles.disabled}`} key={item.label} aria-disabled="true">
-                    <Icon size={18} />
+                    <Icon size={16} />
                     <span>{item.label}</span>
                   </span>
                 );
