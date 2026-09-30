@@ -2,7 +2,9 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
+import { TipoBloque, EstadoBloque } from '@prisma/client';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CreateGrupoDto, PoliticaNumeracion } from './dto/create-grupo.dto';
 import { UpdateGrupoDto } from './dto/update-grupo.dto';
@@ -105,6 +107,14 @@ export class GrupoService {
 
   async remove(id: string) {
     const grupo = await this.findOne(id);
+    if (this.prisma.bloquePedido) {
+      const bloqueLista = await this.prisma.bloquePedido.findUnique({
+        where: { pedidoId_tipo: { pedidoId: grupo.pedidoId, tipo: TipoBloque.LISTA } },
+      });
+      if (bloqueLista?.estado === EstadoBloque.CERRADO) {
+        throw new BadRequestException('No se puede eliminar un grupo con el bloque Lista cerrado (R-H12)');
+      }
+    }
     const [participantes, prendas] = await Promise.all([
       this.prisma.participante.count({ where: { grupoId: id } }),
       this.prisma.prenda.count({ where: { grupoId: id } }),
@@ -121,10 +131,16 @@ export class GrupoService {
   }
 
   async update(id: string, dto: UpdateGrupoDto) {
-    await this.findOne(id);
+    const grupoActual = await this.findOne(id);
+    if (this.prisma.bloquePedido) {
+      const bloqueLista = await this.prisma.bloquePedido.findUnique({
+        where: { pedidoId_tipo: { pedidoId: grupoActual.pedidoId, tipo: TipoBloque.LISTA } },
+      });
+      if (bloqueLista?.estado === EstadoBloque.CERRADO) {
+        throw new BadRequestException('No se puede modificar un grupo con el bloque Lista cerrado (R-H12)');
+      }
+    }
 
-    // R-G01: Si cambia politicaNumeracion a UNICA, validar que no haya numeros repetidos
-    // (el trigger del DB lo bloquea, pero damos mejor error desde el servicio)
     try {
       const grupo = await this.prisma.grupo.update({
         where: { id },
@@ -146,10 +162,8 @@ export class GrupoService {
         },
       });
 
-      // R-B03: Upsert de la configuracion del grupo (atributo/valor)
       if (dto.configuracion?.length) {
         for (const item of dto.configuracion) {
-          // Validar que atributoId y valorAtributoId existen y son coherentes
           const valorAtributo = await this.prisma.valorAtributo.findFirst({
             where: { id: item.valorAtributoId, atributoId: item.atributoId },
           });
@@ -194,6 +208,14 @@ export class GrupoService {
 
   async updatePolitica(id: string, dto: UpdatePoliticaDto) {
     const grupo = await this.findOne(id);
+    if (this.prisma.bloquePedido) {
+      const bloqueLista = await this.prisma.bloquePedido.findUnique({
+        where: { pedidoId_tipo: { pedidoId: grupo.pedidoId, tipo: TipoBloque.LISTA } },
+      });
+      if (bloqueLista?.estado === EstadoBloque.CERRADO) {
+        throw new BadRequestException('No se puede modificar la politica con el bloque Lista cerrado (R-H12)');
+      }
+    }
     if (grupo.politicaNumeracion === dto.politicaNumeracion) {
       return { id: grupo.id, nombre: grupo.nombre, politicaNumeracion: dto.politicaNumeracion };
     }

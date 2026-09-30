@@ -44,6 +44,16 @@ export function PortalParticipanteView({
   );
 
   const isConfirmed = estado === "CONFIRMADO";
+  const isRegistered = estado === "REGISTRADO";
+
+  // Pasos del flujo del participante (1: completar datos, 2: guardar, 3: confirmar)
+  const stepDone =
+    estado === "CONFIRMADO" ? 3 : isRegistered ? 1 : 0;
+  const steps = [
+    { label: "Completá tus datos", desc: "Talla, corte y detalle" },
+    { label: "Guardá tu ficha", desc: "Queda lista para revisión" },
+    { label: "Confirmá definitivamente", desc: "Bloquea tus datos" },
+  ];
 
   function handleFieldChange(
     index: number,
@@ -121,9 +131,37 @@ export function PortalParticipanteView({
   return (
     <div className={styles.container}>
       <header className={styles.brandHeader}>
-        <div className={styles.brandLogo}>SUBLITEX</div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo-sublitex.png"
+          alt="Sublitex"
+          className={styles.brandLogo}
+        />
         <div className={styles.brandSubtitle}>Ficha Técnica de Participante</div>
       </header>
+
+      <ol className={styles.steps} aria-label="Progreso de tu ficha">
+        {steps.map((s, i) => {
+          const paso = i + 1;
+          const cls =
+            paso <= stepDone
+              ? styles.stepDone
+              : paso === stepDone + 1
+                ? styles.stepActive
+                : styles.stepPending;
+          return (
+            <li key={s.label} className={`${styles.step} ${cls}`}>
+              <span className={styles.stepDot}>
+                {paso <= stepDone ? "✓" : paso}
+              </span>
+              <span className={styles.stepText}>
+                <strong>{s.label}</strong>
+                <em>{s.desc}</em>
+              </span>
+            </li>
+          );
+        })}
+      </ol>
 
       <main className={styles.card}>
         <div className={styles.cardHeader}>
@@ -218,47 +256,73 @@ export function PortalParticipanteView({
                       <option value="">-- Seleccioná tu talla --</option>
                       {tallasOpciones.map((t) => (
                         <option key={t.id} value={t.id}>
-                          {t.codigo} {t.etiqueta ? `(${t.etiqueta})` : ""}
+                          {t.etiqueta && t.etiqueta !== t.codigo ? `${t.codigo} (${t.etiqueta})` : t.codigo}
                         </option>
                       ))}
                     </select>
+
+                    {/* Selector rápido táctil para celulares */}
+                    {tallasOpciones.length > 0 && tallasOpciones.length <= 16 && (
+                      <div className={styles.chipsContainer} aria-label="Selección rápida de talla">
+                        {tallasOpciones.map((t) => {
+                          const isSelected = p.tallaId === t.id;
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              className={`${styles.chip} ${isSelected ? styles.chipActive : ""}`}
+                              disabled={isConfirmed || saving || confirming}
+                              onClick={() => handleFieldChange(idx, "tallaId", t.id)}
+                            >
+                              {t.codigo}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   <div className={styles.fieldGroup}>
-                    <label className={styles.label}>Corte / Género</label>
+                    <label className={styles.label}>Género</label>
                     <select
                       className={styles.select}
                       value={p.genero}
                       disabled={isConfirmed || saving || confirming}
                       onChange={(e) =>
-                        handleFieldChange(idx, "genero", e.target.value as any)
+                        handleFieldChange(idx, "genero", e.target.value as FormPrendaState["genero"])
                       }
                     >
-                      <option value="SIN_ESPECIFICAR">Unisex / Estándar</option>
-                      <option value="HOMBRE">Hombre (Corte Recto)</option>
-                      <option value="MUJER">Mujer (Corte Entallado)</option>
+                      <option value="SIN_ESPECIFICAR">Estándar</option>
+                      <option value="HOMBRE">Hombre</option>
+                      <option value="MUJER">Mujer</option>
                       <option value="NINO">Niño</option>
                       <option value="NINA">Niña</option>
                     </select>
                   </div>
 
                   <div className={styles.fieldGroup}>
-                    <label className={styles.label}>Número en la Espalda</label>
+                    <label className={styles.label}>Número</label>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       className={styles.input}
                       placeholder="Ej: 10 (opcional)"
                       maxLength={4}
                       value={p.numero}
                       disabled={isConfirmed || saving || confirming}
                       onChange={(e) =>
-                        handleFieldChange(idx, "numero", e.target.value)
+                        handleFieldChange(
+                          idx,
+                          "numero",
+                          e.target.value.replace(/[^0-9]/g, "")
+                        )
                       }
                     />
                   </div>
 
                   <div className={styles.fieldGroup}>
-                    <label className={styles.label}>Nombre o Apodo en Prenda</label>
+                    <label className={styles.label}>Apodo</label>
                     <input
                       type="text"
                       className={styles.input}

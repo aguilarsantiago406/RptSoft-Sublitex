@@ -1,11 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { actionLogin } from "../actions/auth.actions";
 import styles from "./login.module.css";
 
 export function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,13 +19,15 @@ export function LoginForm() {
     setPending(true);
 
     try {
-      const res = await actionLogin({ email, password });
+      const formData = new FormData(event.currentTarget);
+      const res = await actionLogin(formData);
       if (!res.ok) {
         setError(res.error ?? "Correo o contraseña incorrectos.");
         return;
       }
 
-      window.location.assign("/pedidos");
+      router.push("/pedidos");
+      router.refresh();
     } catch {
       setError("No pudimos conectarnos con el servidor. Inténtalo de nuevo.");
     } finally {
@@ -41,7 +45,7 @@ export function LoginForm() {
             width={210}
             height={40}
             priority
-            style={{ width: "auto", height: "auto" }}
+            style={{ height: "40px", width: "auto" }}
           />
         </div>
         <p className={styles.subtitle} style={{ marginTop: "12px", marginBottom: "24px" }}>

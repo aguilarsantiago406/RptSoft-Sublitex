@@ -1,10 +1,16 @@
-import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../../../core/guards/roles.guard';
+import { Roles, ROLES_GESTION_LISTA } from '../../../core/decorators/roles.decorator';
 import { ParticipantesService } from './participantes.service';
 import { CreateParticipanteDto } from './dto/create-participante.dto';
 
 @ApiTags('Participantes')
 @Controller('api')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles(...ROLES_GESTION_LISTA)
+@ApiBearerAuth()
 export class ParticipantesController {
   constructor(private readonly service: ParticipantesService) {}
 
@@ -18,6 +24,24 @@ export class ParticipantesController {
   @ApiOperation({ summary: 'Lista todos los participantes del grupo con prendas y personalizaciones' })
   listar(@Param('grupoId') grupoId: string) {
     return this.service.listarPorGrupo(grupoId);
+  }
+
+  @Get('grupos/:grupoId/enlaces-whatsapp')
+  @ApiOperation({
+    summary: 'Compila todos los enlaces personales de WhatsApp para el grupo y genera el mensaje listo para compartir',
+  })
+  @ApiQuery({
+    name: 'soloPendientes',
+    required: false,
+    type: Boolean,
+    description: 'Si es true, filtra solo los participantes con estado PENDIENTE',
+  })
+  obtenerEnlacesWhatsApp(
+    @Param('grupoId') grupoId: string,
+    @Query('soloPendientes') soloPendientes?: string,
+  ) {
+    const filtrarSoloPendientes = soloPendientes === 'true' || soloPendientes === '1';
+    return this.service.obtenerEnlacesWhatsApp(grupoId, filtrarSoloPendientes);
   }
 
   @Get('participantes/:id')

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { apiGet, apiPost, SipesApiError } from "@/lib/api/http";
+import { revocarEnlaceParticipante, eliminarParticipante } from "../api/participantes.api";
 
 export interface CrearParticipanteResult {
   ok: boolean;
@@ -14,11 +15,18 @@ export interface CrearParticipanteResult {
   };
 }
 
+export interface PrendaInicialConfig {
+  tipoProductoId?: string;
+  tipoPrenda?: "VENTA" | "OBSEQUIO" | "MUESTRA";
+  esArquero?: boolean;
+  colorId?: string;
+}
+
 export async function actionCrearParticipante(
   grupoId: string,
   nombrePersona: string,
   pedidoId: string,
-  tipoProductoId?: string
+  prendaConfig?: PrendaInicialConfig
 ): Promise<CrearParticipanteResult> {
   const nombreTrimmed = nombrePersona.trim();
   if (!grupoId || !nombreTrimmed) {
@@ -35,30 +43,19 @@ export async function actionCrearParticipante(
       nombrePersona: nombreTrimmed,
     });
 
-    // Crear la prenda física base para este participante
-    if (tipoProductoId) {
+    if (prendaConfig?.tipoProductoId) {
       try {
-        let colorId: string | undefined;
-        try {
-          const ped = await apiGet<{ colores?: Array<{ id: string }> }>(
-            `/api/pedidos/${encodeURIComponent(pedidoId)}`
-          );
-          if (ped.colores && ped.colores.length > 0) {
-            colorId = ped.colores[0].id;
-          }
-        } catch {
-          // Si no se pudo obtener el color, se crea la prenda sin color
-        }
-
         await apiPost("/api/prendas", {
           participanteId: res.id,
           grupoId,
-          tipoProductoId,
-          colorId,
+          tipoProductoId: prendaConfig.tipoProductoId,
+          tipoPrenda: prendaConfig.tipoPrenda || "VENTA",
+          esArquero: Boolean(prendaConfig.esArquero),
+          colorId: prendaConfig.colorId || undefined,
           nombreEnPrenda: nombreTrimmed,
         });
-      } catch (err) {
-        console.warn("No se pudo crear la prenda base para el participante:", err);
+      } catch (errPrenda) {
+        console.warn("No se pudo crear la prenda inicial:", errPrenda);
       }
     }
 
@@ -108,5 +105,62 @@ export async function actionConfirmarManual(
       return { ok: false, error: error.message };
     }
     return { ok: false, error: "No se pudo confirmar el participante." };
+  }
+}
+
+export async function actionRevocarEnlace(
+  participanteId: string,
+  pedidoId: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await revocarEnlaceParticipante(participanteId);
+
+    revalidatePath(`/pedidos/${pedidoId}/participantes`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo revocar el enlace del participante." };
+  }
+}
+
+export interface EnlacesGrupoResult {
+  ok: boolean;
+  error?: string;
+  mensajeGrupal?: string;
+  total?: number;
+}
+
+export async function actionObtenerEnlacesGrupo(
+  grupoId: string,
+  soloPendientes = false
+): Promise<EnlacesGrupoResult> {
+  try {
+    const q = soloPendientes ? "?soloPendientes=true" : "";
+    const res = await apiGet<{ mensajeGrupal: string; total: number }>(
+      `/api/grupos/${encodeURIComponent(grupoId)}/enlaces-whatsapp${q}`
+    );
+    return { ok: true, mensajeGrupal: res.mensajeGrupal, total: res.total };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudieron obtener los enlaces del grupo." };
+  }
+}
+
+export async function actionEliminarParticipante(
+  participanteId: string,
+  pedidoId: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await eliminarParticipante(participanteId);
+    revalidatePath(`/pedidos/${pedidoId}/participantes`);
+    revalidatePath(`/pedidos/${pedidoId}/prendas`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) return { ok: false, error: error.message };
+    return { ok: false, error: "No se pudo eliminar el participante." };
   }
 }

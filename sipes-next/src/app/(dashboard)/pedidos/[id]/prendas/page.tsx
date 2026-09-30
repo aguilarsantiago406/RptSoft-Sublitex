@@ -4,9 +4,14 @@ import {
   getParticipantesGrupo,
   getTallasCatalogo,
   getAtributosCatalogo,
+  type ParticipanteConPrendas,
 } from "@/features/pedidos/api/pedidos.api";
+import { getUbicaciones } from "@/features/catalogos/api/catalogos.api";
+import { getResumenProduccion } from "@/features/pedidos/api/comercial.api";
 import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
+import { PedidoRecoleccionCard } from "@/features/pedidos/components/PedidoRecoleccionCard";
 import { PrendasView } from "@/features/pedidos/components/PrendasView";
+import { PedidoTabs } from "@/features/pedidos/components/PedidoTabs";
 import type { PrendaDetalle } from "@/features/pedidos/types/pedido";
 import styles from "@/features/pedidos/components/pedidos.module.css";
 
@@ -22,13 +27,21 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
   let pedido;
   let tallasCatalogo;
   let atributosCatalogo;
+  let ubicacionesCatalogo;
+  let resumenProduccion = null;
 
   try {
-    [pedido, tallasCatalogo, atributosCatalogo] = await Promise.all([
-      getPedido(id),
+    pedido = await getPedido(id);
+    const [tallasRes, atributosRes, ubicacionesRes, resumenRes] = await Promise.all([
       getTallasCatalogo(),
       getAtributosCatalogo(),
+      getUbicaciones().catch(() => []),
+      getResumenProduccion(pedido.id),
     ]);
+    tallasCatalogo = tallasRes;
+    atributosCatalogo = atributosRes;
+    ubicacionesCatalogo = ubicacionesRes;
+    resumenProduccion = resumenRes;
   } catch {
     notFound();
   }
@@ -50,9 +63,9 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
   }
 
   // Mapa de grupos por id
-  const mapaGrupos = new Map<string, { id: string; nombre: string; politicaNumeracion: string }>();
+  const mapaGrupos = new Map<string, { id: string; nombre: string; politicaNumeracion: string; configuracion?: Array<{ atributo: string; valor: string }> }>();
   for (const g of pedido.grupos) {
-    mapaGrupos.set(g.id, { id: g.id, nombre: g.nombre, politicaNumeracion: g.politicaNumeracion });
+    mapaGrupos.set(g.id, { id: g.id, nombre: g.nombre, politicaNumeracion: g.politicaNumeracion, configuracion: g.configuracion });
   }
 
   // Mapa de atributos y valores del catálogo para excepciones
@@ -66,9 +79,22 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
   }
 
   // Consultar los participantes de cada grupo usando el endpoint oficial GET /api/grupos/:id/participantes
-  const participantesPorGrupo = await Promise.all(
-    pedido.grupos.map((g) => getParticipantesGrupo(g.id).catch(() => []))
+  const resultadosPorGrupo = await Promise.allSettled(
+    pedido.grupos.map((g) => getParticipantesGrupo(g.id))
   );
+
+  const participantesPorGrupo: ParticipanteConPrendas[][] = [];
+  const errorGrupos: string[] = [];
+
+  pedido.grupos.forEach((grupo, index) => {
+    const resultado = resultadosPorGrupo[index];
+    if (resultado.status === "fulfilled") {
+      participantesPorGrupo.push(resultado.value);
+    } else {
+      participantesPorGrupo.push([]);
+      errorGrupos.push(grupo.nombre);
+    }
+  });
 
   // Consolidar y aplanar las prendas
   const prendas: PrendaDetalle[] = [];
@@ -96,43 +122,52 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
             nombrePersona: part.nombrePersona,
             estado: part.estado,
           },
-          grupo: grupo ? { id: grupo.id, nombre: grupo.nombre, politicaNumeracion: grupo.politicaNumeracion } : null,
+          grupo: grupo ? { id: grupo.id, nombre: grupo.nombre, politicaNumeracion: grupo.politicaNumeracion, configuracion: grupo.configuracion } : null,
           talla: codigoTalla ? { id: p.tallaId!, codigo: codigoTalla, etiqueta: codigoTalla } : null,
           color: color ? { id: p.colorId!, nombre: color.nombre, codigoHex: color.codigoHex } : null,
-          excepciones: (p.excepciones ?? []).map((e: any) => ({
+          excepciones: (p.excepciones ?? []).map((e) => ({
             id: e.id,
             motivo: e.motivo,
-            atributoId: e.atributoId,
-            valorAtributoId: e.valorAtributoId,
             atributo: mapaAtributos.get(e.atributoId) ?? { id: e.atributoId, nombre: "Atributo", codigo: "" },
             valor: mapaValores.get(e.valorAtributoId) ?? { id: e.valorAtributoId, etiqueta: "Valor", codigo: "" },
           })),
-          personalizaciones: p.personalizaciones as any,
+          personalizaciones: p.personalizaciones,
         });
       }
     }
   }
 
+  const totalPrendas = pedido.grupos.reduce((acc, g) => acc + g.cantidadContratada, 0);
+
   return (
     <main>
-      <header className={styles.detailHeader}>
+      <header className={styles.detailHeader} style={{ marginBottom: "14px" }}>
         <div className={styles.detailHeaderMain}>
           <h1 className={styles.detailHeaderTitle}>
             PRENDAS <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
           </h1>
           <p className={styles.detailHeaderSubtitle}>
-            <span>Detalle de Prendas</span>
+            <span>Matriz de Prendas, Tallas y Excepciones</span>
           </p>
         </div>
         <EstadoPedidoBadge estado={pedido.estado} size="lg" />
       </header>
 
+      <PedidoTabs pedidoCodigo={pedido.codigo} totalPrendas={totalPrendas} />
+
+      <div style={{ marginBottom: "24px" }}>
+        <PedidoRecoleccionCard pedido={pedido} totalPrendas={totalPrendas} resumen={resumenProduccion} />
+      </div>
+
       <PrendasView
         prendas={prendas}
         grupos={pedido.grupos}
-        pedidoId={id}
+        pedidoId={pedido.id}
         tallas={tallasCatalogo ?? []}
         atributos={atributosCatalogo ?? []}
+        colores={pedido.colores}
+        ubicaciones={ubicacionesCatalogo ?? []}
+        errorGrupos={errorGrupos}
       />
     </main>
   );

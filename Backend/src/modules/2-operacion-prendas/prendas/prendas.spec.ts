@@ -27,6 +27,9 @@ describe('🔴 TDD BK2: PrendasService (Bloque E y K)', () => {
     registroCambio: {
       create: jest.fn(),
     },
+    pedido: {
+      findUnique: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -274,5 +277,168 @@ describe('🔴 TDD BK2: PrendasService (Bloque E y K)', () => {
         }),
       );
     });
+
+    it('debe registrar en RegistroCambio cuando se altera una prenda de un participante PENDIENTE', async () => {
+      mockPrisma.prenda.findUnique.mockResolvedValue({
+        id: 'pre_2',
+        numero: '80',
+        tallaId: 'talla_M',
+        grupo: { pedidoId: 'ped_1' },
+        participante: { estado: 'PENDIENTE' },
+      });
+      mockPrisma.bloquePedido.findFirst.mockResolvedValue(null);
+      mockPrisma.prenda.update.mockResolvedValue({ id: 'pre_2', tipoPrenda: 'VENTA', numero: '81' });
+
+      await service.actualizarFichaMinima(
+        'pre_2',
+        { numero: '81' },
+        { id: 'usr_coord_1', rol: 'COORDINADOR_OPERATIVO' },
+      );
+
+      expect(mockPrisma.registroCambio.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            pedidoId: 'ped_1',
+            entidad: 'Prenda',
+            entidadId: 'pre_2',
+            campo: 'numero',
+            valorAnterior: '80',
+            valorNuevo: '81',
+            origen: 'USUARIO',
+            autorUsuarioId: 'usr_coord_1',
+          }),
+        }),
+      );
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // R-H09 / R-I06..R-I09: DIAGNÓSTICO PREVENTIVO PREVIO AL CIERRE DE LISTA
+  // ---------------------------------------------------------------------------
+  describe('R-H09 / R-I06..R-I09: Diagnóstico Pre-Cierre de Lista', () => {
+    it('debe lanzar NotFoundException si el pedido no existe', async () => {
+      mockPrisma.pedido.findUnique.mockResolvedValue(null);
+
+      await expect(service.obtenerDiagnosticoCierreLista('ped_inexistente')).rejects.toThrow();
+    });
+
+    it('debe retornar aptoParaCierre = true cuando todas las prendas están completas y sin conflictos', async () => {
+      mockPrisma.pedido.findUnique.mockResolvedValue({
+        id: 'ped_10',
+        codigo: 'SUB-0010',
+        grupos: [
+          {
+            id: 'grp_1',
+            nombre: 'Titulares',
+            cantidadContratada: 2,
+            politicaNumeracion: 'UNICA',
+            prendas: [
+              { id: 'pre_1', tallaId: 'talla_M', colorId: 'col_1', numero: '10', excepciones: [] },
+              { id: 'pre_2', tallaId: 'talla_L', colorId: 'col_1', numero: '7', excepciones: [] },
+            ],
+            participantes: [
+              {
+                id: 'part_1',
+                nombrePersona: 'Messi',
+                estado: 'REGISTRADO',
+                prendas: [{ id: 'pre_1', tallaId: 'talla_M', colorId: 'col_1', numero: '10', excepciones: [] }],
+              },
+              {
+                id: 'part_2',
+                nombrePersona: 'Cristiano',
+                estado: 'REGISTRADO',
+                prendas: [{ id: 'pre_2', tallaId: 'talla_L', colorId: 'col_1', numero: '7', excepciones: [] }],
+              },
+            ],
+          },
+        ],
+      });
+
+      const res = await service.obtenerDiagnosticoCierreLista('ped_10');
+
+      expect(res.aptoParaCierre).toBe(true);
+      expect(res.resumen.totalAlertasBloqueantes).toBe(0);
+      expect(res.alertasBloqueantes).toHaveLength(0);
+      expect(res.resumen.prendasCompletas).toBe(2);
+      expect(res.resumen.prendasIncompletas).toBe(0);
+    });
+
+    it('debe detectar alertas bloqueantes: prenda sin talla y número duplicado en política UNICA', async () => {
+      mockPrisma.pedido.findUnique.mockResolvedValue({
+        id: 'ped_10',
+        codigo: 'SUB-0010',
+        grupos: [
+          {
+            id: 'grp_1',
+            nombre: 'Titulares',
+            cantidadContratada: 2,
+            politicaNumeracion: 'UNICA',
+            prendas: [
+              { id: 'pre_1', tallaId: null, colorId: 'col_1', numero: '10', excepciones: [] },
+              { id: 'pre_2', tallaId: 'talla_L', colorId: 'col_1', numero: '10', excepciones: [] },
+            ],
+            participantes: [
+              {
+                id: 'part_1',
+                nombrePersona: 'Jugador Uno',
+                estado: 'REGISTRADO',
+                prendas: [{ id: 'pre_1', tallaId: null, colorId: 'col_1', numero: '10', excepciones: [] }],
+              },
+              {
+                id: 'part_2',
+                nombrePersona: 'Jugador Dos',
+                estado: 'REGISTRADO',
+                prendas: [{ id: 'pre_2', tallaId: 'talla_L', colorId: 'col_1', numero: '10', excepciones: [] }],
+              },
+            ],
+          },
+        ],
+      });
+
+      const res = await service.obtenerDiagnosticoCierreLista('ped_10');
+
+      expect(res.aptoParaCierre).toBe(false);
+      expect(res.resumen.totalAlertasBloqueantes).toBeGreaterThanOrEqual(2);
+
+      const codigosBloqueantes = res.alertasBloqueantes.map((a) => a.codigo);
+      expect(codigosBloqueantes).toContain('PRENDA_SIN_TALLA');
+      expect(codigosBloqueantes).toContain('NUMERO_DUPLICADO');
+    });
+
+    it('debe detectar alertas informativas: discrepancia con cantidad contratada y participante PENDIENTE', async () => {
+      mockPrisma.pedido.findUnique.mockResolvedValue({
+        id: 'ped_10',
+        codigo: 'SUB-0010',
+        grupos: [
+          {
+            id: 'grp_1',
+            nombre: 'Titulares',
+            cantidadContratada: 10, // Contratadas 10, pero solo hay 1 prenda
+            politicaNumeracion: 'LIBRE',
+            prendas: [
+              { id: 'pre_1', tallaId: 'talla_M', colorId: 'col_1', numero: '7', excepciones: [] },
+            ],
+            participantes: [
+              {
+                id: 'part_1',
+                nombrePersona: 'Alumno Pendiente',
+                estado: 'PENDIENTE',
+                prendas: [{ id: 'pre_1', tallaId: 'talla_M', colorId: 'col_1', numero: '7', excepciones: [] }],
+              },
+            ],
+          },
+        ],
+      });
+
+      const res = await service.obtenerDiagnosticoCierreLista('ped_10');
+
+      expect(res.aptoParaCierre).toBe(true); // Porque no hay bloqueantes
+      expect(res.resumen.totalAlertasInformativas).toBeGreaterThanOrEqual(2);
+
+      const codigosInformativos = res.alertasInformativas.map((a) => a.codigo);
+      expect(codigosInformativos).toContain('DISCREPANCIA_CANTIDAD');
+      expect(codigosInformativos).toContain('PARTICIPANTE_PENDIENTE');
+    });
   });
 });
+

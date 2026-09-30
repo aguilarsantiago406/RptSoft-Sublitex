@@ -263,4 +263,81 @@ export class ParticipantesService {
     await this.prisma.participante.delete({ where: { id } });
     return { mensaje: 'Participante eliminado correctamente' };
   }
+
+  async obtenerEnlacesWhatsApp(grupoId: string, soloPendientes?: boolean) {
+    const grupo = await this.prisma.grupo.findUnique({
+      where: { id: grupoId },
+      include: {
+        pedido: {
+          select: {
+            id: true,
+            codigo: true,
+          },
+        },
+      },
+    });
+
+    if (!grupo) {
+      throw new NotFoundException(`Grupo con ID ${grupoId} no encontrado.`);
+    }
+
+    const where: any = { grupoId };
+    if (soloPendientes) {
+      where.estado = 'PENDIENTE';
+    }
+
+    const participantes = await this.prisma.participante.findMany({
+      where,
+      orderBy: { nombrePersona: 'asc' },
+    });
+
+    const baseUrl = (process.env.FRONTEND_URL || process.env.APP_URL || 'https://app.sublitex.com').replace(/\/+$/, '');
+    const ahora = new Date();
+
+    const items = participantes.map((p) => {
+      const url = `${baseUrl}/ficha/${p.enlaceToken}`;
+      const expirado = p.enlaceExpiraEn ? new Date(p.enlaceExpiraEn) < ahora : false;
+      return {
+        id: p.id,
+        nombrePersona: p.nombrePersona,
+        estado: p.estado,
+        enlaceToken: p.enlaceToken,
+        url,
+        expirado,
+        enlaceRevocado: p.enlaceRevocado,
+        valido: !p.enlaceRevocado && !expirado,
+      };
+    });
+
+    let mensajeGrupal = '';
+    const pedidoCodigo = grupo.pedido?.codigo || 'PEDIDO';
+    const grupoNombre = grupo.nombre;
+
+    if (items.length === 0) {
+      mensajeGrupal = soloPendientes
+        ? `✅ ¡Excelente! No hay participantes pendientes de registro en el grupo "${grupoNombre}" (${pedidoCodigo}).`
+        : `No hay participantes registrados en el grupo "${grupoNombre}".`;
+    } else {
+      const encabezado = soloPendientes
+        ? `📢 *Recordatorio: Registro de Tallas y Nombres — ${pedidoCodigo} (${grupoNombre})*\nPor favor, los siguientes integrantes ingresen a su enlace personal para completar su ficha:`
+        : `📢 *Registro de Tallas y Nombres — ${pedidoCodigo} (${grupoNombre})*\nPor favor, cada participante ingrese a su enlace personal para llenar su ficha:`;
+
+      const lineas = items.map((p) => `👉 *${p.nombrePersona}*: ${p.url}`).join('\n');
+      const pie = `\n\n⚠️ _Los enlaces son personales e intransferibles._`;
+
+      mensajeGrupal = `${encabezado}\n\n${lineas}${pie}`;
+    }
+
+    return {
+      pedidoId: grupo.pedidoId,
+      pedidoCodigo,
+      grupoId: grupo.id,
+      grupoNombre,
+      total: items.length,
+      soloPendientes: !!soloPendientes,
+      mensajeGrupal,
+      participantes: items,
+    };
+  }
 }
+

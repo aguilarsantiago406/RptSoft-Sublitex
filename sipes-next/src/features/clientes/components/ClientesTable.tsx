@@ -1,10 +1,21 @@
 "use client";
 
+import { useState, useTransition } from "react";
+import Link from "next/link";
+import { formatDate } from "@/lib/format/date";
+import { useTableState } from "@/lib/useTableState";
+import { Pagination } from "@/components/ui/table/Pagination";
+import { SortableTh } from "@/components/ui/table/SortableTh";
+import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
+import shared from "@/components/ui/table/tableShared.module.css";
 import type { Cliente, TipoCliente } from "../types/cliente";
+import { actionEliminarCliente } from "../actions/clientes.actions";
+import { ModalEditarCliente } from "./ModalEditarCliente";
 import styles from "./clientes.module.css";
 
 interface ClientesTableProps {
   clientes: Cliente[];
+  error?: string | null;
 }
 
 function getBadgeClass(tipo: TipoCliente): string {
@@ -40,61 +51,176 @@ function getTipoLabel(tipo: TipoCliente): string {
   }
 }
 
-export function ClientesTable({ clientes }: ClientesTableProps) {
-  if (clientes.length === 0) {
-    return (
-      <div className={styles.tableCard}>
-        <div className={styles.emptyState}>
-          No se encontraron clientes ni organizaciones registradas con los filtros seleccionados.
-        </div>
-      </div>
-    );
+export function ClientesTable({ clientes, error }: ClientesTableProps) {
+  const table = useTableState<Cliente>(clientes);
+  const offset = (table.page - 1) * table.pageSize;
+
+  const [clienteAEditar, setClienteAEditar] = useState<Cliente | null>(null);
+  const [clienteAEliminar, setClienteAEliminar] = useState<Cliente | null>(null);
+  const [errorAccion, setErrorAccion] = useState<string | null>(null);
+  const [isDeleting, startTransition] = useTransition();
+
+  function handleConfirmEliminar() {
+    if (!clienteAEliminar) return;
+    const { id } = clienteAEliminar;
+
+    setErrorAccion(null);
+    startTransition(async () => {
+      const res = await actionEliminarCliente(id);
+      if (!res.ok) {
+        setErrorAccion(res.error || "No se pudo eliminar el cliente.");
+      } else {
+        setClienteAEliminar(null);
+      }
+    });
   }
 
   return (
-    <div className={styles.tableCard}>
-      <div className={styles.tableScroll}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.colIndex}>#</th>
-              <th>Organización / Cliente</th>
-              <th style={{ width: "140px" }}>Tipo</th>
-              <th style={{ width: "160px" }}>Ciudad / Sede</th>
-              <th style={{ width: "160px" }}>Teléfono</th>
-              <th style={{ width: "150px" }}>Registrado el</th>
-            </tr>
-          </thead>
-          <tbody>
-            {clientes.map((cliente, index) => {
-              const fecha = cliente.creadoEn
-                ? new Date(cliente.creadoEn).toLocaleDateString("es-PE", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—";
+    <>
+      {(error || errorAccion) && (
+        <div className={shared.inlineWarning} role="alert">
+          {errorAccion || error}
+        </div>
+      )}
 
-              return (
-                <tr key={cliente.id}>
-                  <td className={styles.colIndex}>{index + 1}</td>
-                  <td>
-                    <div className={styles.clientName}>{cliente.nombre}</div>
-                  </td>
-                  <td>
-                    <span className={getBadgeClass(cliente.tipo)}>
-                      {getTipoLabel(cliente.tipo)}
-                    </span>
-                  </td>
-                  <td>{cliente.ciudad || "—"}</td>
-                  <td>{cliente.telefono || "—"}</td>
-                  <td style={{ color: "#64748b", fontSize: "0.82rem" }}>{fecha}</td>
+      {clientes.length === 0 ? (
+        <div className={styles.tableCard}>
+          <div className={styles.emptyState}>
+            No se encontraron clientes ni organizaciones registradas con los filtros
+            seleccionados.
+          </div>
+        </div>
+      ) : (
+        <div className={styles.tableCard}>
+          <div className={styles.tableScroll}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th className={styles.colIndex}>#</th>
+                  <SortableTh<Cliente>
+                    label="Organización / Cliente"
+                    sortKey="nombre"
+                    activeKey={table.sortKey}
+                    dir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                  <SortableTh<Cliente>
+                    label="Tipo"
+                    sortKey="tipo"
+                    activeKey={table.sortKey}
+                    dir={table.sortDir}
+                    onSort={table.toggleSort}
+                    width={140}
+                  />
+                  <SortableTh<Cliente>
+                    label="Ciudad / Sede"
+                    sortKey="ciudad"
+                    activeKey={table.sortKey}
+                    dir={table.sortDir}
+                    onSort={table.toggleSort}
+                    width={150}
+                  />
+                  <th style={{ width: "140px" }}>Teléfono</th>
+                  <th style={{ width: "130px" }}>Registrado</th>
+                  <th style={{ width: "200px", textAlign: "right" }}>Acciones</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+              </thead>
+              <tbody>
+                {table.sortedRows.map((cliente, index) => {
+                  return (
+                    <tr key={cliente.id}>
+                      <td className={styles.colIndex}>{offset + index + 1}</td>
+                      <td>
+                        <Link
+                          href={`/clientes/${cliente.id}`}
+                          className={styles.clientNameLink}
+                          title="Ver ficha técnica e historial"
+                        >
+                          {cliente.nombre}
+                        </Link>
+                      </td>
+                      <td>
+                        <span className={getBadgeClass(cliente.tipo)}>
+                          {getTipoLabel(cliente.tipo)}
+                        </span>
+                      </td>
+                      <td>{cliente.ciudad || "—"}</td>
+                      <td>{cliente.telefono || "—"}</td>
+                      <td style={{ color: "#64748b", fontSize: "0.82rem" }} suppressHydrationWarning>
+                        {formatDate(cliente.creadoEn)}
+                      </td>
+                      <td>
+                        <div className={styles.actionsCell}>
+                          <Link
+                            href={`/clientes/${cliente.id}`}
+                            className={styles.actionBtnView}
+                          >
+                            Ver Ficha
+                          </Link>
+                          <button
+                            type="button"
+                            className={styles.actionBtnEdit}
+                            onClick={() => setClienteAEditar(cliente)}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.actionBtnDelete}
+                            onClick={() => {
+                              setErrorAccion(null);
+                              setClienteAEliminar(cliente);
+                            }}
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <Pagination
+            page={table.page}
+            totalPages={table.totalPages}
+            totalRows={table.totalRows}
+            firstRow={table.firstRow}
+            lastRow={table.lastRow}
+            onPage={table.setPage}
+          />
+        </div>
+      )}
+
+      {clienteAEditar && (
+        <ModalEditarCliente
+          isOpen={Boolean(clienteAEditar)}
+          onClose={() => setClienteAEditar(null)}
+          cliente={clienteAEditar}
+        />
+      )}
+
+      <ModalConfirmacion
+        isOpen={Boolean(clienteAEliminar)}
+        onClose={() => setClienteAEliminar(null)}
+        onConfirm={handleConfirmEliminar}
+        title="Eliminar Cliente"
+        description={
+          clienteAEliminar ? (
+            <>
+              ¿Deseas eliminar a <strong>{clienteAEliminar.nombre}</strong>?
+              <br />
+              <br />
+              Solo se podrá eliminar si no tiene pedidos registrados en el sistema.
+            </>
+          ) : ""
+        }
+        confirmText="Eliminar Cliente"
+        variant="danger"
+        isPending={isDeleting}
+      />
+    </>
   );
 }

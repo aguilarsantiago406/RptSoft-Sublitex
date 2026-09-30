@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ClipboardList, Users, Shirt, FileText } from "lucide-react";
+import { ClipboardList, Palette, Users, Shirt, FileText } from "lucide-react";
 import { actionLogout } from "@/features/auth/actions/auth.actions";
 import styles from "./layout.module.css";
 
@@ -13,6 +13,7 @@ interface PedidoSidebarProps {
 }
 
 export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
+  const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -24,6 +25,12 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
       href: basePath,
       icon: ClipboardList,
       isActive: pathname === basePath,
+    },
+    {
+      label: "Diseño y Mockups",
+      href: `${basePath}/diseno`,
+      icon: Palette,
+      isActive: pathname.startsWith(`${basePath}/diseno`),
     },
     {
       label: "Participantes",
@@ -61,7 +68,6 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
               height={32}
               priority
               className={styles.brandLogo}
-              style={{ width: "auto", height: "auto" }}
             />
           </Link>
         </div>
@@ -116,7 +122,8 @@ export function PedidoSidebar({ pedidoId }: PedidoSidebarProps) {
           type="button"
           onClick={() => {
             void actionLogout().finally(() => {
-              window.location.assign("/login");
+              router.push("/login");
+              router.refresh();
             });
           }}
         >

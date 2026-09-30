@@ -2,19 +2,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { ShoppingBag, Users, Layers, BookOpen, UserCheck, type LucideIcon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, type ComponentType } from "react";
+import { ShoppingBag, Users, Layers, BookOpen, UserCheck, History } from "lucide-react";
 import { actionLogout } from "@/features/auth/actions/auth.actions";
 import styles from "./layout.module.css";
 
 interface NavItemData {
   label: string;
   href?: string;
-  icon: LucideIcon;
+  icon: ComponentType<{ size?: number | string; className?: string }>;
 }
 
-interface NavSectionData {
+interface NavSectionData {  
   label: string;
   items: NavItemData[];
 }
@@ -25,19 +25,21 @@ const sections: NavSectionData[] = [
     items: [
       { label: "Pedidos", href: "/pedidos", icon: ShoppingBag },
       { label: "Clientes", href: "/clientes", icon: Users },
-      { label: "Producción", icon: Layers },
+      { label: "Producción", href: "/taller", icon: Layers },
     ],
   },
   {
     label: "Configuración",
     items: [
       { label: "Catálogos", href: "/catalogos", icon: BookOpen },
-      { label: "Usuarios", icon: UserCheck },
+      { label: "Usuarios", href: "/usuarios", icon: UserCheck },
+      { label: "Auditoría", href: "/auditoria", icon: History },
     ],
   },
 ];
 
 export function MainSidebar() {
+  const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -57,7 +59,7 @@ export function MainSidebar() {
               height={32}
               priority
               className={styles.brandLogo}
-              style={{ width: "auto", height: "auto" }}
+              style={{ height: "32px", width: "auto" }}
             />
           </Link>
         </div>
@@ -83,7 +85,6 @@ export function MainSidebar() {
                   <span className={`${styles.navItem} ${styles.disabled}`} key={item.label} aria-disabled="true">
                     <Icon size={18} />
                     <span>{item.label}</span>
-                    <small>Próximo</small>
                   </span>
                 );
               })}
@@ -103,7 +104,8 @@ export function MainSidebar() {
           type="button"
           onClick={() => {
             void actionLogout().finally(() => {
-              window.location.assign("/login");
+              router.push("/login");
+              router.refresh();
             });
           }}
         >

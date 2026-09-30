@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { createPortal } from "react-dom";
+import { useIsClient } from "@/lib/useIsClient";
 import type { TipoCliente } from "../types/cliente";
 import { actionCrearCliente } from "../actions/clientes.actions";
 import styles from "./clientes.module.css";
@@ -24,6 +26,7 @@ export function ModalNuevoCliente({
   onClose,
   onSuccess,
 }: ModalNuevoClienteProps) {
+  const isClient = useIsClient();
   const [nombre, setNombre] = useState("");
   const [tipo, setTipo] = useState<TipoCliente>("PROMOCION");
   const [ciudad, setCiudad] = useState("Lima");
@@ -31,7 +34,7 @@ export function ModalNuevoCliente({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  if (!isOpen) return null;
+  if (!isOpen || !isClient) return null;
 
   function handleReset() {
     setNombre("");
@@ -68,7 +71,7 @@ export function ModalNuevoCliente({
     });
   }
 
-  return (
+  return createPortal(
     <div className={styles.modalBackdrop} onClick={handleReset}>
       <div
         className={styles.modalDialog}
@@ -180,6 +183,7 @@ export function ModalNuevoCliente({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

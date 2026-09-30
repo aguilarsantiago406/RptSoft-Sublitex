@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import type { PedidoDetalle } from "../types/pedido";
 import { actionEliminarColorPedido } from "../actions/pedidos.actions";
 import { ModalColorForm } from "./ModalColorForm";
+import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import styles from "./pedidos.module.css";
 
 interface PedidoColoresProps {
@@ -13,17 +14,19 @@ interface PedidoColoresProps {
 
 export function PedidoColores({ pedidoId, colores }: PedidoColoresProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [colorAEliminar, setColorAEliminar] = useState<{ id: string; nombre: string } | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  const handleEliminar = (colorId: string, nombreColor: string) => {
-    const confirmar = window.confirm(`¿Seguro que deseas eliminar el color "${nombreColor}"?`);
-    if (!confirmar) return;
+  const handleConfirmEliminar = () => {
+    if (!colorAEliminar) return;
+    const { id: colorId } = colorAEliminar;
 
     setIsDeletingId(colorId);
     startTransition(async () => {
       await actionEliminarColorPedido(pedidoId, colorId);
       setIsDeletingId(null);
+      setColorAEliminar(null);
     });
   };
 
@@ -61,7 +64,7 @@ export function PedidoColores({ pedidoId, colores }: PedidoColoresProps) {
             <button
               type="button"
               className={styles.deleteColorButton}
-              onClick={() => handleEliminar(color.id, color.nombre)}
+              onClick={() => setColorAEliminar({ id: color.id, nombre: color.nombre })}
               disabled={isDeletingId === color.id}
               title={`Eliminar ${color.nombre}`}
               aria-label={`Eliminar color ${color.nombre}`}
@@ -76,6 +79,23 @@ export function PedidoColores({ pedidoId, colores }: PedidoColoresProps) {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         pedidoId={pedidoId}
+      />
+
+      <ModalConfirmacion
+        isOpen={Boolean(colorAEliminar)}
+        onClose={() => setColorAEliminar(null)}
+        onConfirm={handleConfirmEliminar}
+        title="Eliminar Color"
+        description={
+          colorAEliminar ? (
+            <>
+              ¿Seguro que deseas eliminar el color <strong>{colorAEliminar.nombre}</strong> del pedido?
+            </>
+          ) : ""
+        }
+        confirmText="Eliminar Color"
+        variant="danger"
+        isPending={Boolean(isDeletingId)}
       />
     </section>
   );

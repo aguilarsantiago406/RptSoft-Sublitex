@@ -45,16 +45,17 @@ export async function apiGet<T>(path: string): Promise<T> {
 
 export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
   const token = await getSessionToken();
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-  };
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const response = await fetch(`${getApiUrl()}${path}`, {
     method: "POST",
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: isFormData ? (body as BodyInit) : body !== undefined ? JSON.stringify(body) : undefined,
   });
 
   if (!response.ok) {

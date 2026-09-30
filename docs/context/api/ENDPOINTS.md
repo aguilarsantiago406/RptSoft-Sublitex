@@ -1,4 +1,5 @@
 # ENDPOINTS OPERATIVOS BK1 — SUBLITEX SIPES
+# Versión alineada: 2026-09-17
 # Base URL: http://localhost:3001
 
 ---
@@ -46,15 +47,18 @@ Request Body:
 {
   "clienteId": "cuid_real_del_cliente",
   "fechaCompromiso": "2026-11-20T00:00:00.000Z",
+  "vendedoraId": "cuid_de_la_vendedora",
   "observaciones": "Entrega para desfile escolar"
 }
 ```
 Campos:
 - clienteId (string CUID, REQUERIDO) — debe existir en la BD
-- fechaCompromiso (ISO 8601, REQUERIDO)
+- fechaCompromiso (ISO 8601, REQUERIDO) — posterior a hoy (R-A09)
+- vendedoraId (string CUID, opcional) — asesora asignada
 - observaciones (string, opcional)
 
-Response 201: Pedido con código autogenerado SUB-XXXX, estado BORRADOR
+Response 201: Pedido con código autogenerado SUB-XXXX, estado BORRADOR, tiempoDias calculado
+Response 400: "La fecha de compromiso debe ser posterior a la fecha del pedido"
 Response 404: "Cliente no encontrado: :clienteId"
 
 ---
@@ -63,13 +67,33 @@ Response 404: "Cliente no encontrado: :clienteId"
 Query params opcionales:
 - ?estado=BORRADOR (filtra por EstadoPedido)
 - ?clienteId=cuid_cliente
-Response 200: Array de pedidos con datos del cliente
+Response 200: Array de pedidos con datos del cliente, vendedora asignada y tiempoDias
 
 ---
 
 ### GET /api/pedidos/:id — Detalle Completo
-Response 200: Pedido + cliente + colores + grupos (con tipoProducto)
+Response 200: Pedido + cliente + vendedora + colores + grupos (con tipoProducto) + tiempoDias
 Response 404: Si no existe
+
+---
+
+### PATCH /api/pedidos/:id — Actualizar Datos Generales
+Request Body:
+```json
+{
+  "fechaCompromiso": "2026-12-01T00:00:00.000Z",
+  "vendedoraId": "cuid_otra_vendedora",
+  "observaciones": "Nueva fecha solicitada por el cliente"
+}
+```
+Campos (todos opcionales):
+- fechaCompromiso (ISO 8601) — posterior a fechaPedido (R-A09)
+- vendedoraId (string CUID)
+- observaciones (string)
+
+Response 200: Pedido actualizado con nuevo tiempoDias
+Response 400: Fecha compromiso inválida
+Response 404: Pedido o vendedora no encontrado
 
 ---
 
@@ -88,6 +112,87 @@ Campos:
 - motivo (string, OPCIONAL)
 
 Response 200: Pedido con nuevo estado
+Response 400: Transición inválida o condiciones no cumplidas (R-A06)
+Response 404: Si pedido no existe
+
+---
+
+### GET /api/pedidos/:id/resumen-produccion — Resumen y Conciliación
+Alias: POST /api/pedidos/:id/resumen-produccion y GET /api/pedidos/:id/conciliacion-comercial
+Response 200:
+```json
+{
+  "pedidoId": "cuid_ped_01",
+  "codigo": "SUB-0001",
+  "grupos": [
+    {
+      "grupoId": "cuid_grp_01",
+      "nombre": "Conjunto Titular Alumnos",
+      "cantidadContratada": 28,
+      "totalPrendasRegistradas": 28,
+      "diferencia": 0,
+      "completo": true
+    }
+  ],
+  "totalContratado": 28,
+  "totalRegistrado": 28,
+  "balanceGeneral": 0
+}
+```
+Response 404: Si pedido no existe
+
+---
+
+### POST /api/pedidos/:id/confirmaciones — Emitir Confirmación Comercial
+Alias de `/api/comercial/pedidos/:id/confirmacion`
+Request Body:
+```json
+{
+  "adelantoRecibido": 500.00,
+  "comprobante": "FACTURA",
+  "pdfUrl": "https://storage.sublitex.com/confirmaciones/SUB-0001-v1.pdf",
+  "recargoTallas": 25.00,
+  "recargoTelas": 30.00,
+  "recargoCuellos": 15.00,
+  "recargoAcabados": 10.00,
+  "adicionales": 40.00
+}
+```
+Response 201: Confirmación emitida con versión incremental, recargos calculados, adelanto 50% y saldo
+Response 404: Si pedido no existe
+
+---
+
+### GET /api/pedidos/:id/confirmaciones — Historial de Confirmaciones
+Response 200: Array de confirmaciones ordenadas por version desc
+Response 404: Si pedido no existe
+
+---
+
+### GET /api/pedidos/:id/bloques — Consultar Bloques (R-H01, R-H11)
+Response 200: Lista de los 3 bloques (DISENO, LISTA, COMERCIAL) con su estado y versiones
+Response 404: Si pedido no existe
+
+---
+
+### POST /api/pedidos/:id/bloques/:tipo/cerrar — Cerrar Bloque
+Path params: `:tipo` = DISENO | LISTA | COMERCIAL
+Response 201: Bloque cerrado y VersionBloque congelada
+Response 400: Si faltan condiciones previas (ej. prendas incompletas R-E03 o discrepancia R-B02)
+Response 404: Si pedido no existe
+
+---
+
+### POST /api/pedidos/:id/bloques/:tipo/reabrir — Reabrir Bloque (R-H12, R-H13, R-H14)
+Path params: `:tipo` = DISENO | LISTA | COMERCIAL
+Request Body:
+```json
+{
+  "motivoReapertura": "Cliente solicita cambio de tallas y agregado de arquero"
+}
+```
+Response 201: Bloque reabierto a ABIERTO, nueva VersionBloque registrada con diff y flag alertaTaller
+Response 400: Si el bloque no está CERRADO o motivo ausente
 Response 404: Si pedido no existe
 
 ---
@@ -442,3 +547,31 @@ Response 404: Si no existen datos de envío para ese pedido
 Requiere Header: `Authorization: Bearer <JWT>`
 Response 200: Confirmación de eliminación
 Response 404: Si no existen datos de envío para ese pedido
+
+---
+
+### POST /api/comercial/pedidos/:pedidoId/confirmacion — Emitir Confirmación Comercial (R-H05, R-K06, R-K07)
+Requiere Header: `Authorization: Bearer <JWT>`
+Request Body:
+```json
+{
+  "adelantoRecibido": 500.00,
+  "comprobante": "FACTURA",
+  "pdfUrl": "https://storage.sublitex.com/confirmaciones/SUB-0001-v1.pdf"
+}
+```
+Campos (todos opcionales):
+- adelantoRecibido (number >= 0)
+- comprobante (enum TipoComprobante): BOLETA | FACTURA | RECIBO | NINGUNO
+- pdfUrl (string)
+
+Response 201: Confirmación emitida con versión incremental, totalSinIgv, adelantoRequerido (50%) y saldoPendiente
+Response 404: Si pedidoId no existe
+
+---
+
+### GET /api/comercial/pedidos/:pedidoId/confirmaciones — Historial de Confirmaciones (R-K06)
+Requiere Header: `Authorization: Bearer <JWT>`
+Response 200: Array con las versiones de confirmación ordenadas de la más reciente a la más antigua
+Response 404: Si pedidoId no existe
+

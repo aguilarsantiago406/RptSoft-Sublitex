@@ -2,9 +2,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
+import { UpdatePedidoDto } from './dto/update-pedido.dto';
 import { UpdateEstadoDto } from './dto/update-estado.dto';
 import { AddColorDto } from './dto/add-color.dto';
 import { EstadoPedido } from './estado-pedido.enum';
@@ -34,9 +36,24 @@ export class PedidoService {
     return user.id;
   }
 
-  async create(dto: CreatePedidoDto) {
+  private calcularTiempoDias(fechaPedido?: Date | string | null, fechaCompromiso?: Date | string | null): number | null {
+    if (!fechaPedido || !fechaCompromiso) return null;
+    const inicio = new Date(fechaPedido).getTime();
+    const fin = new Date(fechaCompromiso).getTime();
+    return Math.max(0, Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)));
+  }
+
+  private normalizarFechaCompromiso(fecha: string): Date {
+    const SOLO_FECHA = /^\d{4}-\d{2}-\d{2}$/;
+    if (SOLO_FECHA.test(fecha.trim())) {
+      return new Date(`${fecha.trim()}T23:59:59.999-05:00`);
+    }
+    return new Date(fecha);
+  }
+
+  async create(dto: CreatePedidoDto, userId?: string) {
     const ahora = new Date();
-    const fechaCompromiso = new Date(dto.fechaCompromiso);
+    const fechaCompromiso = this.normalizarFechaCompromiso(dto.fechaCompromiso);
     if (fechaCompromiso <= ahora) {
       throw new BadRequestException(
         'La fecha de compromiso debe ser posterior a la fecha del pedido (R-A09)',
@@ -47,22 +64,43 @@ export class PedidoService {
     });
     if (!cliente) throw new NotFoundException('Cliente no encontrado: ' + dto.clienteId);
 
-    const systemId = await this.getSystemUserId();
-    const codigo = await this.generarCodigo();
+    const responsableId = userId ?? (await this.getSystemUserId());
+    let creado;
+    let intentos = 0;
+    while (!creado && intentos < 3) {
+      try {
+        const codigo = await this.generarCodigo();
+        creado = await this.prisma.pedido.create({
+          data: {
+            codigo,
+            clienteId: dto.clienteId,
+            vendedoraId: dto.vendedoraId || dto.vendedorId,
+            fechaCompromiso,
+            observaciones: dto.observaciones,
+            estado: EstadoPedido.BORRADOR,
+            creadoPorId: responsableId,
+            coordinadorId: responsableId,
+          },
+          include: { cliente: true, vendedora: true },
+        });
+      } catch (error: any) {
+        if (error?.code === 'P2002' && error?.meta?.target?.includes('codigo')) {
+          intentos++;
+          if (intentos >= 3) {
+            throw new ConflictException('No se pudo generar un codigo unico para el pedido');
+          }
+        } else {
+          throw error;
+        }
+      }
+    }
 
-    return this.prisma.pedido.create({
-      data: {
-        codigo,
-        clienteId: dto.clienteId,
-        fechaCompromiso,
-        observaciones: dto.observaciones,
-        estado: EstadoPedido.BORRADOR,
-        creadoPorId: systemId,
-        coordinadorId: systemId,
-      },
-      include: { cliente: true },
-    });
+    return {
+      ...creado,
+      tiempoDias: this.calcularTiempoDias(creado.fechaPedido ?? ahora, creado.fechaCompromiso),
+    };
   }
+
 
   async findAll(estado?: string, clienteId?: string) {
     const pedidos = await this.prisma.pedido.findMany({
@@ -72,6 +110,7 @@ export class PedidoService {
       },
       include: {
         cliente: true,
+        vendedora: true,
       },
       orderBy: { fechaPedido: 'desc' },
     });
@@ -100,15 +139,18 @@ export class PedidoService {
 
     return pedidos.map((pedido) => ({
       ...pedido,
+      tiempoDias: this.calcularTiempoDias(pedido.fechaPedido, pedido.fechaCompromiso),
       totalPrendas: prendasPorPedidoId.get(pedido.id) ?? 0,
     }));
   }
 
   async findOne(id: string) {
-    const pedido = await this.prisma.pedido.findUnique({
-      where: { id },
+    const where = id.startsWith('SUB-') ? { codigo: id } : { id };
+    let pedido = await this.prisma.pedido.findUnique({
+      where,
       include: {
         cliente: true,
+        vendedora: true,
         grupos: {
           include: {
             tipoProducto: true,
@@ -121,9 +163,29 @@ export class PedidoService {
         colores: true,
       },
     });
+    if (!pedido && !id.startsWith('SUB-')) {
+      pedido = await this.prisma.pedido.findUnique({
+        where: { codigo: id },
+        include: {
+          cliente: true,
+          vendedora: true,
+          grupos: {
+            include: {
+              tipoProducto: true,
+              configuracion: {
+                include: { atributo: true, valor: true },
+                orderBy: { atributo: { orden: 'asc' } },
+              },
+            },
+          },
+          colores: true,
+        },
+      });
+    }
     if (!pedido) throw new NotFoundException('Pedido no encontrado: ' + id);
     return {
       ...pedido,
+      tiempoDias: this.calcularTiempoDias(pedido.fechaPedido, pedido.fechaCompromiso),
       grupos: (pedido.grupos ?? []).map((grupo) => ({
         id: grupo.id,
         nombre: grupo.nombre,
@@ -149,41 +211,49 @@ export class PedidoService {
   }
 
   async resumenProduccion(id: string) {
-    const pedido = await this.prisma.pedido.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        codigo: true,
-        grupos: {
-          include: {
-            tipoProducto: {
-              select: {
-                id: true,
-                codigo: true,
-                nombre: true,
-                camisetas: true,
-                shorts: true,
-                medias: true,
-              },
+    const where = id.startsWith('SUB-') ? { codigo: id } : { id };
+    const selectConfig = {
+      id: true,
+      codigo: true,
+      grupos: {
+        include: {
+          tipoProducto: {
+            select: {
+              id: true,
+              codigo: true,
+              nombre: true,
+              camisetas: true,
+              shorts: true,
+              medias: true,
             },
-            prendas: {
-              select: {
-                id: true,
-                tipoProducto: {
-                  select: {
-                    codigo: true,
-                    camisetas: true,
-                    shorts: true,
-                    medias: true,
-                  },
+          },
+          prendas: {
+            select: {
+              id: true,
+              tipoProducto: {
+                select: {
+                  codigo: true,
+                  camisetas: true,
+                  shorts: true,
+                  medias: true,
                 },
               },
             },
           },
-          orderBy: { nombre: 'asc' },
         },
+        orderBy: { nombre: 'asc' as const },
       },
+    };
+    let pedido = await this.prisma.pedido.findUnique({
+      where,
+      select: selectConfig,
     });
+    if (!pedido && !id.startsWith('SUB-')) {
+      pedido = await this.prisma.pedido.findUnique({
+        where: { codigo: id },
+        select: selectConfig,
+      });
+    }
     if (!pedido) throw new NotFoundException('Pedido no encontrado: ' + id);
 
     const grupos = pedido.grupos.map((grupo) => {
@@ -346,6 +416,32 @@ export class PedidoService {
     }
   }
 
+  async update(id: string, dto: UpdatePedidoDto) {
+    const pedido = await this.prisma.pedido.findUnique({ where: { id } });
+    if (!pedido) throw new NotFoundException('Pedido no encontrado: ' + id);
+
+    if (dto.fechaCompromiso) {
+      const nuevaFecha = this.normalizarFechaCompromiso(dto.fechaCompromiso);
+      if (nuevaFecha <= new Date(pedido.fechaPedido)) {
+        throw new BadRequestException(
+          'La fecha de compromiso debe ser posterior a la fecha del pedido (R-A09)',
+        );
+      }
+    }
+
+    const vendedoraId = dto.vendedoraId !== undefined ? dto.vendedoraId : dto.vendedorId;
+
+    return this.prisma.pedido.update({
+      where: { id },
+      data: {
+        ...(dto.fechaCompromiso ? { fechaCompromiso: new Date(dto.fechaCompromiso) } : {}),
+        ...(vendedoraId !== undefined ? { vendedoraId } : {}),
+        ...(dto.observaciones !== undefined ? { observaciones: dto.observaciones } : {}),
+      },
+      include: { cliente: true, vendedora: true },
+    });
+  }
+
   async getColores(pedidoId: string) {
     await this.findOne(pedidoId);
     return this.prisma.colorPedido.findMany({ where: { pedidoId } });
@@ -367,6 +463,9 @@ export class PedidoService {
     } catch (error: any) {
       if (error?.code === 'P2025') {
         throw new NotFoundException('Color no encontrado: ' + colorId);
+      }
+      if (error?.code === 'P2003') {
+        throw new ConflictException('No se puede eliminar el color porque esta asignado a prendas');
       }
       throw error;
     }
