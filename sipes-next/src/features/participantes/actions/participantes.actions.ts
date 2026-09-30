@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { apiGet, apiPost, SipesApiError } from "@/lib/api/http";
+import { apiGet, apiPost, apiPatch, SipesApiError } from "@/lib/api/http";
 import { revocarEnlaceParticipante, eliminarParticipante } from "../api/participantes.api";
 
 export interface CrearParticipanteResult {
@@ -59,6 +59,16 @@ export async function actionCrearParticipante(
       }
     }
 
+    try {
+      await apiPatch(`/api/pedidos/${encodeURIComponent(pedidoId)}/estado`, {
+        estado: "EN_RECOLECCION",
+      });
+    } catch {
+      // Ignorar si el pedido ya está en EN_RECOLECCION o etapa superior
+    }
+
+    revalidatePath(`/pedidos/${pedidoId}`);
+    revalidatePath(`/pedidos/${pedidoId}/estado`);
     revalidatePath(`/pedidos/${pedidoId}/participantes`);
     revalidatePath(`/pedidos/${pedidoId}/prendas`);
     return { ok: true, participante: res };

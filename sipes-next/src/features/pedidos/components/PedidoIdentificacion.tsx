@@ -9,9 +9,10 @@ import styles from "./pedidos.module.css";
 
 interface PedidoIdentificacionProps {
   pedido: PedidoDetalle;
+  vendedoras?: Array<{ id: string; nombre: string }>;
 }
 
-export function PedidoIdentificacion({ pedido }: PedidoIdentificacionProps) {
+export function PedidoIdentificacion({ pedido, vendedoras = [] }: PedidoIdentificacionProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   return (
@@ -81,6 +82,7 @@ export function PedidoIdentificacion({ pedido }: PedidoIdentificacionProps) {
           isOpen={isEditOpen}
           onClose={() => setIsEditOpen(false)}
           pedido={pedido}
+          vendedoras={vendedoras}
         />
       )}
     </section>

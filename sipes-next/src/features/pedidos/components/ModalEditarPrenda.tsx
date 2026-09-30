@@ -76,7 +76,7 @@ export function ModalEditarPrenda({
       type="button" onClick={() => setTab(t)}
       style={{
         padding: "8px 14px", border: "none", background: "none", fontSize: "0.8rem",
-        fontWeight: tab === t ? 700 : 500, color: tab === t ? "var(--navy)" : "#64748b",
+        fontWeight: 400, color: tab === t ? "var(--navy)" : "#64748b",
         borderBottom: tab === t ? "2px solid #0284c7" : "2px solid transparent", cursor: "pointer",
       }}
     >
@@ -169,18 +169,24 @@ export function ModalEditarPrenda({
         )}
 
         {tab === "confeccion" && (
-          <div style={{ padding: "14px 20px", display: "grid", gap: "12px" }}>
-            {prenda.grupo?.configuracion && (
-              <TablaConfiguracionGrupo
-                grupoNombre={grupoNombre}
-                configuracion={prenda.grupo.configuracion}
-              />
-            )}
+          <div style={{ padding: "14px 20px", display: "grid", gap: "16px" }}>
             <SeccionExcepcionesPrenda
-              prendaId={prenda.id} pedidoId={pedidoId}
+              prendaId={prenda.id}
+              pedidoId={pedidoId}
               excepciones={prenda.excepciones}
               atributosCatalogo={atributosCatalogo}
             />
+            {prenda.grupo?.configuracion && (
+              <div style={{ display: "grid", gap: "6px" }}>
+                <span style={{ fontSize: "0.72rem", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  Estándar del Grupo {grupoNombre ? `(${grupoNombre})` : ""}
+                </span>
+                <TablaConfiguracionGrupo
+                  grupoNombre={grupoNombre}
+                  configuracion={prenda.grupo.configuracion}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

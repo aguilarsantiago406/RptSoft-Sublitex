@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useIsClient } from "@/lib/useIsClient";
 import type { PedidoDetalle } from "../types/pedido";
-import { actionActualizarCabeceraPedido } from "../actions/pedidos.actions";
+import { actionActualizarCabeceraPedido, actionActualizarEstadoPedido } from "../actions/pedidos.actions";
 import { formatDate } from "@/lib/format/date";
 import styles from "./pedidos.module.css";
 
@@ -13,12 +13,14 @@ interface ModalEditarPedidoProps {
   isOpen: boolean;
   onClose: () => void;
   pedido: PedidoDetalle;
+  vendedoras?: Array<{ id: string; nombre: string }>;
 }
 
 export function ModalEditarPedido({
   isOpen,
   onClose,
   pedido,
+  vendedoras = [],
 }: ModalEditarPedidoProps) {
   const isClient = useIsClient();
   const router = useRouter();
@@ -31,6 +33,7 @@ export function ModalEditarPedido({
   })();
 
   const [fechaCompromiso, setFechaCompromiso] = useState(fechaActual);
+  const [vendedoraId, setVendedoraId] = useState(pedido.vendedora?.id ?? "");
   const [observaciones, setObservaciones] = useState(pedido.observaciones ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -52,12 +55,17 @@ export function ModalEditarPedido({
     startTransition(async () => {
       const res = await actionActualizarCabeceraPedido(pedido.id, {
         fechaCompromiso,
+        vendedoraId: vendedoraId || null,
         observaciones: observaciones.trim() || undefined,
       });
 
       if (!res.ok) {
         setError(res.error || "No se pudo actualizar el pedido.");
         return;
+      }
+
+      if (pedido.estado === "BORRADOR") {
+        await actionActualizarEstadoPedido(pedido.id, "EN_CONFIGURACION");
       }
 
       onClose();
@@ -94,6 +102,23 @@ export function ModalEditarPedido({
             <small id="edit-pedido-fecha-hint" className={styles.formHint}>
               Debe ser posterior al {formatDate(pedido.fechaPedido)} (R-A09).
             </small>
+          </div>
+
+          <div className={styles.formField}>
+            <label htmlFor="edit-pedido-vendedora">Asesora comercial</label>
+            <select
+              id="edit-pedido-vendedora"
+              value={vendedoraId}
+              onChange={(e) => setVendedoraId(e.target.value)}
+              className={styles.formInput}
+            >
+              <option value="">Sin asesora asignada</option>
+              {vendedoras.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className={styles.formField}>

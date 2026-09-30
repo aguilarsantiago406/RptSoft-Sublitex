@@ -53,12 +53,12 @@ export function SeccionPersonalizacionesPrenda({
       {error && <div className={styles.modalErrorBanner} role="alert">{error}</div>}
 
       <div style={{ display: "grid", gap: "6px" }}>
-        <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "#475569", textTransform: "uppercase" }}>
+        <span style={{ fontSize: "0.74rem", fontWeight: 400, color: "#475569", textTransform: "uppercase" }}>
           Estampados Registrados ({personalizaciones.length})
         </span>
 
         {personalizaciones.length === 0 ? (
-          <div style={{ padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "0.8rem", color: "#64748b" }}>
+          <div style={{ padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "0.8rem", color: "#64748b", fontWeight: 400 }}>
             Esta prenda no tiene estampados especiales asignados.
           </div>
         ) : (
@@ -72,14 +72,14 @@ export function SeccionPersonalizacionesPrenda({
                 }}
               >
                 <div>
-                  <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", background: "#e0f2fe", color: "#0369a1", padding: "2px 6px", borderRadius: "4px", marginRight: "8px" }}>
+                  <span style={{ fontSize: "0.7rem", fontWeight: 400, textTransform: "uppercase", background: "#e0f2fe", color: "#0369a1", padding: "2px 6px", borderRadius: "4px", marginRight: "8px" }}>
                     {p.ubicacion?.etiqueta ?? "Ubicación"}
                   </span>
-                  <strong style={{ fontSize: "0.86rem", color: "var(--navy)" }}>&ldquo;{p.contenido}&rdquo;</strong>
+                  <span style={{ fontSize: "0.86rem", color: "var(--navy)", fontWeight: 400 }}>&ldquo;{p.contenido}&rdquo;</span>
                 </div>
                 <button
                   type="button" onClick={() => handleDelete(p.id)} disabled={isPending || deletingId === p.id}
-                  style={{ background: "none", border: "none", color: "#ef4444", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer" }}
+                  style={{ background: "none", border: "none", color: "#ef4444", fontSize: "0.78rem", fontWeight: 400, cursor: "pointer" }}
                 >
                   {deletingId === p.id ? "Eliminando..." : "Quitar"}
                 </button>
@@ -90,7 +90,7 @@ export function SeccionPersonalizacionesPrenda({
       </div>
 
       <form onSubmit={handleAdd} style={{ padding: "12px 14px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "10px", display: "grid", gap: "10px" }}>
-        <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--navy)", textTransform: "uppercase" }}>
+        <span style={{ fontSize: "0.74rem", fontWeight: 400, color: "var(--navy)", textTransform: "uppercase" }}>
           + Agregar Nuevo Estampado
         </span>
 

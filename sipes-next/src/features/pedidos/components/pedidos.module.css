@@ -234,7 +234,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   padding: 16px 18px;
-  background: var(--background);
+  background: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
@@ -269,17 +269,17 @@
 
 .groupName {
   margin: 0;
-  font-size: 0.875rem;
-  font-weight: 700;
+  font-size: 0.84rem;
+  font-weight: 400;
   color: var(--navy);
 }
 
 .productBadge {
-  font-size: 0.72rem;
-  font-weight: 500;
+  font-size: 0.7rem;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 3px 9px;
+  padding: 2px 8px;
   border-radius: 999px;
   background: rgba(14, 165, 233, 0.12);
   color: #0369a1;
@@ -293,28 +293,28 @@
 }
 
 .policyBadge {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #64748b;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .policyLabel {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #64748b;
 }
 
 .policySelect {
-  height: 28px;
-  padding: 0 8px;
-  border-radius: 8px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 6px;
   border: 1px solid #e2e8f0;
   background: #ffffff;
   color: var(--navy);
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 400;
   cursor: pointer;
   outline: none;
   transition: border-color 0.15s ease;
@@ -355,19 +355,19 @@
 
 .countNumber {
   display: block;
-  font-size: 0.875rem;
-  font-weight: 700;
+  font-size: 0.84rem;
+  font-weight: 400;
   color: var(--navy);
   line-height: 1.2;
 }
 
 .countLabel {
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #64748b;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .componentsRow {
@@ -375,23 +375,23 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  font-size: 0.875rem;
+  font-size: 0.82rem;
   color: var(--muted);
 }
 
 .componentsLabel {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 400;
   color: var(--muted);
 }
 
 .componentsPill {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   padding: 2px 8px;
   border-radius: 6px;
   border: 1px solid var(--border-soft);
   background: #f8fafc;
-  font-weight: 500;
+  font-weight: 400;
   color: #475569;
   white-space: nowrap;
 }
@@ -401,15 +401,15 @@
    especificaciones en dos columnas (etiqueta arriba, valor abajo) del mockup. */
 .configSection {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   margin-top: auto;
-  padding-top: 14px;
+  padding-top: 12px;
   border-top: 1px solid var(--border-soft);
 }
 
 .configSectionTitle {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #94a3b8;
@@ -418,7 +418,7 @@
 .configTabla {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 20px;
+  gap: 10px 16px;
   margin: 0;
 }
 
@@ -430,25 +430,25 @@
 
 .configFila {
   display: grid;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
 }
 
 .configLabel {
-  font-size: 0.72rem;
-  font-weight: 500;
+  font-size: 0.7rem;
+  font-weight: 400;
   color: var(--muted);
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 
 .configValor {
   margin: 0;
-  font-size: 0.875rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 400;
   color: var(--navy);
   overflow-wrap: anywhere;
 }
@@ -555,7 +555,7 @@
 .sectionBlock {
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: var(--background);
+  background: var(--surface);
   padding: 22px 24px;
   box-shadow: var(--shadow-sm);
 }
@@ -749,20 +749,20 @@
 .idFields dt {
   color: var(--muted);
   font-size: 0.7rem;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .idFields dd {
   margin: 0;
-  font-weight: 700;
-  font-size: 0.84rem;
+  font-weight: 400;
+  font-size: 0.82rem;
   color: var(--navy);
   overflow-wrap: anywhere;
 }
 
 .idFields dd.valueMuted {
   color: var(--muted);
-  font-weight: 500;
+  font-weight: 400;
   font-style: italic;
 }
 
@@ -1093,7 +1093,7 @@
 .modalTitle {
   margin: 0;
   font-size: 1rem;
-  font-weight: 650;
+  font-weight: 400;
   color: var(--navy);
 }
 
@@ -1127,7 +1127,7 @@
   border-radius: 8px;
   color: #be123c;
   font-size: 0.78rem;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .modalForm {
@@ -1163,7 +1163,7 @@
 
 .formField label {
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: 400;
   color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -1208,7 +1208,7 @@
 .hexTextInput {
   flex: 1;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 0.04em;
 }
 
@@ -1240,7 +1240,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 9px;
   font-size: 0.84rem;
-  font-weight: 550;
+  font-weight: 400;
   color: #475569;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1257,7 +1257,7 @@
   border: none;
   border-radius: 9px;
   font-size: 0.84rem;
-  font-weight: 600;
+  font-weight: 400;
   color: #ffffff;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(2, 132, 199, 0.25);
@@ -1473,7 +1473,7 @@
   padding: 4px 12px;
   border-radius: 8px;
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: 400;
   color: #ffffff;
   background: #b45309;
   border: none;
@@ -1484,19 +1484,25 @@
   opacity: 0.9;
 }
 
-/* R-C08 · Atributo crítico para producción, visible sin abrir detalle */
-.criticoTag {
-  margin-left: 6px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: #b45309;
-  background: rgba(217, 119, 6, 0.12);
-  border: 1px solid rgba(217, 119, 6, 0.25);
-  vertical-align: middle;
+/* R-C08 · Atributo clave para producción, resaltado sutilmente */
+.criticoDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0284c7;
+  display: inline-block;
+  margin-right: 2px;
+}
+
+.configFilaDestacada {
+  padding: 4px 8px;
+  background: rgba(2, 132, 199, 0.05);
+  border-radius: 6px;
+  border-left: 2px solid #0284c7;
+}
+
+.configValorDestacado {
+  color: #0369a1;
 }
 
 /* Avance de recolección: sin card, es un bloque de datos dentro de la page.
