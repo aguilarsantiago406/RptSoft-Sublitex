@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Palette } from "lucide-react";
 import type { PedidoDetalle } from "../types/pedido";
 import { actionEliminarColorPedido } from "../actions/pedidos.actions";
 import { ModalColorForm } from "./ModalColorForm";
@@ -31,20 +32,22 @@ export function PedidoColores({ pedidoId, colores }: PedidoColoresProps) {
   };
 
   return (
-    <section className={styles.sectionBlock}>
+    <section className={`${styles.sectionBlock} ${styles.sectionBlockCompacta}`}>
       <div className={styles.sectionHeaderRow}>
-        <div>
-          <h2 className={styles.sectionTitle}>3 · COLORES OFICIALES</h2>
-          <p className={styles.sectionSubtitle}>Código hexadecimal obligatorio (Regla R-K05)</p>
+        <div className={styles.sectionTitleRow}>
+          <span className={styles.cardIcon}>
+            <Palette size={16} />
+          </span>
+          <h2 className={styles.sectionTitle}>Colores oficiales</h2>
         </div>
         <div className={styles.colorsHeaderActions}>
-          <span className={styles.tagSi}>{colores.length} colores</span>
+          <span className={styles.countTag}>{colores.length} colores</span>
           <button
             type="button"
-            className={styles.addColorButton}
+            className={styles.cardAction}
             onClick={() => setIsModalOpen(true)}
           >
-            + Agregar Color
+            + Agregar color
           </button>
         </div>
       </div>

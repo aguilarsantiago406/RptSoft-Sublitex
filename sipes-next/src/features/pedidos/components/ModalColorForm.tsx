@@ -74,7 +74,7 @@ export function ModalColorForm({ isOpen, onClose, pedidoId }: ModalColorFormProp
         <div className={styles.modalHeader}>
           <div>
             <h3 className={styles.modalTitle}>Agregar Color Oficial</h3>
-            <p className={styles.modalSubtitle}>Código HEX obligatorio para producción (Regla R-K05)</p>
+            <p className={styles.modalSubtitle}>Código HEX obligatorio para producción</p>
           </div>
           <button
             type="button"

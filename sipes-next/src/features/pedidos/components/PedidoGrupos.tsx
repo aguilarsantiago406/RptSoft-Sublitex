@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { LayoutGrid } from "lucide-react";
 import type { GrupoPedido } from "../types/pedido";
 import type { TipoProductoCatalogoItem, AtributoCatalogoItem } from "../api/pedidos.api";
 import { actionEliminarGrupo } from "../actions/grupos.actions";
@@ -13,7 +14,6 @@ import styles from "./pedidos.module.css";
 interface PedidoGruposProps {
   grupos: GrupoPedido[];
   pedidoId: string;
-  pedidoCodigo?: string;
   totalPrendas: number;
   tiposProducto: TipoProductoCatalogoItem[];
   atributosCatalogo?: AtributoCatalogoItem[];
@@ -22,7 +22,6 @@ interface PedidoGruposProps {
 export function PedidoGrupos({
   grupos,
   pedidoId,
-  pedidoCodigo,
   totalPrendas,
   tiposProducto,
   atributosCatalogo = [],
@@ -53,20 +52,20 @@ export function PedidoGrupos({
   return (
     <section className={styles.sectionBlock}>
       <div className={styles.sectionHeaderRow}>
-        <div>
-          <h2 className={styles.sectionTitle}>2 · DISEÑO Y CONFIGURACIÓN DE GRUPOS</h2>
-          <p className={styles.sectionSubtitle}>
-            {grupos.length} grupos contratados · La configuración técnica vive en cada grupo
-          </p>
+        <div className={styles.sectionTitleRow}>
+          <span className={styles.cardIcon}>
+            <LayoutGrid size={16} />
+          </span>
+          <h2 className={styles.sectionTitle}>Grupos y configuración</h2>
         </div>
         <div className={styles.groupsHeaderActions}>
-          <span className={styles.quantity}>{totalPrendas} prendas contratadas</span>
+          <span className={styles.countTag}>{totalPrendas} prendas contratadas</span>
           <button
             type="button"
-            className={styles.addGrupoButton}
+            className={styles.cardAction}
             onClick={() => setIsModalOpen(true)}
           >
-            + Agregar Grupo
+            + Agregar grupo
           </button>
         </div>
       </div>
@@ -93,8 +92,7 @@ export function PedidoGrupos({
           <GrupoCard
             key={grupo.id}
             grupo={grupo}
-            pedidoId={pedidoId}
-            pedidoCodigo={pedidoCodigo}
+            atributosCatalogo={atributosCatalogo}
             onEdit={(g) => setEditingGrupo(g)}
             onDelete={(id, nombre) => setGrupoAEliminar({ id, nombre })}
             isDeleting={isDeletingId === grupo.id}

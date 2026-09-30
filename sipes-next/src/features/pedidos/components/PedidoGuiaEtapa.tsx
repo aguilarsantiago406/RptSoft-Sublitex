@@ -14,14 +14,17 @@ interface CheckItem {
   id: string;
   label: string;
   ok: boolean;
+  codigo?: string;
 }
 
 interface EtapaConfig {
   numero: number;
   titulo: string;
-  objetivo: string;
+  detalle: string;
   siguiente?: EstadoPedido;
   siguienteLabel?: string;
+  checksEnTarjetas?: boolean;
+  resumenFaltantes?: (faltantes: number) => string;
   getChecks: (
     pedido: PedidoDetalle,
     disenos: Array<{ id: string; estado: string }>,
@@ -35,30 +38,30 @@ interface EtapaConfig {
 const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
   BORRADOR: {
     numero: 1,
-    titulo: "Borrador · Identificación y Compromiso",
-    objetivo: "Pactá la fecha de entrega obligatoria y asegurate de tener al cliente registrado.",
+    titulo: "Datos y fecha de entrega",
+    detalle: "Asigná el cliente y pactá la fecha de entrega.",
     siguiente: "EN_CONFIGURACION",
-    siguienteLabel: "Avanzar a Configuración",
+    siguienteLabel: "Ir a Configuración",
     getChecks: (p) => [
       { id: "cli", label: "Cliente asignado", ok: Boolean(p.cliente?.nombre) },
-      { id: "fec", label: "Fecha compromiso definida (R-A09)", ok: Boolean(p.fechaCompromiso) },
+      { id: "fec", label: "Fecha de entrega pactada", codigo: "R-A09", ok: Boolean(p.fechaCompromiso) },
     ],
   },
   EN_CONFIGURACION: {
     numero: 2,
-    titulo: "Configuración · Estructura de Prendas y Colores",
-    objetivo: "Creá los grupos de prendas (telas, cortes, cantidades) y definí la paleta de colores.",
+    titulo: "Grupos y colores",
+    detalle: "Creá al menos un grupo de prendas y la paleta de colores.",
     siguiente: "EN_RECOLECCION",
-    siguienteLabel: "Abrir Recolección de Tallas",
+    siguienteLabel: "Abrir recolección de tallas",
     getChecks: (p) => [
-      { id: "grp", label: "Al menos 1 grupo de prendas creado (R-B02)", ok: (p.grupos?.length ?? 0) > 0 },
-      { id: "col", label: "Colores del pedido definidos", ok: (p.colores?.length ?? 0) > 0 },
+      { id: "grp", label: "Al menos 1 grupo de prendas", codigo: "R-B02", ok: (p.grupos?.length ?? 0) > 0 },
+      { id: "col", label: "Colores definidos", ok: (p.colores?.length ?? 0) > 0 },
     ],
   },
   EN_RECOLECCION: {
     numero: 3,
-    titulo: "Recolección · Carga de Tallas y Participantes",
-    objetivo: "Compartí los enlaces de registro o cargá las tallas, números y nombres de las prendas.",
+    titulo: "Tallas y participantes",
+    detalle: "Cargá tallas, dorsales y nombres de las prendas.",
     siguiente: "EN_REVISION",
     siguienteLabel: "Pasar a Revisión",
     getChecks: (_, __, ___, total) => [
@@ -67,35 +70,25 @@ const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
   },
   EN_REVISION: {
     numero: 4,
-    titulo: "Revisión · Control de Calidad y Gobernanza de Bloques",
-    objetivo: "Los 3 bloques operativos (Diseño, Lista y Comercial) deben estar CERRADOS en el sistema antes de enviar al taller.",
+    titulo: "Auditoría de calidad",
+    detalle: "Cerrá los 3 bloques para liberar el pedido al taller.",
     siguiente: "EN_PRODUCCION",
-    siguienteLabel: "Enviar a Producción (Taller)",
+    siguienteLabel: "Enviar a Producción",
+    checksEnTarjetas: true,
+    resumenFaltantes: (n) => `Falta cerrar ${n} de 3 bloques`,
     getChecks: (_p, _disenos, _envio, _total, _resumen, bloques) => {
       const g = evaluarBloquesReales(bloques || []);
       return [
-        {
-          id: "blk-diseno",
-          label: `Bloque Diseño: ${g.diseno.cerrado ? "CERRADO (Aprobado formalmente)" : "ABIERTO (Pendiente cierre)"}`,
-          ok: g.diseno.cerrado,
-        },
-        {
-          id: "blk-lista",
-          label: `Bloque Lista: ${g.lista.cerrado ? "CERRADO (Prendas completas)" : "ABIERTO (Pendiente cierre)"}`,
-          ok: g.lista.cerrado,
-        },
-        {
-          id: "blk-comercial",
-          label: `Bloque Comercial: ${g.comercial.cerrado ? "CERRADO (Confirmación emitida)" : "ABIERTO (Pendiente cierre)"}`,
-          ok: g.comercial.cerrado,
-        },
+        { id: "blk-diseno", label: "Diseño", ok: g.diseno.cerrado },
+        { id: "blk-lista", label: "Lista de prendas", codigo: "R-H03", ok: g.lista.cerrado },
+        { id: "blk-comercial", label: "Comercial", codigo: "R-H03", ok: g.comercial.cerrado },
       ];
     },
   },
   EN_PRODUCCION: {
     numero: 5,
-    titulo: "Producción · Confección en Taller",
-    objetivo: "La orden se encuentra en corte, sublimación y armado. La ficha técnica está congelada.",
+    titulo: "Taller",
+    detalle: "Corte, sublimación y armado. La ficha técnica queda congelada.",
     siguiente: "ENTREGADO",
     siguienteLabel: "Marcar como Entregado",
     getChecks: () => [
@@ -104,8 +97,8 @@ const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
   },
   ENTREGADO: {
     numero: 6,
-    titulo: "Entregado · Despacho y Liquidación",
-    objetivo: "El cliente recibió el pedido. Verificá la proforma comercial antes del cierre final.",
+    titulo: "Entrega",
+    detalle: "Verificá la proforma comercial antes del cierre.",
     siguiente: "CERRADO",
     siguienteLabel: "Cerrar Pedido",
     getChecks: () => [
@@ -114,14 +107,14 @@ const ETAPAS_CONFIG: Record<EstadoPedido, EtapaConfig> = {
   },
   CERRADO: {
     numero: 7,
-    titulo: "Cerrado · Pedido Completado y Archivado",
-    objetivo: "Este pedido concluyó exitosamente su ciclo operativo y comercial.",
+    titulo: "Completado",
+    detalle: "El pedido cerró su ciclo.",
     getChecks: () => [],
   },
   CANCELADO: {
     numero: 0,
     titulo: "Cancelado",
-    objetivo: "Este pedido fue cancelado y no admite modificaciones.",
+    detalle: "Salió del flujo de producción.",
     getChecks: () => [],
   },
 };
@@ -151,6 +144,11 @@ export function PedidoGuiaEtapa({
   const checks = config.getChecks(pedido, disenos, datosEnvio, totalPrendas, resumenProduccion, bloques);
   const faltantes = checks.filter((c) => !c.ok);
   const puedeAvanzar = faltantes.length === 0 && Boolean(config.siguiente);
+  const resumenFaltantes = config.resumenFaltantes ?? ((n: number) => `Falta ${n} requisito${n === 1 ? "" : "s"}`);
+
+  function irABloques() {
+    document.getElementById("bloques")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   function ejecutarAvanzar() {
     if (!puedeAvanzar || !config.siguiente) return;
@@ -181,35 +179,67 @@ export function PedidoGuiaEtapa({
     <div className={styles.guiaContainer}>
       <div className={styles.guiaHeader}>
         <div className={styles.guiaTitleRow}>
-          <span className={styles.etapaBadge}>Etapa {config.numero}</span>
+          <span className={styles.etapaBadge}>
+            Etapa {config.numero}
+            {config.numero > 0 ? " de 7" : ""}
+          </span>
           <h2 className={styles.guiaTitle}>{config.titulo}</h2>
         </div>
+        <p className={styles.guiaSubtitle}>{config.detalle}</p>
       </div>
 
       <div className={styles.guiaContent}>
-        <div className={styles.checklistSection}>
-          <h3 className={styles.checklistTitle}>Requisitos para avanzar a la siguiente etapa:</h3>
-          <div className={styles.checkItems}>
-            {checks.map((item) => (
-              <span
-                key={item.id}
-                className={`${styles.checkItem} ${item.ok ? styles.checkItemOk : styles.checkItemPending}`}
-              >
-                {item.ok ? <CheckCircle2 size={15} /> : <CircleAlert size={15} />}
-                {item.label}
+        <div className={styles.estadoRow}>
+          {!puedeAvanzar && faltantes.length > 0 ? (
+            <>
+              <span className={styles.bloqueoIcon}>
+                <CircleAlert size={16} />
               </span>
-            ))}
-          </div>
+              <span className={styles.bloqueoTexto}>
+                {resumenFaltantes(faltantes.length)}
+                {config.checksEnTarjetas && (
+                  <button type="button" className={styles.bloqueoLink} onClick={irABloques}>
+                    Ver abajo
+                  </button>
+                )}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className={styles.listoIcon}>
+                <CheckCircle2 size={16} />
+              </span>
+              <span className={styles.listoTexto}>
+                {puedeAvanzar ? "Todo listo para avanzar" : "Etapa completada"}
+              </span>
+            </>
+          )}
         </div>
 
-        <div className={styles.actionsSection}>
-          {config.siguiente && (
+        {!config.checksEnTarjetas && checks.length > 0 && (
+          <ul className={styles.checkList}>
+            {checks.map((item) => (
+              <li
+                key={item.id}
+                className={item.ok ? styles.checkItemOk : styles.checkItemPending}
+                title={item.codigo ? `Regla ${item.codigo}` : undefined}
+              >
+                {item.ok ? <CheckCircle2 size={14} /> : <CircleAlert size={14} />}
+                <span>{item.label}</span>
+                {item.codigo && <code className={styles.checkCodigo}>{item.codigo}</code>}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {config.siguiente && (
+          <div className={styles.actionsSection}>
             <button
               type="button"
               className={styles.advanceButton}
               onClick={handleAvanzarClick}
               disabled={!puedeAvanzar || isPending}
-              title={puedeAvanzar ? config.siguienteLabel : "Completa los requisitos pendientes"}
+              title={puedeAvanzar ? config.siguienteLabel : resumenFaltantes(faltantes.length)}
             >
               {isPending ? "Avanzando…" : (
                 <>
@@ -218,14 +248,9 @@ export function PedidoGuiaEtapa({
                 </>
               )}
             </button>
-          )}
-          {!puedeAvanzar && faltantes.length > 0 && (
-            <span className={styles.advanceHelper}>
-              Faltan {faltantes.length} requisito(s) obligatorio(s)
-            </span>
-          )}
-          {errorMsg && <span className={styles.advanceHelper}>{errorMsg}</span>}
-        </div>
+            {errorMsg && <span className={styles.advanceHelper}>{errorMsg}</span>}
+          </div>
+        )}
       </div>
 
       <ModalConfirmacion
@@ -239,7 +264,7 @@ export function PedidoGuiaEtapa({
               Estás a punto de enviar el pedido <strong>{pedido.codigo}</strong> al taller.
             </p>
             <p style={{ marginTop: "10px", fontSize: "0.85rem", color: "#64748b" }}>
-              Los 3 bloques operativos (Diseño, Lista de Prendas y Comercial) han sido validados. Al confirmar, la ficha técnica se congelará para corte y confección.
+              Los 3 bloques están cerrados. Al confirmar, la ficha técnica queda congelada para corte y confección.
             </p>
           </div>
         }

@@ -10,104 +10,143 @@
 
 .guiaHeader {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, rgba(2, 132, 199, 0.04) 0%, rgba(30, 41, 59, 0.02) 100%);
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border-soft);
-  gap: 16px;
   flex-wrap: wrap;
 }
 
 .guiaTitleRow {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .etapaBadge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   background: rgba(2, 132, 199, 0.12);
   color: var(--sky-dark);
+  white-space: nowrap;
 }
 
 .guiaTitle {
-  font-size: 0.96rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--navy);
   margin: 0;
 }
 
 .guiaSubtitle {
-  margin: 2px 0 0;
-  font-size: 0.82rem;
+  margin: 0;
+  font-size: 0.84rem;
   color: var(--muted);
 }
 
+/* Una sola fila: veredicto a la izquierda, lista de checks al centro, acción a la derecha */
 .guiaContent {
-  padding: 18px 20px;
+  padding: 14px 20px;
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 20px;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
+  gap: 18px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .guiaContent {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 
-.checklistSection {
+.estadoRow {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
-.checklistTitle {
-  font-size: 0.78rem;
+.bloqueoIcon,
+.listoIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.bloqueoIcon {
+  color: #b45309;
+}
+
+.listoIcon {
+  color: #15803d;
+}
+
+.bloqueoTexto {
+  font-size: 0.86rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  margin: 0;
+  color: #b45309;
 }
 
-.checkItems {
+.listoTexto {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.bloqueoLink {
+  background: none;
+  border: none;
+  padding: 0 0 0 6px;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--sky-dark);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.checkList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 16px;
+  gap: 6px 8px;
 }
 
-.checkItem {
+.checkList li {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  font-size: 0.84rem;
+  gap: 6px;
+  font-size: 0.8rem;
   font-weight: 500;
-  padding: 4px 10px;
+  padding: 4px 9px;
   border-radius: 8px;
-  transition: all var(--duration-fast) var(--ease-out);
 }
 
 .checkItemOk {
-  background: rgba(22, 163, 74, 0.08);
   color: #15803d;
-  border: 1px solid rgba(22, 163, 74, 0.2);
+  background: rgba(22, 163, 74, 0.08);
+  border: 1px solid rgba(22, 163, 74, 0.18);
 }
 
 .checkItemPending {
-  background: rgba(217, 119, 6, 0.08);
   color: #b45309;
-  border: 1px solid rgba(217, 119, 6, 0.25);
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+}
+
+.checkCodigo {
+  font-size: 0.68rem;
+  font-weight: 600;
+  opacity: 0.6;
+  letter-spacing: 0.02em;
 }
 
 .actionsSection {
@@ -117,7 +156,7 @@
   gap: 6px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .actionsSection {
     align-items: stretch;
   }
@@ -128,9 +167,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 18px;
+  padding: 9px 16px;
   border-radius: 10px;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #ffffff;
   background: var(--sky-dark);
@@ -138,6 +177,7 @@
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-out);
   box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
+  white-space: nowrap;
 }
 
 .advanceButton:hover:not(:disabled) {
@@ -154,7 +194,7 @@
 
 .advanceHelper {
   font-size: 0.74rem;
-  color: #b45309;
+  color: #b91c1c;
   font-weight: 500;
   text-align: right;
 }

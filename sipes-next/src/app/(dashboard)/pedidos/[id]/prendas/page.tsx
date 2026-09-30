@@ -1,6 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import {
   getPedido,
   getParticipantesGrupo,
@@ -10,7 +8,6 @@ import {
 } from "@/features/pedidos/api/pedidos.api";
 import { getUbicaciones } from "@/features/catalogos/api/catalogos.api";
 import { getResumenProduccion } from "@/features/pedidos/api/comercial.api";
-import { EstadoPedidoBadge } from "@/features/pedidos/components/EstadoPedidoBadge";
 import { PedidoRecoleccionCard } from "@/features/pedidos/components/PedidoRecoleccionCard";
 import { PrendasView } from "@/features/pedidos/components/PrendasView";
 import type { PrendaDetalle } from "@/features/pedidos/types/pedido";
@@ -144,31 +141,12 @@ export default async function PrendasPage({ params }: PrendasPageProps) {
     <main>
       <header className={styles.detailHeader} style={{ marginBottom: "20px" }}>
         <div className={styles.detailHeaderMain}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-            <Link
-              href={`/pedidos/${pedido.codigo}`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                color: "var(--muted)",
-                fontSize: "0.84rem",
-                textDecoration: "none",
-                fontWeight: 500,
-              }}
-            >
-              <ArrowLeft size={16} /> Volver a datos del pedido
-            </Link>
-          </div>
-          <h1 className={styles.detailHeaderTitle}>
-            PRENDAS <span className={styles.detailHeaderCode}>— {pedido.codigo}</span>
-          </h1>
+          <h1 className={styles.detailHeaderTitle}>PRENDAS</h1>
         </div>
-        <EstadoPedidoBadge estado={pedido.estado} size="lg" />
       </header>
 
       <div style={{ marginBottom: "24px" }}>
-        <PedidoRecoleccionCard pedido={pedido} totalPrendas={totalPrendas} resumen={resumenProduccion} />
+        <PedidoRecoleccionCard totalPrendas={totalPrendas} resumen={resumenProduccion} />
       </div>
 
       <PrendasView
