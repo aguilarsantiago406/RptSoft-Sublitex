@@ -48,6 +48,7 @@ export function ModalEmitirConfirmacion({
   const baseSinIgv = basePrendas + totalExtras;
   const igvCalculado = comprobante === "FACTURA" ? Math.round(baseSinIgv * 0.18 * 100) / 100 : 0;
   const totalFinal = baseSinIgv + igvCalculado;
+  const adelantoSugerido50 = Math.round(totalFinal * 0.5 * 100) / 100;
   const saldoPendiente = Math.max(0, Math.round((totalFinal - adelantoRecibido) * 100) / 100);
 
   function handleSubmit(e: React.FormEvent) {
@@ -110,9 +111,45 @@ export function ModalEmitirConfirmacion({
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label htmlFor="adelanto" className={styles.label}>
-                Adelanto recibido (S/):
-              </label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label htmlFor="adelanto" className={styles.label}>
+                  Adelanto recibido (S/):
+                </label>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setAdelantoRecibido(adelantoSugerido50)}
+                    style={{
+                      fontSize: "11px",
+                      padding: "2px 8px",
+                      background: "var(--sky-soft, #e0f2fe)",
+                      color: "var(--sky-dark, #0284c7)",
+                      border: "1px solid var(--sky, #38bdf8)",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    50% (S/ {adelantoSugerido50.toFixed(2)})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdelantoRecibido(totalFinal)}
+                    style={{
+                      fontSize: "11px",
+                      padding: "2px 8px",
+                      background: "#f1f5f9",
+                      color: "#475569",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    100%
+                  </button>
+                </div>
+              </div>
               <input
                 id="adelanto"
                 type="number"

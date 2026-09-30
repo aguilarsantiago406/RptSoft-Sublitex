@@ -87,6 +87,40 @@ async function seedCatalogos() {
     });
   }
 
+  const tarifasBase = [
+    { tipo: 'PRODUCTO', concepto: 'Camiseta', valor: 35.00 },
+    { tipo: 'PRODUCTO', concepto: 'Conjunto deportivo', valor: 65.00 },
+    { tipo: 'PRODUCTO', concepto: 'Kit completo', valor: 75.00 },
+    { tipo: 'PRODUCTO', concepto: 'Camiseta arquero', valor: 45.00 },
+    { tipo: 'PRODUCTO', concepto: 'Short', valor: 25.00 },
+    { tipo: 'PRODUCTO', concepto: 'Medias', valor: 15.00 },
+    { tipo: 'PRODUCTO', concepto: 'Falda', valor: 30.00 },
+    { tipo: 'RECARGO_TALLA', concepto: 'XL', valor: 3.00 },
+    { tipo: 'RECARGO_TALLA', concepto: 'XXL', valor: 5.00 },
+    { tipo: 'RECARGO_TALLA', concepto: '2XL', valor: 5.00 },
+    { tipo: 'RECARGO_TALLA', concepto: '3XL', valor: 8.00 },
+    { tipo: 'RECARGO_TELA', concepto: 'Win', valor: 4.00 },
+    { tipo: 'RECARGO_TELA', concepto: 'Algodón', valor: 6.00 },
+    { tipo: 'RECARGO_CUELLO', concepto: 'Camisero', valor: 3.50 },
+  ];
+
+  for (const t of tarifasBase) {
+    const existe = await prisma.tarifa.findFirst({
+      where: { tipo: t.tipo as any, concepto: t.concepto },
+    });
+    if (!existe) {
+      await prisma.tarifa.create({
+        data: {
+          tipo: t.tipo as any,
+          concepto: t.concepto,
+          valor: t.valor,
+          activo: true,
+          vigenteDesde: new Date('2026-01-01'),
+        },
+      });
+    }
+  }
+
   return productos;
 }
 

@@ -153,16 +153,45 @@ export class ComercialService {
   }
   async getTarifaVigentePorConcepto(tipo: string, concepto: string): Promise<number> {
     const ahora = new Date();
-    const tarifa = await this.prisma.tarifa.findFirst({
+    const conceptoLimpio = concepto.trim();
+    
+    let tarifa = await this.prisma.tarifa.findFirst({
       where: {
         tipo: tipo as any,
-        concepto,
+        concepto: { equals: conceptoLimpio, mode: 'insensitive' },
         activo: true,
         vigenteDesde: { lte: ahora },
         OR: [{ vigenteHasta: null }, { vigenteHasta: { gte: ahora } }],
       },
       orderBy: { vigenteDesde: 'desc' },
     });
+
+    if (!tarifa) {
+      tarifa = await this.prisma.tarifa.findFirst({
+        where: {
+          tipo: tipo as any,
+          concepto: { contains: conceptoLimpio, mode: 'insensitive' },
+          activo: true,
+          vigenteDesde: { lte: ahora },
+          OR: [{ vigenteHasta: null }, { vigenteHasta: { gte: ahora } }],
+        },
+        orderBy: { vigenteDesde: 'desc' },
+      });
+    }
+
+    if (!tarifa) {
+      const tarifasTipo = await this.prisma.tarifa.findMany({
+        where: {
+          tipo: tipo as any,
+          activo: true,
+          vigenteDesde: { lte: ahora },
+          OR: [{ vigenteHasta: null }, { vigenteHasta: { gte: ahora } }],
+        },
+      });
+      const norm = conceptoLimpio.toLowerCase();
+      tarifa = tarifasTipo.find((t) => norm.includes(t.concepto.toLowerCase().trim())) ?? null;
+    }
+
     return Number(tarifa?.valor ?? 0);
   }
 

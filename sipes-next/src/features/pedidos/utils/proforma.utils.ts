@@ -52,12 +52,30 @@ export function buscarTarifaVigente(
   tarifas: TarifaItem[]
 ): { valor: number; encontrada: boolean } {
   const norm = concepto.trim().toLowerCase();
+  if (!norm) return { valor: 0, encontrada: false };
 
-  const match = tarifas.find((t) => {
+  let match = tarifas.find((t) => {
     if (t.tipo && t.tipo !== tipo) return false;
     const c = t.concepto.trim().toLowerCase();
-    return c === norm || norm.includes(c) || c.includes(norm);
+    return c === norm;
   });
+
+  if (!match) {
+    match = tarifas.find((t) => {
+      if (t.tipo && t.tipo !== tipo) return false;
+      const c = t.concepto.trim().toLowerCase();
+      return c.includes(norm) || norm.includes(c);
+    });
+  }
+
+  if (!match && tipo === "PRODUCTO") {
+    const palabras = norm.split(/\s+/).filter((p) => p.length >= 4);
+    match = tarifas.find((t) => {
+      if (t.tipo && t.tipo !== tipo) return false;
+      const c = t.concepto.trim().toLowerCase();
+      return palabras.some((p) => c.includes(p));
+    });
+  }
 
   if (match) {
     return { valor: Number(match.valor), encontrada: true };
@@ -76,19 +94,23 @@ export function calcularProformaCompleta(
   // 1. Cotización comercial: SIEMPRE sobre la cantidad contratada del grupo
   const itemsCotizados: ItemCotizadoProforma[] = pedido.grupos.map((g) => {
     const nombreProd = g.tipoProducto?.nombre || g.nombre;
-    const { valor, encontrada } = buscarTarifaVigente("PRODUCTO", nombreProd, tarifas);
-    if (!encontrada) tieneTarifasFaltantes = true;
+    let res = buscarTarifaVigente("PRODUCTO", nombreProd, tarifas);
+    if (!res.encontrada && g.nombre && g.nombre !== nombreProd) {
+      const resAlt = buscarTarifaVigente("PRODUCTO", g.nombre, tarifas);
+      if (resAlt.encontrada) res = resAlt;
+    }
+    if (!res.encontrada) tieneTarifasFaltantes = true;
 
     const cantidad = g.cantidadContratada;
-    const subtotal = cantidad * valor;
+    const subtotal = cantidad * res.valor;
 
     return {
       grupoId: g.id,
       nombre: g.nombre,
       tipoProductoNombre: nombreProd,
       cantidad,
-      precioUnitario: valor,
-      tarifaEncontrada: encontrada,
+      precioUnitario: res.valor,
+      tarifaEncontrada: res.encontrada,
       subtotal,
     };
   });
