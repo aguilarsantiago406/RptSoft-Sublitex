@@ -8,6 +8,7 @@ import {
   actionConfirmarManual,
   actionEliminarParticipante,
 } from "../actions/participantes.actions";
+import { Trash2 } from "lucide-react";
 import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import styles from "./participantes.module.css";
 
@@ -138,12 +139,15 @@ export function ParticipantesRow({
             </button>
           )}
           <button
-            type="button" className={styles.revokeButton}
+            type="button"
+            className={styles.revokeButton}
             onClick={() => setModalAction("eliminar")}
             disabled={isPending}
             title="Eliminar participante del grupo"
+            aria-label="Eliminar participante del grupo"
+            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "5px 7px" }}
           >
-            Eliminar
+            <Trash2 size={13} />
           </button>
         </div>
 

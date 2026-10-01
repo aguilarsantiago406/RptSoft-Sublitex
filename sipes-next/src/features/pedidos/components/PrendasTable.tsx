@@ -51,7 +51,7 @@ export function PrendasTable({
             <col style={{ width: "55px" }} />
             <col style={{ width: "75px" }} />
             <col style={{ width: "105px" }} />
-            <col style={{ width: "90px" }} />
+            <col style={{ width: "120px" }} />
             <col style={{ width: "130px" }} />
             <col style={{ width: "100px" }} />
             <col style={{ width: "80px" }} />
@@ -84,7 +84,7 @@ export function PrendasTable({
               />
               <th>Color</th>
               <SortableTh<PrendaDetalle>
-                label="Tipo"
+                label="Tipo de Prenda"
                 sortKey="tipoPrenda"
                 activeKey={table.sortKey}
                 dir={table.sortDir}

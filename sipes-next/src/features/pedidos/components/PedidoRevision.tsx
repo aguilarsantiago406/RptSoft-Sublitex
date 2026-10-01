@@ -1,23 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
-import {
-  ShieldCheck,
-  Palette,
-  ClipboardList,
-  BadgeDollarSign,
-  ArrowDown,
-  ArrowRight,
-  AlertTriangle,
-  Lock,
-  Unlock,
-} from "lucide-react";
+import { ShieldCheck, Palette, ClipboardList, BadgeDollarSign } from "lucide-react";
 import type { PedidoDetalle } from "../types/pedido";
 import type { BloquePedidoItem, TipoBloque } from "../types/bloque";
+import type { ResumenProduccionItem, ConfirmacionItem } from "../api/comercial.api";
 import { actionCerrarBloque, actionReabrirBloque } from "../actions/bloques.actions";
 import { evaluarBloquesReales } from "../utils/bloques.utils";
 import { ModalReabrirBloque } from "./ModalReabrirBloque";
+import { BloqueCard, type BloqueCheckItem } from "./BloqueCard";
 import sharedStyles from "./pedidos.module.css";
 import styles from "./pedidoRevision.module.css";
 
@@ -25,39 +16,31 @@ interface PedidoRevisionProps {
   pedido: PedidoDetalle;
   bloques?: BloquePedidoItem[];
   totalPrendas?: number;
+  disenos?: Array<{ id: string; estado: string }>;
+  datosEnvio?: { ciudad?: string | null; direccion?: string | null; agencia?: string | null } | null;
+  resumenProduccion?: ResumenProduccionItem | null;
+  confirmaciones?: ConfirmacionItem[];
 }
-
-const NOMBRES_BLOQUE: Record<TipoBloque, string> = {
-  DISENO: "Bloque Diseño",
-  LISTA: "Bloque Lista de Prendas",
-  COMERCIAL: "Bloque Comercial",
-};
 
 export function PedidoRevision({
   pedido,
   bloques = [],
+  totalPrendas = 0,
+  disenos = [],
+  datosEnvio = null,
+  resumenProduccion = null,
+  confirmaciones = [],
 }: PedidoRevisionProps) {
   const [isPending, startTransition] = useTransition();
-  const [bloquePendingTipo, setBloquePendingTipo] = useState<TipoBloque | null>(null);
   const [errores, setErrores] = useState<Partial<Record<TipoBloque, string>>>({});
   const [reabrirTipo, setReabrirTipo] = useState<TipoBloque | null>(null);
 
   const gobernanza = evaluarBloquesReales(bloques);
 
-  function scrollToSection(id: string) {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }
-
   function handleCerrar(tipo: TipoBloque) {
     setErrores((prev) => ({ ...prev, [tipo]: undefined }));
-    setBloquePendingTipo(tipo);
-
     startTransition(async () => {
       const res = await actionCerrarBloque(pedido.id, tipo);
-      setBloquePendingTipo(null);
       if (!res.ok) {
         setErrores((prev) => ({ ...prev, [tipo]: res.error || "No se pudo cerrar el bloque." }));
       }
@@ -68,17 +51,48 @@ export function PedidoRevision({
     if (!reabrirTipo) return;
     const tipo = reabrirTipo;
     setErrores((prev) => ({ ...prev, [tipo]: undefined }));
-    setBloquePendingTipo(tipo);
-
     startTransition(async () => {
       const res = await actionReabrirBloque(pedido.id, tipo, motivo);
-      setBloquePendingTipo(null);
       setReabrirTipo(null);
       if (!res.ok) {
         setErrores((prev) => ({ ...prev, [tipo]: res.error || "No se pudo reabrir el bloque." }));
       }
     });
   }
+
+  // 1. Checklist Bloque Diseño
+  const hayDiseno = disenos.length > 0;
+  const hayAprobado = disenos.some((d) => d.estado === "APROBADO");
+  const checksDiseno: BloqueCheckItem[] = [
+    { id: "dis-sub", label: "Propuesta de diseño cargada", ok: hayDiseno, detalle: hayDiseno ? `${disenos.length} arte(s)` : "Falta propuesta" },
+    { id: "dis-apr", label: "Mockup aprobado por cliente", ok: hayAprobado, detalle: hayAprobado ? "Aprobado" : "Pendiente" },
+    { id: "dis-cierre", label: "Bloque cerrado y protegido", ok: gobernanza.diseno.cerrado, detalle: gobernanza.diseno.cerrado ? "Cerrado" : "Abierto" },
+  ];
+
+  // 2. Checklist Bloque Lista de Prendas
+  const contratadas = Number(resumenProduccion?.totales?.cantidadContratada ?? totalPrendas ?? 0);
+  const registradas = Number(resumenProduccion?.totales?.prendasRegistradas ?? 0);
+  const prendasCompletas = contratadas > 0 && registradas >= contratadas;
+  const checksLista: BloqueCheckItem[] = [
+    { id: "lst-cant", label: "Prendas contratadas completas", ok: prendasCompletas, detalle: `${registradas}/${contratadas}` },
+    { id: "lst-tallas", label: "Tallas asignadas a cada prenda", ok: prendasCompletas, detalle: prendasCompletas ? "Completas" : "Pendiente" },
+    { id: "lst-dorsales", label: "Dorsales y apodos asignados", ok: prendasCompletas, detalle: prendasCompletas ? "Verificados" : "Pendiente" },
+    { id: "lst-cierre", label: "Bloque cerrado para taller", ok: gobernanza.lista.cerrado, detalle: gobernanza.lista.cerrado ? "Cerrado" : "Abierto" },
+  ];
+
+  // 3. Checklist Bloque Comercial
+  const hayEnvio = Boolean(datosEnvio && (datosEnvio.ciudad || datosEnvio.agencia));
+  const listaConfirmaciones = Array.isArray(confirmaciones) ? confirmaciones : [];
+  const hayConfirmacion = listaConfirmaciones.length > 0;
+  const primeraConfirmacion = listaConfirmaciones[0];
+  const adelantoNum = Number(primeraConfirmacion?.adelantoRecibido ?? 0);
+  const hayAdelanto = !isNaN(adelantoNum) && adelantoNum > 0;
+  const checksComercial: BloqueCheckItem[] = [
+    { id: "com-env", label: "Datos de despacho y entrega", ok: hayEnvio, detalle: hayEnvio ? `Envío a ${datosEnvio?.ciudad || "destino"}` : "Sin registrar" },
+    { id: "com-prof", label: "Proforma comercial emitida", ok: hayConfirmacion, detalle: hayConfirmacion ? `v${primeraConfirmacion?.version ?? 1}` : "Sin emitir" },
+    { id: "com-adel", label: "Adelanto 50% confirmado", ok: hayAdelanto, detalle: hayAdelanto ? `S/ ${adelantoNum.toFixed(2)}` : "Pendiente" },
+    { id: "com-cierre", label: "Bloque comercial cerrado", ok: gobernanza.comercial.cerrado, detalle: gobernanza.comercial.cerrado ? "Cerrado" : "Abierto" },
+  ];
 
   const bDiseno = gobernanza.diseno.bloque;
   const bLista = gobernanza.lista.bloque;
@@ -93,204 +107,40 @@ export function PedidoRevision({
             BLOQUES DEL PEDIDO
           </h2>
           <p className={sharedStyles.sectionSubtitle}>
-            Los 3 deben quedar cerrados para liberar el pedido al taller.
+            Cada bloque tiene sus puntos a cumplir antes de cerrarlo. Los 3 deben quedar cerrados para taller.
           </p>
         </div>
       </div>
 
       <div className={styles.gridBloques}>
-        {/* BLOQUE 1: DISEÑO */}
-        <div className={styles.bloqueCard} title="R-H01, R-H02">
-          <div>
-            <div className={styles.bloqueCardHeader}>
-              <h3 className={styles.bloqueTitle}>
-                <Palette size={18} color="var(--sky-dark)" />
-                {NOMBRES_BLOQUE.DISENO}
-              </h3>
-              <span className={gobernanza.diseno.cerrado ? styles.bloqueBadgeOk : styles.bloqueBadgePending}>
-                {gobernanza.diseno.cerrado ? "CERRADO" : "ABIERTO"}
-              </span>
-            </div>
-            <p className={styles.bloqueDescription}>Arte y mockups aprobados.</p>
+        <BloqueCard
+          titulo="Bloque Diseño" icono={Palette} cerrado={gobernanza.diseno.cerrado}
+          cerradoPor={bDiseno?.cerradoPor?.nombre} version={bDiseno?.versiones?.[0]?.numero}
+          checks={checksDiseno} error={errores.DISENO} isPending={isPending}
+          onCerrar={() => handleCerrar("DISENO")} onReabrir={() => setReabrirTipo("DISENO")}
+          actionScrollId="seccion-diseno" actionLabel="Ir a Mockups"
+        />
 
-            {gobernanza.diseno.cerrado && (
-              <div className={styles.metaAuditoria}>
-                ✓ {bDiseno?.cerradoPor?.nombre ?? "Sin autor"}
-                {bDiseno?.versiones?.[0]?.numero ? ` · v${bDiseno.versiones[0].numero}` : ""}
-              </div>
-            )}
+        <BloqueCard
+          titulo="Bloque Lista de Prendas" icono={ClipboardList} cerrado={gobernanza.lista.cerrado}
+          cerradoPor={bLista?.cerradoPor?.nombre} version={bLista?.versiones?.[0]?.numero}
+          checks={checksLista} error={errores.LISTA} isPending={isPending}
+          onCerrar={() => handleCerrar("LISTA")} onReabrir={() => setReabrirTipo("LISTA")}
+          actionHref={`/pedidos/${pedido.codigo}/prendas`} actionLabel="Ir a Prendas"
+        />
 
-            {errores.DISENO && (
-              <div className={styles.alertaError} role="alert">
-                <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: "1px" }} />
-                <span>{errores.DISENO}</span>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <div className={styles.bloqueActionRow}>
-              {gobernanza.diseno.cerrado ? (
-                <button
-                  type="button"
-                  className={styles.btnReabrir}
-                  onClick={() => setReabrirTipo("DISENO")}
-                  disabled={isPending}
-                >
-                  <Unlock size={13} /> Reabrir
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className={styles.btnCerrar}
-                  onClick={() => handleCerrar("DISENO")}
-                  disabled={isPending && bloquePendingTipo === "DISENO"}
-                >
-                  <Lock size={13} />
-                  {isPending && bloquePendingTipo === "DISENO" ? "Validando..." : "Cerrar"}
-                </button>
-              )}
-
-              <button
-                type="button"
-                className={styles.bloqueLink}
-                onClick={() => scrollToSection("seccion-diseno")}
-              >
-                Ir a Mockups <ArrowDown size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* BLOQUE 2: LISTA DE PRENDAS */}
-        <div className={styles.bloqueCard} title="R-B02, R-E03, R-G03, R-H03">
-          <div>
-            <div className={styles.bloqueCardHeader}>
-              <h3 className={styles.bloqueTitle}>
-                <ClipboardList size={18} color="var(--sky-dark)" />
-                {NOMBRES_BLOQUE.LISTA}
-              </h3>
-              <span className={gobernanza.lista.cerrado ? styles.bloqueBadgeOk : styles.bloqueBadgePending}>
-                {gobernanza.lista.cerrado ? "CERRADO" : "ABIERTO"}
-              </span>
-            </div>
-            <p className={styles.bloqueDescription}>Tallas, dorsales y excepciones completos.</p>
-
-            {gobernanza.lista.cerrado && (
-              <div className={styles.metaAuditoria}>
-                ✓ {bLista?.cerradoPor?.nombre ?? "Sin autor"}
-                {bLista?.versiones?.[0]?.numero ? ` · v${bLista.versiones[0].numero}` : ""}
-              </div>
-            )}
-
-            {errores.LISTA && (
-              <div className={styles.alertaError} role="alert">
-                <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: "1px" }} />
-                <span>{errores.LISTA}</span>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <div className={styles.bloqueActionRow}>
-              {gobernanza.lista.cerrado ? (
-                <button
-                  type="button"
-                  className={styles.btnReabrir}
-                  onClick={() => setReabrirTipo("LISTA")}
-                  disabled={isPending}
-                >
-                  <Unlock size={13} /> Reabrir
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className={styles.btnCerrar}
-                  onClick={() => handleCerrar("LISTA")}
-                  disabled={isPending && bloquePendingTipo === "LISTA"}
-                >
-                  <Lock size={13} />
-                  {isPending && bloquePendingTipo === "LISTA" ? "Validando..." : "Cerrar"}
-                </button>
-              )}
-
-              <Link
-                href={`/pedidos/${pedido.codigo}/prendas`}
-                className={styles.bloqueLink}
-              >
-                Ir a Prendas <ArrowRight size={14} />
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* BLOQUE 3: COMERCIAL */}
-        <div className={styles.bloqueCard} title="R-A09, R-H03">
-          <div>
-            <div className={styles.bloqueCardHeader}>
-              <h3 className={styles.bloqueTitle}>
-                <BadgeDollarSign size={18} color="var(--sky-dark)" />
-                {NOMBRES_BLOQUE.COMERCIAL}
-              </h3>
-              <span className={gobernanza.comercial.cerrado ? styles.bloqueBadgeOk : styles.bloqueBadgePending}>
-                {gobernanza.comercial.cerrado ? "CERRADO" : "ABIERTO"}
-              </span>
-            </div>
-            <p className={styles.bloqueDescription}>Confirmación y adelanto registrados.</p>
-
-            {gobernanza.comercial.cerrado && (
-              <div className={styles.metaAuditoria}>
-                ✓ {bComercial?.cerradoPor?.nombre ?? "Sin autor"}
-                {bComercial?.versiones?.[0]?.numero ? ` · v${bComercial.versiones[0].numero}` : ""}
-              </div>
-            )}
-
-            {errores.COMERCIAL && (
-              <div className={styles.alertaError} role="alert">
-                <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: "1px" }} />
-                <span>{errores.COMERCIAL}</span>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <div className={styles.bloqueActionRow}>
-              {gobernanza.comercial.cerrado ? (
-                <button
-                  type="button"
-                  className={styles.btnReabrir}
-                  onClick={() => setReabrirTipo("COMERCIAL")}
-                  disabled={isPending}
-                >
-                  <Unlock size={13} /> Reabrir
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className={styles.btnCerrar}
-                  onClick={() => handleCerrar("COMERCIAL")}
-                  disabled={isPending && bloquePendingTipo === "COMERCIAL"}
-                >
-                  <Lock size={13} />
-                  {isPending && bloquePendingTipo === "COMERCIAL" ? "Validando..." : "Cerrar"}
-                </button>
-              )}
-
-              <Link href={`/pedidos/${pedido.codigo}/proforma`} className={styles.bloqueLink}>
-                Ir a Proforma <ArrowRight size={14} />
-              </Link>
-            </div>
-          </div>
-        </div>
+        <BloqueCard
+          titulo="Bloque Comercial" icono={BadgeDollarSign} cerrado={gobernanza.comercial.cerrado}
+          cerradoPor={bComercial?.cerradoPor?.nombre} version={bComercial?.versiones?.[0]?.numero}
+          checks={checksComercial} error={errores.COMERCIAL} isPending={isPending}
+          onCerrar={() => handleCerrar("COMERCIAL")} onReabrir={() => setReabrirTipo("COMERCIAL")}
+          actionHref={`/pedidos/${pedido.codigo}/proforma`} actionLabel="Ir a Proforma"
+        />
       </div>
 
-      {/* MODAL REAPERTURA DE BLOQUE */}
       <ModalReabrirBloque
-        isOpen={Boolean(reabrirTipo)}
-        tipo={reabrirTipo}
-        onClose={() => setReabrirTipo(null)}
-        onConfirm={handleConfirmReabrir}
-        isPending={isPending}
+        isOpen={Boolean(reabrirTipo)} tipo={reabrirTipo}
+        onClose={() => setReabrirTipo(null)} onConfirm={handleConfirmReabrir} isPending={isPending}
       />
     </section>
   );

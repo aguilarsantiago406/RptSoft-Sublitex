@@ -17,6 +17,7 @@ interface PedidosTableProps {
 
 export function PedidosTable({ pedidos, error }: PedidosTableProps) {
   const table = useTableState<PedidoResumen>(pedidos);
+  const offset = (table.page - 1) * table.pageSize;
 
   return (
     <>
@@ -38,6 +39,7 @@ export function PedidosTable({ pedidos, error }: PedidosTableProps) {
             <table className={styles.table}>
               <thead>
                 <tr>
+                  <th className={styles.colIndex}>#</th>
                   <SortableTh<PedidoResumen>
                     label="Código"
                     sortKey="codigo"
@@ -74,8 +76,9 @@ export function PedidosTable({ pedidos, error }: PedidosTableProps) {
                 </tr>
               </thead>
               <tbody>
-                {table.sortedRows.map((pedido) => (
+                {table.sortedRows.map((pedido, index) => (
                   <tr key={pedido.id}>
+                    <td className={styles.colIndex}>{offset + index + 1}</td>
                     <td className={styles.code}>{pedido.codigo}</td>
                     <td>{pedido.cliente.nombre}</td>
                     <td>

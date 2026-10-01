@@ -137,13 +137,13 @@ export function ModalNuevoTipoProducto({ isOpen, onClose }: ModalNuevoTipoProduc
             </div>
           </div>
 
-          {/* REGLA R-K03: PIEZAS FÍSICAS */}
+          {/* PIEZAS FÍSICAS */}
           <div style={{ background: "#f8fafc", padding: "14px 16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-            <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "#1e293b", marginBottom: "4px" }}>
-              Desglose de Piezas Físicas por Unidad (Regla R-K03)
+            <div style={{ fontSize: "0.78rem", fontWeight: 400, color: "#1e293b", marginBottom: "4px" }}>
+              Desglose de Piezas Físicas por Unidad
             </div>
             <div style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: "12px", lineHeight: "1.3" }}>
-              Indica cuántas piezas reales se envían a corte y confección por cada prenda contratada. Total actual: <strong>{totalPiezas} piezas</strong>.
+              Indica cuántas piezas reales se envían a corte y confección por cada prenda contratada. Total actual: {totalPiezas} piezas.
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>

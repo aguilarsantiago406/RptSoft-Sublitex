@@ -28,7 +28,7 @@ export function PedidoDisenoCard({ pedidoId, pedidoCodigo, disenos }: PedidoDise
         <div>
           <h2 className={styles.sectionTitle} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Palette size={18} color="var(--sky-dark)" />
-            DISEÑO Y MOCKUP (BLOQUE DISENO · R-H01)
+            DISEÑO Y MOCKUP
           </h2>
           <p className={styles.sectionSubtitle}>
             Arte gráfico y previsualización textil aprobada por el cliente

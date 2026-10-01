@@ -57,31 +57,31 @@ export function ClienteDetalleView({ cliente }: ClienteDetalleViewProps) {
 
   return (
     <div>
-      <Link href="/clientes" className={styles.detailBackLink}>
+      <Link href="/clientes" className="backLink">
         ← Volver al directorio de clientes
       </Link>
 
-      <div className={styles.detailHeaderRow}>
+      <header className="pageHeader">
         <div>
-          <h1 className={styles.detailTitle}>
+          <h1 style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
             {cliente.nombre}
-            <span className={getBadgeClass(cliente.tipo)} style={{ fontSize: "0.80rem" }}>
+            <span className={getBadgeClass(cliente.tipo)} style={{ fontSize: "0.72rem" }}>
               {getTipoLabel(cliente.tipo)}
             </span>
           </h1>
-          <p className={styles.detailSubtitle}>
+          <p>
             Ficha técnica e historial consolidado de pedidos
           </p>
         </div>
 
         <button
           type="button"
-          className={styles.btnSubmit}
+          className="primaryButton"
           onClick={() => setIsEditModalOpen(true)}
         >
           Editar Datos
         </button>
-      </div>
+      </header>
 
       <div className={styles.detailKpiGrid}>
         <div className={styles.detailKpiCard}>
@@ -129,7 +129,7 @@ export function ClienteDetalleView({ cliente }: ClienteDetalleViewProps) {
       </div>
 
       <div className={styles.tableCard}>
-        <div style={{ padding: "18px 24px", borderBottom: "1px solid var(--border-soft)" }}>
+        <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)" }}>
           <h2 className={styles.detailInfoTitle} style={{ margin: 0, border: "none", padding: 0 }}>
             Historial de Pedidos de la Organización ({totalPedidos})
           </h2>

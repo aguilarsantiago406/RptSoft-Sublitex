@@ -10,21 +10,16 @@ import { ETIQUETA_TIPO_TARIFA } from "../types/catalogo";
 import { actionEliminarTarifa } from "../actions/tarifas.actions";
 import { ModalTarifaForm } from "./ModalTarifaForm";
 import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
+import { Pencil, Trash2 } from "lucide-react";
 import styles from "./catalogos.module.css";
 
 interface TarifasViewProps {
   tarifas: TarifaCatalogo[];
 }
 
-function formatFecha(iso?: string | null): string {
-  return formatDateNumeric(iso);
-}
-
-function getEstado(t: TarifaCatalogo): { label: string; className: string } {
+function getEstado(t: TarifaCatalogo) {
   if (!t.activo) return { label: "Inactiva", className: styles.tarifaEstadoInactiva };
-  const hoy = new Date();
-  const desde = new Date(t.vigenteDesde);
-  const hasta = t.vigenteHasta ? new Date(t.vigenteHasta) : null;
+  const hoy = new Date(), desde = new Date(t.vigenteDesde), hasta = t.vigenteHasta ? new Date(t.vigenteHasta) : null;
   if (hasta && hasta < hoy) return { label: "Vencida", className: styles.tarifaEstadoVencida };
   if (desde > hoy) return { label: "Futura", className: styles.tarifaEstadoFutura };
   return { label: "Vigente", className: styles.tarifaEstadoVigente };
@@ -38,13 +33,7 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
   const [, startTransition] = useTransition();
   const table = useTableState<TarifaCatalogo>(tarifas);
 
-  const handleNueva = () => {
-    setEditing(null);
-    setErrorMsg(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditar = (tarifa: TarifaCatalogo) => {
+  const abrirModal = (tarifa: TarifaCatalogo | null) => {
     setEditing(tarifa);
     setErrorMsg(null);
     setIsModalOpen(true);
@@ -78,7 +67,7 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
           </p>
         </div>
         <div className={styles.tarifasHeaderActions}>
-          <button type="button" className={styles.tarifaNuevaButton} onClick={handleNueva}>
+          <button type="button" className={styles.tarifaNuevaButton} onClick={() => abrirModal(null)}>
             + Nueva tarifa
           </button>
         </div>
@@ -95,35 +84,10 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
           <table className={styles.table}>
             <thead>
               <tr>
-                <SortableTh<TarifaCatalogo>
-                  label="Tipo"
-                  sortKey="tipo"
-                  activeKey={table.sortKey}
-                  dir={table.sortDir}
-                  onSort={table.toggleSort}
-                />
-                <SortableTh<TarifaCatalogo>
-                  label="Concepto"
-                  sortKey="concepto"
-                  activeKey={table.sortKey}
-                  dir={table.sortDir}
-                  onSort={table.toggleSort}
-                />
-                <SortableTh<TarifaCatalogo>
-                  label="Valor (S/)"
-                  sortKey="valor"
-                  activeKey={table.sortKey}
-                  dir={table.sortDir}
-                  onSort={table.toggleSort}
-                  align="right"
-                />
-                <SortableTh<TarifaCatalogo>
-                  label="Vigencia desde"
-                  sortKey="vigenteDesde"
-                  activeKey={table.sortKey}
-                  dir={table.sortDir}
-                  onSort={table.toggleSort}
-                />
+                <SortableTh<TarifaCatalogo> label="Tipo" sortKey="tipo" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} />
+                <SortableTh<TarifaCatalogo> label="Concepto" sortKey="concepto" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} />
+                <SortableTh<TarifaCatalogo> label="Valor (S/)" sortKey="valor" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} align="right" />
+                <SortableTh<TarifaCatalogo> label="Vigencia desde" sortKey="vigenteDesde" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} />
                 <th>Vigencia hasta</th>
                 <th>Estado</th>
                 <th>Nota</th>
@@ -154,8 +118,8 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
                       <td className={styles.tarifaValor}>
                         {Number(t.valor).toFixed(2)}
                       </td>
-                      <td suppressHydrationWarning>{formatFecha(t.vigenteDesde)}</td>
-                      <td suppressHydrationWarning>{formatFecha(t.vigenteHasta)}</td>
+                      <td suppressHydrationWarning>{formatDateNumeric(t.vigenteDesde)}</td>
+                      <td suppressHydrationWarning>{formatDateNumeric(t.vigenteHasta)}</td>
                       <td>
                         <span className={estado.className}>{estado.label}</span>
                       </td>
@@ -165,17 +129,23 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
                           <button
                             type="button"
                             className={styles.tarifaEditButton}
-                            onClick={() => handleEditar(t)}
+                            onClick={() => abrirModal(t)}
+                            title="Editar tarifa"
+                            aria-label="Editar tarifa"
+                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "5px 7px" }}
                           >
-                            Editar
+                            <Pencil size={13} />
                           </button>
                           <button
                             type="button"
                             className={styles.tarifaDeleteButton}
                             onClick={() => setTarifaAEliminar(t)}
                             disabled={deletingId === t.id}
+                            title="Eliminar tarifa"
+                            aria-label="Eliminar tarifa"
+                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "5px 7px" }}
                           >
-                            {deletingId === t.id ? "Eliminando…" : "Eliminar"}
+                            <Trash2 size={13} />
                           </button>
                         </div>
                       </td>
@@ -199,31 +169,16 @@ export function TarifasView({ tarifas }: TarifasViewProps) {
 
       {isModalOpen && (
         <ModalTarifaForm
-          key={editing?.id ?? "nueva"}
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          initial={editing}
+          key={editing?.id ?? "nueva"} isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)} initial={editing}
         />
       )}
 
       <ModalConfirmacion
-        isOpen={Boolean(tarifaAEliminar)}
-        onClose={() => setTarifaAEliminar(null)}
-        onConfirm={handleConfirmEliminar}
-        title="Eliminar Tarifa"
-        description={
-          tarifaAEliminar ? (
-            <>
-              ¿Eliminar la tarifa <strong>{tarifaAEliminar.concepto}</strong>?
-              <br />
-              <br />
-              Esta acción borra el registro de tarifa asociado del catálogo (R-K10).
-            </>
-          ) : ""
-        }
-        confirmText="Eliminar Tarifa"
-        variant="danger"
-        isPending={Boolean(deletingId)}
+        isOpen={Boolean(tarifaAEliminar)} onClose={() => setTarifaAEliminar(null)}
+        onConfirm={handleConfirmEliminar} title="Eliminar Tarifa" confirmText="Eliminar Tarifa"
+        variant="danger" isPending={Boolean(deletingId)}
+        description={tarifaAEliminar ? `¿Eliminar la tarifa ${tarifaAEliminar.concepto}? Borra el registro asociado del catálogo.` : ""}
       />
     </section>
   );

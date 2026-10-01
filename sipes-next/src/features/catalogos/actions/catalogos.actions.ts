@@ -41,7 +41,7 @@ export async function actionCrearTipoProducto(
   if (camisetas === 0 && shorts === 0 && medias === 0) {
     return {
       ok: false,
-      error: "Debe especificar al menos una pieza física (camiseta, short o medias) según la regla R-K03.",
+      error: "Debe especificar al menos una pieza física (camiseta, short o medias).",
     };
   }
 

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { apiPost, SipesApiError } from "@/lib/api/http";
+import { apiPost, apiPatch, SipesApiError } from "@/lib/api/http";
 import type { EmitirConfirmacionParams } from "../api/comercial.api";
 
 export interface EmitirConfirmacionResult {
@@ -37,5 +37,26 @@ export async function actionEmitirConfirmacion(
       return { ok: false, error: error.message };
     }
     return { ok: false, error: "No se pudo emitir la confirmación comercial." };
+  }
+}
+
+export async function actionRegistrarAdelanto(
+  pedidoId: string,
+  confirmacionId: string,
+  adelantoRecibido: number
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await apiPatch(`/api/comercial/pedidos/${encodeURIComponent(pedidoId)}/confirmaciones/${encodeURIComponent(confirmacionId)}/adelanto`, {
+      adelantoRecibido: Number(adelantoRecibido),
+    });
+
+    revalidatePath(`/pedidos/${pedidoId}/proforma`);
+    revalidatePath(`/pedidos/${pedidoId}`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo registrar el adelanto." };
   }
 }

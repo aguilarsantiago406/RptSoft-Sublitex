@@ -83,18 +83,9 @@ export function ModalGrupoForm({
         <div className={styles.modalHeader}>
           <div>
             <h3 className={styles.modalTitle}>Agregar Grupo Contratado</h3>
-            <p className={styles.modalSubtitle}>
-              Pacto comercial de prendas a fabricar (Regla R-B02)
-            </p>
+            <p className={styles.modalSubtitle}>Pacto comercial de prendas a fabricar</p>
           </div>
-          <button
-            type="button"
-            className={styles.modalCloseButton}
-            onClick={handleReset}
-            aria-label="Cerrar"
-          >
-            ✕
-          </button>
+          <button type="button" className={styles.modalCloseButton} onClick={handleReset} aria-label="Cerrar">✕</button>
         </div>
 
         {error && (
@@ -189,19 +180,10 @@ export function ModalGrupoForm({
           </div>
 
           <div className={styles.modalFooter}>
-            <button
-              type="button"
-              className={styles.modalCancelButton}
-              onClick={handleReset}
-              disabled={isPending}
-            >
+            <button type="button" className={styles.modalCancelButton} onClick={handleReset} disabled={isPending}>
               Cancelar
             </button>
-            <button
-              type="submit"
-              className={styles.modalSubmitButton}
-              disabled={isPending}
-            >
+            <button type="submit" className={styles.modalSubmitButton} disabled={isPending}>
               {isPending ? "Creando..." : "Crear Grupo"}
             </button>
           </div>

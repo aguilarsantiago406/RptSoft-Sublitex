@@ -1,15 +1,15 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 16px;
 }
 
-/* Tabla Principal de CatÃ¡logo de Prendas */
+/* Tabla Principal de Catálogo de Prendas */
 .tableCard {
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--surface);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -24,10 +24,10 @@
 }
 
 .table th {
-  padding: 13px 18px;
+  padding: 9px 14px;
   background: #f8fafc;
   color: #64748b;
-  font-size: 0.72rem;
+  font-size: 0.70rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-align: left;
@@ -36,9 +36,9 @@
 }
 
 .table td {
-  padding: 14px 18px;
+  padding: 10px 14px;
   border-top: 1px solid var(--border-soft);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   color: #334155;
   vertical-align: middle;
 }
@@ -52,10 +52,10 @@
 }
 
 .colIndex {
-  width: 46px;
+  width: 40px;
   text-align: center;
   color: #94a3b8;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 600;
 }
 
@@ -158,18 +158,18 @@
 .standardsGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
+  gap: 12px;
 }
 
 .standardsCard {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .standardsCardHeader {
@@ -313,19 +313,20 @@
   background: var(--sky-dark);
   color: #ffffff;
   border: none;
-  padding: 8px 16px;
-  border-radius: 999px;
-  font-size: 0.84rem;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.80rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.22);
+  min-height: 34px;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.18);
   transition: background-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .tarifaNuevaButton:hover:not(:disabled) {
   background: #0284c7;
   transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(2, 132, 199, 0.30);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
 }
 
 .tarifaNuevaButton:disabled {

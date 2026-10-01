@@ -16,7 +16,7 @@ export async function actionCrearPersonalizacion(
     return { ok: false, error: "La prenda es obligatoria." };
   }
   if (!data.ubicacionId) {
-    return { ok: false, error: "La ubicación es obligatoria (R-F03)." };
+    return { ok: false, error: "La ubicación es obligatoria." };
   }
 
   const contenido = data.contenido.trim();

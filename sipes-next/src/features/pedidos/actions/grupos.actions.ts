@@ -64,7 +64,7 @@ export async function actionCrearGrupo(
   }
   const cantidad = Number(data.cantidadContratada);
   if (!Number.isInteger(cantidad) || cantidad < 1) {
-    return { ok: false, error: "La cantidad contratada debe ser un número entero mayor o igual a 1 (Regla R-B02)." };
+    return { ok: false, error: "La cantidad contratada debe ser un número entero mayor o igual a 1." };
   }
 
   try {

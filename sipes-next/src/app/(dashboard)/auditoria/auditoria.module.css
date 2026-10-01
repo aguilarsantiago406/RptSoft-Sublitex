@@ -1,82 +1,65 @@
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 12px 16px 40px;
-}
-
-.header {
-  margin-bottom: 24px;
-}
-
-.title {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: -0.02em;
-}
-
-.subtitle {
-  margin: 4px 0 0;
-  font-size: 0.84rem;
-  color: #64748b;
+  width: 100%;
 }
 
 .controls {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 14px 18px;
-  margin-bottom: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
 }
 
 .searchRow {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
 }
 
 .searchInput {
   flex: 1;
-  padding: 9px 14px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  font-size: 0.84rem;
-  color: #0f172a;
-  background: #ffffff;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--navy);
+  background: var(--surface);
   outline: none;
+  min-height: 35px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .searchInput:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  border-color: var(--sky-dark);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
 }
 
 .refreshButton {
-  padding: 9px 16px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #334155;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--navy);
   font-size: 0.80rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
+  min-height: 35px;
   transition: all 0.15s ease;
 }
 
 .refreshButton:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--sky-soft);
+  border-color: var(--sky);
 }
 
 .exportButton {
-  padding: 9px 16px;
-  border-radius: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
   border: 1px solid #16a34a;
   background: #f0fdf4;
   color: #15803d;
@@ -84,6 +67,7 @@
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  min-height: 35px;
   transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
@@ -103,13 +87,13 @@
 
 .filtersRow {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   align-items: center;
 }
 
 .filterLabel {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
@@ -118,7 +102,7 @@
 
 .filterChip {
   font-size: 0.74rem;
-  padding: 4px 11px;
+  padding: 3px 10px;
   border-radius: 999px;
   border: 1px solid #cbd5e1;
   background: #ffffff;
@@ -134,21 +118,21 @@
 }
 
 .filterChipActive {
-  background: #2563eb;
+  background: var(--sky-dark);
   color: #ffffff;
-  border-color: #2563eb;
+  border-color: var(--sky-dark);
   font-weight: 600;
 }
 
 .filterChipActive:hover {
-  background: #1d4ed8;
+  background: var(--sky);
   color: #ffffff;
 }
 
 .listGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 12px;
 }
 
 .emptyState {

@@ -128,26 +128,15 @@ export default function AuditoriaGlobalPage() {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Bitácora Global de Auditoría</h1>
-        <p className={styles.subtitle}>
-          Historial inmutable de trazabilidad operativa y cambios registrados en pedidos
-        </p>
-      </div>
-
-      <div className={styles.controls}>
-        <div className={styles.searchRow}>
-          <input
-            type="search"
-            className={styles.searchInput}
-            placeholder="Buscar por participante, prenda, talla o autor..."
-            value={busqueda}
-            onChange={(e) => {
-              setBusqueda(e.target.value);
-              setVisibles(24);
-            }}
-          />
+    <main>
+      <header className="pageHeader">
+        <div>
+          <h1>Bitácora Global de Auditoría</h1>
+          <p>
+            Historial inmutable de trazabilidad operativa y cambios en pedidos
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <button
             type="button"
             className={styles.refreshButton}
@@ -164,6 +153,21 @@ export default function AuditoriaGlobalPage() {
           >
             Exportar CSV
           </button>
+        </div>
+      </header>
+
+      <div className={styles.controls}>
+        <div className={styles.searchRow}>
+          <input
+            type="search"
+            className={styles.searchInput}
+            placeholder="Buscar por participante, prenda, talla o autor..."
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setVisibles(24);
+            }}
+          />
         </div>
 
         <div className={styles.filtersRow}>
@@ -286,6 +290,6 @@ export default function AuditoriaGlobalPage() {
           )}
         </>
       )}
-    </div>
+    </main>
   );
 }

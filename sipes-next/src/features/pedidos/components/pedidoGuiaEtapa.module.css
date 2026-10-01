@@ -7,170 +7,113 @@
   overflow: hidden;
   transition: all var(--duration-normal) var(--ease-out);
 }
-
 .guiaHeader {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   padding: 14px 20px;
   border-bottom: 1px solid var(--border-soft);
   flex-wrap: wrap;
 }
-
-.guiaTitleRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.etapaBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  background: rgba(2, 132, 199, 0.12);
-  color: var(--sky-dark);
-  white-space: nowrap;
-}
-
-.guiaTitle {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--navy);
-  margin: 0;
-}
-
-.guiaSubtitle {
-  margin: 0;
-  font-size: 0.84rem;
-  color: var(--muted);
-}
-
-/* Una sola fila: veredicto a la izquierda, lista de checks al centro, acción a la derecha */
+.guiaTitle { font-size: 1rem; font-weight: 400; color: var(--navy); margin: 0; }
 .guiaContent {
   padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.estadoRow { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.bloqueoIcon, .listoIcon { display: inline-flex; flex-shrink: 0; }
+.bloqueoIcon { color: #b45309; }
+.listoIcon { color: #15803d; }
+.bloqueoTexto { font-size: 0.84rem; font-weight: 400; color: #b45309; }
+.listoTexto { font-size: 0.84rem; font-weight: 400; color: #15803d; }
+.requirementsGrid {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
 }
-
-@media (max-width: 900px) {
-  .guiaContent {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-}
-
-.estadoRow {
+.requirementCardOk, .requirementCardPending {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.bloqueoIcon,
-.listoIcon {
-  display: inline-flex;
-  flex-shrink: 0;
-}
-
-.bloqueoIcon {
-  color: #b45309;
-}
-
-.listoIcon {
-  color: #15803d;
-}
-
-.bloqueoTexto {
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: #b45309;
-}
-
-.listoTexto {
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: #15803d;
-}
-
-.bloqueoLink {
-  background: none;
-  border: none;
-  padding: 0 0 0 6px;
-  font: inherit;
-  font-size: 0.8rem;
-  color: var(--sky-dark);
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.checkList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 8px;
-}
-
-.checkList li {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 4px 9px;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
   border-radius: 8px;
+  transition: all var(--duration-fast) var(--ease-out);
 }
-
-.checkItemOk {
-  color: #15803d;
-  background: rgba(22, 163, 74, 0.08);
-  border: 1px solid rgba(22, 163, 74, 0.18);
+.requirementCardOk {
+  background: rgba(22, 163, 74, 0.04);
+  border: 1px solid rgba(22, 163, 74, 0.2);
 }
-
-.checkItemPending {
-  color: #b45309;
-  background: rgba(217, 119, 6, 0.08);
+.requirementCardPending {
+  background: rgba(217, 119, 6, 0.04);
   border: 1px solid rgba(217, 119, 6, 0.22);
 }
-
-.checkCodigo {
-  font-size: 0.68rem;
-  font-weight: 600;
-  opacity: 0.6;
-  letter-spacing: 0.02em;
+.requirementHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
-
+.requirementIndicator { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.iconOk { color: #15803d; flex-shrink: 0; }
+.iconPending { color: #b45309; flex-shrink: 0; }
+.requirementLabel {
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--navy);
+  line-height: 1.25;
+}
+.requirementDetalle {
+  font-size: 0.76rem;
+  font-weight: 400;
+  margin: 0;
+  padding-left: 22px;
+  line-height: 1.4;
+}
+.requirementCardOk .requirementDetalle { color: #166534; }
+.requirementCardPending .requirementDetalle { color: #92400e; }
+.subitemList {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-left: 22px;
+}
+.subitemOk, .subitemPending {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 400;
+  line-height: 1.3;
+}
+.subitemOk { color: #166534; }
+.subitemPending { color: #92400e; }
+.tagCumplido, .tagPendiente {
+  font-size: 0.68rem;
+  font-weight: 400;
+  padding: 2px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.tagCumplido { color: #15803d; background: rgba(22, 163, 74, 0.12); }
+.tagPendiente { color: #b45309; background: rgba(217, 119, 6, 0.12); }
 .actionsSection {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 6px;
 }
-
-@media (max-width: 900px) {
-  .actionsSection {
-    align-items: stretch;
-  }
-}
-
 .advanceButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 9px 16px;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 400;
   color: #ffffff;
   background: var(--sky-dark);
   border: none;
@@ -179,32 +122,22 @@
   box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
   white-space: nowrap;
 }
-
 .advanceButton:hover:not(:disabled) {
   filter: brightness(1.1);
   transform: translateY(-1px);
 }
-
 .advanceButton:disabled {
   background: #94a3b8;
   cursor: not-allowed;
   box-shadow: none;
   opacity: 0.7;
 }
-
-.advanceHelper {
-  font-size: 0.74rem;
-  color: #b91c1c;
-  font-weight: 500;
-  text-align: right;
-}
-
+.advanceHelper { font-size: 0.74rem; color: #b91c1c; font-weight: 400; text-align: right; }
 .activeSectionHighlight {
   border: 2px solid var(--sky-dark) !important;
   box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12) !important;
   position: relative;
 }
-
 .activeSectionBadge {
   position: absolute;
   top: -10px;
@@ -212,10 +145,15 @@
   background: var(--sky-dark);
   color: #ffffff;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 2px 10px;
   border-radius: 999px;
   box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
+}
+@media (max-width: 768px) {
+  .guiaHeader { flex-direction: column; align-items: stretch; }
+  .actionsSection { align-items: stretch; }
+  .advanceButton { width: 100%; }
 }

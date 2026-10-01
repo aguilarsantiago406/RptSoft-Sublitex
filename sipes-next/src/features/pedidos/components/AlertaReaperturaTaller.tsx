@@ -63,7 +63,7 @@ export function AlertaReaperturaTaller({
               <div className={styles.tituloWrapper}>
                 <AlertTriangle size={22} color="#d97706" />
                 <h3 className={styles.titulo}>
-                  Alerta Operativa: Reapertura de {bloqueNombre} (R-H14)
+                  Alerta Operativa: Reapertura de {bloqueNombre}
                 </h3>
               </div>
               <span className={styles.versionBadge}>Versión #{v.numero}</span>
@@ -76,11 +76,11 @@ export function AlertaReaperturaTaller({
 
             <div className={styles.metaInfo}>
               <span>
-                <strong>Reabierto por:</strong> {v.creadoPor?.nombre || "Usuario"} (
+                Reabierto por: {v.creadoPor?.nombre || "Usuario"} (
                 {v.creadoPor?.rol || "Sistema"})
               </span>
               <span>
-                <strong>Fecha:</strong> {new Date(v.creadoEn).toLocaleString("es-PE")}
+                Fecha: {new Date(v.creadoEn).toLocaleString("es-PE")}
               </span>
             </div>
 

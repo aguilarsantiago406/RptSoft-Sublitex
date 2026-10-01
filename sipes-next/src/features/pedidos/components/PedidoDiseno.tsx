@@ -187,7 +187,7 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
         isOpen={confirmAction !== null} onClose={() => setConfirmAction(null)}
         onConfirm={handleConfirmAction}
         title={confirmAction === "aprobar" ? "Aprobar Diseño Textil" : "Eliminar Archivo Vectorial"}
-        description={confirmAction === "aprobar" ? "¿Confirmar aprobación del diseño? Cerrará el bloque DISENO (R-H01) para taller." : "¿Eliminar el archivo vectorial adjunto de la nube? Solo permitido en Borrador."}
+        description={confirmAction === "aprobar" ? "¿Confirmar aprobación del diseño? Cerrará el bloque de diseño para taller." : "¿Eliminar el archivo vectorial adjunto de la nube? Solo permitido en Borrador."}
         confirmText={confirmAction === "aprobar" ? "Aprobar y Cerrar Bloque" : "Eliminar Archivo"}
         variant={confirmAction === "aprobar" ? "primary" : "danger"} isPending={isPending}
       />

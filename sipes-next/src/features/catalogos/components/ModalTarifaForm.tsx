@@ -120,7 +120,7 @@ export function ModalTarifaForm({ isOpen, onClose, initial }: ModalTarifaFormPro
               {initial ? "Editar tarifa" : "Nueva tarifa"}
             </h3>
             <p className={styles.modalSubtitle}>
-              Catálogo oficial de costos y recargos de confección (R-K10)
+              Catálogo oficial de costos y recargos de confección
             </p>
           </div>
           <button

@@ -1,28 +1,28 @@
 .card {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
-  padding: 18px 20px;
+  padding: 12px 14px;
   transition: box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
 }
 
 .card:hover {
   border-color: rgba(2, 132, 199, 0.3);
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .icon {
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
 }
 
 .icon_sky { background: var(--sky-soft); color: var(--sky-dark); }
@@ -33,30 +33,30 @@
 
 .body {
   display: grid;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
 }
 
 .value {
-  font-size: var(--text-xl);
-  font-weight: 800;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--navy);
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .label {
-  font-size: var(--text-xs);
+  font-size: 0.70rem;
   color: var(--muted);
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 @media (max-width: 620px) {
-  .card { padding: 14px 16px; }
-  .value { font-size: var(--text-lg); }
+  .card { padding: 10px 12px; }
+  .value { font-size: 1.1rem; }
 }
