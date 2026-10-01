@@ -91,8 +91,46 @@ export function PedidoDisenoCard({ pedidoId, pedidoCodigo, disenos }: PedidoDise
             <p style={{ margin: 0, fontSize: "0.84rem", color: "var(--muted)" }}>
               {activo.estado === "APROBADO"
                 ? "Este diseño fue aprobado por el cliente y congeló el bloque de diseño para el taller."
+                : activo.estado === "RECHAZADO"
+                ? "El diseño fue rechazado con observaciones técnicas. Se debe generar y subir una nueva versión."
                 : "El diseño se encuentra en revisión. Accedé al taller para subir nuevas versiones o aprobar el arte."}
             </p>
+
+            {activo.aprobadoPorWhatsApp && (
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "#dcfce7",
+                  border: "1px solid #bbf7d0",
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  fontSize: "0.8rem",
+                  color: "#15803d",
+                  fontWeight: 650,
+                  width: "fit-content",
+                }}
+              >
+                <CheckCircle2 size={13} />
+                Diseño: Según modelo aprobado por WhatsApp
+              </div>
+            )}
+
+            {activo.estado === "RECHAZADO" && activo.motivoRechazo && (
+              <div
+                style={{
+                  background: "#fff1f2",
+                  border: "1px solid #fecdd3",
+                  borderRadius: "8px",
+                  padding: "8px 12px",
+                  fontSize: "0.82rem",
+                  color: "#9f1239",
+                }}
+              >
+                <strong>Observación técnica:</strong> {activo.motivoRechazo}
+              </div>
+            )}
 
             <div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
               {activo.archivoUrl && (
@@ -111,7 +149,7 @@ export function PedidoDisenoCard({ pedidoId, pedidoCodigo, disenos }: PedidoDise
                   }}
                 >
                   <ExternalLink size={14} />
-                  Descargar arte vectorial (.ai / .pdf)
+                  Descargar arte (.cdr / .zip / .pdf)
                 </a>
               )}
             </div>

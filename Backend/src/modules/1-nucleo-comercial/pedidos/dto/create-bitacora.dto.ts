@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateBitacoraDto {
   @ApiProperty({ description: 'Descripción detallada de la modificación post-cierre', example: 'Cambio de talla de L a XL solicitado por el cliente por WhatsApp' })
@@ -16,4 +16,9 @@ export class CreateBitacoraDto {
   @IsOptional()
   @IsString()
   prendaId?: string;
+
+  @ApiPropertyOptional({ description: 'Indica si ya fue comunicado al taller de confección', example: false })
+  @IsOptional()
+  @IsBoolean()
+  avisadoATaller?: boolean;
 }

@@ -249,8 +249,8 @@ export class PedidoController {
   @ApiOperation({ summary: 'Registrar modificación o cambio de último momento en el pedido' })
   @ApiParam({ name: 'id', description: 'ID o código único del pedido' })
   @ApiResponse({ status: 201, description: 'Modificación registrada exitosamente' })
-  createBitacora(@Param('id') id: string, @Body() dto: CreateBitacoraDto) {
-    return this.pedidoService.crearBitacora(id, dto);
+  createBitacora(@Param('id') id: string, @Body() dto: CreateBitacoraDto, @Request() req: any) {
+    return this.pedidoService.crearBitacora(id, dto, req?.user?.id);
   }
 
   @Get(':id/bitacoras')

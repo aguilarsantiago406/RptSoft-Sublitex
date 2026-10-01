@@ -52,8 +52,8 @@ export function ModalRechazarDiseno({
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <div>
-            <h3 className={styles.modalTitle}>Rechazar Mockup de Diseño</h3>
-            <p className={styles.modalSubtitle}>Indica las correcciones que el taller o cliente solicitó</p>
+            <h3 className={styles.modalTitle}>Rechazar Diseño / Observación Técnica</h3>
+            <p className={styles.modalSubtitle}>Indica con precisión los ajustes que el diseñador debe corregir en la siguiente versión</p>
           </div>
           <button type="button" className={styles.modalCloseButton} onClick={onClose} aria-label="Cerrar">✕</button>
         </div>
@@ -62,12 +62,12 @@ export function ModalRechazarDiseno({
 
         <form onSubmit={handleSubmit} className={styles.modalForm}>
           <div className={styles.formField}>
-            <label htmlFor="rechazo-motivo">Motivo u observaciones técnicas *</label>
+            <label htmlFor="rechazo-motivo">Motivo de rechazo / Observación técnica *</label>
             <textarea
               id="rechazo-motivo"
-              rows={3}
+              rows={4}
               required
-              placeholder="Ej: Corregir color de franjas laterales a azul marino y centrar escudo 2cm más abajo."
+              placeholder="Ej: El cuello debe ser V, no redondo. Alinear el escudo central 3 cm más arriba y verificar que los nombres en espalda sean en tipografía blanca con borde negro."
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
               className={styles.formInput}

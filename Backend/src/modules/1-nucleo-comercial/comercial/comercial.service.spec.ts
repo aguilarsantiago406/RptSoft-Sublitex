@@ -27,6 +27,17 @@ function buildPrismaMock() {
       findFirst: jest.fn(),
       findMany: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
+    },
+    diseno: {
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+    },
+    pago: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      delete: jest.fn(),
     },
     usuario: {
       findFirst: jest.fn(),
@@ -310,5 +321,113 @@ describe('R-H05 / R-K06 / R-K07 - emitirConfirmacion', () => {
       expect.objectContaining({ codigo: 'SUB-000099', version: 1, clienteNombre: 'Promo 2025' }),
     );
     expect(result.pdfUrl).toBe('/storage/confirmaciones/PED-001-v1.pdf');
+  });
+
+  describe('Gestión de Pagos Parciales (PAGOS)', () => {
+    it('registra un pago y calcula totalPagado y saldoPendiente dinámicamente', async () => {
+      const prisma = buildPrismaMock();
+      prisma.pedido.findUnique.mockResolvedValue({
+        id: 'ped_1',
+        grupos: [
+          {
+            id: 'g_1',
+            cantidadContratada: 10,
+            tipoProducto: { nombre: 'Kit' },
+            prendas: [],
+          },
+        ],
+      });
+      prisma.tarifa.findFirst.mockResolvedValue({ valor: 100 });
+      prisma.confirmacion.findFirst.mockResolvedValue({
+        id: 'conf_1',
+        totalSinIgv: 1000,
+        adelantoRecibido: 0,
+        saldo: 1000,
+      });
+      prisma.confirmacion.update = jest.fn().mockResolvedValue({});
+
+      const pagoCreado = {
+        id: 'pago_1',
+        pedidoId: 'ped_1',
+        monto: 400,
+        medio: 'YAPE',
+        numeroOperacion: 'OP-1234',
+        comprobanteUrl: 'https://storage/voucher.png',
+        fechaPago: new Date(),
+      };
+      prisma.pago.create.mockResolvedValue(pagoCreado);
+      prisma.pago.findMany.mockResolvedValue([pagoCreado]);
+
+      const service = await crearServicio(prisma);
+      const res = await service.createPago(
+        'ped_1',
+        {
+          monto: 400,
+          medio: 'YAPE' as any,
+          numeroOperacion: 'OP-1234',
+          comprobanteUrl: 'https://storage/voucher.png',
+        },
+        'usr_vendedora',
+      );
+
+      expect(res.pago.id).toBe('pago_1');
+      expect(res.totalPedido).toBe(1000);
+      expect(res.totalPagado).toBe(400);
+      expect(res.saldoPendiente).toBe(600);
+      expect(prisma.confirmacion.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'conf_1' },
+          data: { adelantoRecibido: 400, saldo: 600 },
+        }),
+      );
+    });
+
+    it('findPagos devuelve historial y saldo dinámico en tiempo real', async () => {
+      const prisma = buildPrismaMock();
+      prisma.pedido.findUnique.mockResolvedValue({
+        id: 'ped_1',
+        grupos: [],
+      });
+      prisma.confirmacion.findFirst.mockResolvedValue({
+        id: 'conf_1',
+        totalSinIgv: 800,
+      });
+      prisma.pago.findMany.mockResolvedValue([
+        { id: 'p1', monto: 300, medio: 'TRANSFERENCIA', fechaPago: new Date() },
+        { id: 'p2', monto: 200, medio: 'EFECTIVO', fechaPago: new Date() },
+      ]);
+
+      const service = await crearServicio(prisma);
+      const res = await service.findPagos('ped_1');
+
+      expect(res.pagos.length).toBe(2);
+      expect(res.totalPedido).toBe(800);
+      expect(res.totalPagado).toBe(500);
+      expect(res.saldoPendiente).toBe(300);
+    });
+
+    it('removePago elimina el abono y recalcula el saldo restante', async () => {
+      const prisma = buildPrismaMock();
+      prisma.pago.findFirst.mockResolvedValue({
+        id: 'p1',
+        pedidoId: 'ped_1',
+        monto: 200,
+      });
+      prisma.pago.delete.mockResolvedValue({ id: 'p1' });
+      prisma.pago.findMany.mockResolvedValue([]);
+      prisma.confirmacion.findFirst.mockResolvedValue({
+        id: 'conf_1',
+        totalSinIgv: 500,
+      });
+      prisma.confirmacion.update = jest.fn().mockResolvedValue({});
+
+      const service = await crearServicio(prisma);
+      const res = await service.removePago('ped_1', 'p1');
+
+      expect(res.id).toBe('p1');
+      expect(res.totalPagado).toBe(0);
+      expect(res.saldoPendiente).toBe(500);
+      expect(prisma.pago.delete).toHaveBeenCalledWith({ where: { id: 'p1' } });
+    });
   });
 });

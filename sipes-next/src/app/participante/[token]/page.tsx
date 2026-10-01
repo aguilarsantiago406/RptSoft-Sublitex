@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getFichaParticipantePublica } from "@/features/participantes/api/portal.api";
 import { getTallasCatalogo } from "@/features/pedidos/api/pedidos.api";
 import { PortalParticipanteView } from "@/features/participantes/components/portal/PortalParticipanteView";
@@ -9,6 +10,41 @@ interface ParticipantePageProps {
 }
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: ParticipantePageProps): Promise<Metadata> {
+  const { token } = await params;
+  try {
+    const ficha = await getFichaParticipantePublica(token);
+    const nombrePersona = ficha.nombrePersona || "Participante";
+    const grupoNombre = ficha.grupo?.nombre || "Tu Pedido";
+    const disenoUrl = ficha.disenoImagenUrl || null;
+
+    const title = `Ficha Técnica Deportiva - ${nombrePersona} | Sublitex`;
+    const description = `Hola ${nombrePersona}, confirma tu talla, corte y número para tu uniforme de ${grupoNombre} en Sublitex Perú.`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "website",
+        images: disenoUrl ? [{ url: disenoUrl, alt: `Modelo oficial ${grupoNombre}` }] : [],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: disenoUrl ? [disenoUrl] : [],
+      },
+    };
+  } catch {
+    return {
+      title: "Ficha de Prenda | Sublitex Perú",
+      description: "Registra tu talla, número y nombre para la confección de tu prenda.",
+    };
+  }
+}
 
 export default async function ParticipantePublicPage({ params }: ParticipantePageProps) {
   const { token } = await params;

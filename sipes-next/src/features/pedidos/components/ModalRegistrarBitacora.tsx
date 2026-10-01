@@ -21,6 +21,7 @@ export function ModalRegistrarBitacora({
   const isClient = useIsClient();
   const [descripcionCambio, setDescripcionCambio] = useState("");
   const [solicitadoPor, setSolicitadoPor] = useState("");
+  const [avisadoATaller, setAvisadoATaller] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -42,6 +43,7 @@ export function ModalRegistrarBitacora({
       const res = await actionRegistrarBitacora(pedidoId, {
         descripcionCambio: descripcionCambio.trim(),
         solicitadoPor: solicitadoPor.trim(),
+        avisadoATaller,
       });
       if (res.ok) {
         onClose();
@@ -108,6 +110,43 @@ export function ModalRegistrarBitacora({
 
           <div
             style={{
+              background: avisadoATaller ? "#f0fdf4" : "#f8fafc",
+              border: `1px solid ${avisadoATaller ? "#86efac" : "#cbd5e1"}`,
+              borderRadius: "6px",
+              padding: "10px 12px",
+              marginTop: "4px",
+            }}
+          >
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                cursor: "pointer",
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                color: avisadoATaller ? "#15803d" : "#0f172a",
+                userSelect: "none",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={avisadoATaller}
+                onChange={(e) => setAvisadoATaller(e.target.checked)}
+                disabled={isPending}
+                style={{ width: "16px", height: "16px", accentColor: "#16a34a", cursor: "pointer" }}
+              />
+              <span>¿Avisado a taller de confección? ({avisadoATaller ? "SÍ" : "NO"})</span>
+            </label>
+            <p style={{ margin: "4px 0 0 24px", fontSize: "0.75rem", color: "#64748b" }}>
+              {avisadoATaller
+                ? "Se guardará marcado como comunicado y sellará tu usuario y fecha actual."
+                : "Se guardará como pendiente de notificar a taller."}
+            </p>
+          </div>
+
+          <div
+            style={{
               background: "#fffbeb",
               border: "1px solid #fde68a",
               padding: "10px 12px",
@@ -117,7 +156,7 @@ export function ModalRegistrarBitacora({
               lineHeight: 1.4,
             }}
           >
-            ℹ️ Toda modificación post-cierre debe registrarse aquí. Posteriormente, el Coordinador Operativo o Administrador marcará si ya fue avisada a taller de confección.
+            ℹ️ Toda modificación post-cierre debe registrarse aquí. Posteriormente, el Coordinador Operativo o Administrador puede marcar o desmarcar si ya fue avisada a taller desde la ficha.
           </div>
 
           <div className={styles.modalActions}>

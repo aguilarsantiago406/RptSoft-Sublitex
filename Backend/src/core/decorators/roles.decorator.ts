@@ -40,6 +40,15 @@ export const ROLES_DISENO_APROBACION = [
   RolUsuario.DISENO,
 ];
 
+export const ROLES_DISENO_RAPIDO = [
+  RolUsuario.ADMINISTRADOR,
+  RolUsuario.COORDINADOR_OPERATIVO,
+  RolUsuario.COORDINADOR_CLIENTE,
+  RolUsuario.DISENO,
+  RolUsuario.VENDEDOR,
+  RolUsuario.VENDEDORA,
+];
+
 export const ROLES_PRODUCCION = [
   RolUsuario.ADMINISTRADOR,
   RolUsuario.COORDINADOR_OPERATIVO,

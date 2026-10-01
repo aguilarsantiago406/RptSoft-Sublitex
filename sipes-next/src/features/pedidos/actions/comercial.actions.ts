@@ -122,3 +122,20 @@ export async function actionEliminarPago(
     return { ok: false, error: "No se pudo eliminar el pago." };
   }
 }
+
+export async function actionSubirComprobantePago(
+  formData: FormData
+): Promise<{ ok: boolean; url?: string; error?: string }> {
+  try {
+    const res = await apiPost<{ url: string; path: string }>(
+      "/api/archivos/subir?carpeta=comprobantes",
+      formData
+    );
+    return { ok: true, url: res.url };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo subir el comprobante." };
+  }
+}

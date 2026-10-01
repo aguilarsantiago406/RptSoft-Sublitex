@@ -229,6 +229,18 @@ export class ComercialService {
       ? Math.round(totalSinIgv * 0.18 * 100) / 100
       : null;
 
+    const disenoAprobado = this.prisma.diseno?.findFirst
+      ? await this.prisma.diseno.findFirst({
+          where: { pedidoId },
+          orderBy: { version: 'desc' },
+        })
+      : null;
+    const disenoTexto = disenoAprobado?.aprobadoPorWhatsApp
+      ? 'Según modelo aprobado por WhatsApp'
+      : disenoAprobado?.estado === 'APROBADO'
+      ? `Modelo aprobado v${disenoAprobado.version}`
+      : undefined;
+
     const pdfUrl = await this.pdfService.generarConfirmacionPdf({
       codigo: pedido.codigo,
       version: siguienteVersion,
@@ -246,6 +258,7 @@ export class ComercialService {
       saldo,
       igvCalculado,
       comprobante: dto.comprobante ?? 'NINGUNO',
+      disenoTexto,
     });
 
     return this.prisma.confirmacion.create({
@@ -321,25 +334,23 @@ export class ComercialService {
     const todosPagos = await this.prisma.pago.findMany({ where: { pedidoId } });
     const totalPagado = Math.round(todosPagos.reduce((acc, p) => acc + Number(p.monto), 0) * 100) / 100;
 
+    const totalPedido = await this.calcularTotalDinamico(pedidoId);
+    const saldoPendiente = Math.max(0, Math.round((totalPedido - totalPagado) * 100) / 100);
+
     const ultimaConfirmacion = await this.prisma.confirmacion.findFirst({
       where: { pedidoId },
       orderBy: { version: 'desc' },
     });
 
-    let totalPedido = 0;
     if (ultimaConfirmacion) {
-      totalPedido = Number(ultimaConfirmacion.totalSinIgv);
-      const nuevoSaldo = Math.max(0, Math.round((totalPedido - totalPagado) * 100) / 100);
       await this.prisma.confirmacion.update({
         where: { id: ultimaConfirmacion.id },
         data: {
           adelantoRecibido: totalPagado,
-          saldo: nuevoSaldo,
+          saldo: saldoPendiente,
         },
       });
     }
-
-    const saldoPendiente = Math.max(0, Math.round((totalPedido - totalPagado) * 100) / 100);
 
     return {
       pago,
@@ -366,13 +377,7 @@ export class ComercialService {
     });
 
     const totalPagado = Math.round(pagos.reduce((acc, p) => acc + Number(p.monto), 0) * 100) / 100;
-
-    const ultimaConfirmacion = await this.prisma.confirmacion.findFirst({
-      where: { pedidoId },
-      orderBy: { version: 'desc' },
-    });
-
-    const totalPedido = ultimaConfirmacion ? Number(ultimaConfirmacion.totalSinIgv) : 0;
+    const totalPedido = await this.calcularTotalDinamico(pedidoId);
     const saldoPendiente = Math.max(0, Math.round((totalPedido - totalPagado) * 100) / 100);
 
     return {
@@ -396,26 +401,23 @@ export class ComercialService {
 
     const todosPagos = await this.prisma.pago.findMany({ where: { pedidoId } });
     const totalPagado = Math.round(todosPagos.reduce((acc, p) => acc + Number(p.monto), 0) * 100) / 100;
+    const totalPedido = await this.calcularTotalDinamico(pedidoId);
+    const saldoPendiente = Math.max(0, Math.round((totalPedido - totalPagado) * 100) / 100);
 
     const ultimaConfirmacion = await this.prisma.confirmacion.findFirst({
       where: { pedidoId },
       orderBy: { version: 'desc' },
     });
 
-    let totalPedido = 0;
     if (ultimaConfirmacion) {
-      totalPedido = Number(ultimaConfirmacion.totalSinIgv);
-      const nuevoSaldo = Math.max(0, Math.round((totalPedido - totalPagado) * 100) / 100);
       await this.prisma.confirmacion.update({
         where: { id: ultimaConfirmacion.id },
         data: {
           adelantoRecibido: totalPagado,
-          saldo: nuevoSaldo,
+          saldo: saldoPendiente,
         },
       });
     }
-
-    const saldoPendiente = Math.max(0, Math.round((totalPedido - totalPagado) * 100) / 100);
 
     return {
       id: pagoId,
@@ -423,6 +425,44 @@ export class ComercialService {
       totalPagado,
       saldoPendiente,
     };
+  }
+
+  private async calcularTotalDinamico(pedidoId: string): Promise<number> {
+    const ultimaConfirmacion = await this.prisma.confirmacion.findFirst({
+      where: { pedidoId },
+      orderBy: { version: 'desc' },
+    });
+    if (ultimaConfirmacion && Number(ultimaConfirmacion.totalSinIgv) > 0) {
+      return Number(ultimaConfirmacion.totalSinIgv);
+    }
+
+    const pedido = await this.prisma.pedido.findUnique({
+      where: { id: pedidoId },
+      include: {
+        grupos: {
+          include: {
+            tipoProducto: true,
+            prendas: { where: { tipoPrenda: 'VENTA' } },
+          },
+        },
+      },
+    });
+
+    if (!pedido || !pedido.grupos || pedido.grupos.length === 0) {
+      return 0;
+    }
+
+    let base = 0;
+    for (const g of pedido.grupos) {
+      try {
+        const tarifa = await this.getTarifaVigentePorConcepto('PRODUCTO', g.tipoProducto.nombre);
+        const cant = g.prendas.length > 0 ? g.prendas.length : g.cantidadContratada;
+        base += cant * tarifa;
+      } catch {
+        // En caso no haya tarifa registrada para el concepto, continuar
+      }
+    }
+    return Math.round(base * 100) / 100;
   }
 }
 

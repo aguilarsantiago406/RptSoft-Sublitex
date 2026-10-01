@@ -26,6 +26,7 @@ export interface ConfirmacionPdfData {
   saldo: number;
   igvCalculado: number | null;
   comprobante: string;
+  disenoTexto?: string;
 }
 
 @Injectable()
@@ -67,6 +68,9 @@ export class PdfService {
       doc.text(`Cliente: ${data.clienteNombre}`, { continued: true });
       doc.text(`   Fecha: ${data.fechaEmision.toLocaleDateString('es-PE')}`, { align: 'right' });
       doc.text(`Comprobante: ${data.comprobante}`);
+      if (data.disenoTexto) {
+        doc.text(`Diseño: ${data.disenoTexto}`);
+      }
       doc.moveDown(0.5);
 
       doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();

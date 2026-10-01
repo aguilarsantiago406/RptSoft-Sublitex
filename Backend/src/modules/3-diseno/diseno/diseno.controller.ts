@@ -11,6 +11,7 @@ import {
   Roles,
   ROLES_DISENO,
   ROLES_DISENO_APROBACION,
+  ROLES_DISENO_RAPIDO,
   ROLES_TODOS,
 } from '../../../core/decorators/roles.decorator';
 
@@ -22,11 +23,14 @@ export class DisenoController {
   constructor(private readonly disenoService: DisenoService) {}
 
   @Post('disenos')
-  @Roles(...ROLES_DISENO)
+  @Roles(...ROLES_DISENO_RAPIDO)
   @ApiOperation({
-    summary: 'Crea una nueva versión de diseño para un pedido (R-H02, R-H11)',
+    summary: 'Crea una nueva versión de diseño para un pedido (R-H02, R-H11, opción WhatsApp)',
   })
-  crear(@Body() dto: CrearDisenoDto) {
+  crear(@Body() dto: CrearDisenoDto, @Request() req?: any) {
+    if (!dto.usuarioId && req?.user?.id) {
+      dto.usuarioId = req.user.id;
+    }
     return this.disenoService.crear(dto);
   }
 
@@ -70,6 +74,14 @@ export class DisenoController {
       dto.usuarioId = req.user.id;
     }
     return this.disenoService.rechazar(id, dto);
+  }
+
+  @Patch('disenos/:id/aprobar-whatsapp')
+  @Roles(...ROLES_DISENO_RAPIDO)
+  @ApiOperation({ summary: 'Aprueba el diseño directamente según modelo aprobado por WhatsApp' })
+  aprobarPorWhatsApp(@Param('id') id: string, @Request() req?: any) {
+    const usuarioId = req?.user?.id;
+    return this.disenoService.aprobarPorWhatsApp(id, usuarioId);
   }
 
   @Get('pedidos/:pedidoId/disenos')

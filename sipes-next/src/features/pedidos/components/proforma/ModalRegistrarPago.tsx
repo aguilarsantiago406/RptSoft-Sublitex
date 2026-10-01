@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { createPortal } from "react-dom";
-import { DollarSign, X, AlertCircle, Calendar, Hash, FileText } from "lucide-react";
+import { DollarSign, X, AlertCircle, Calendar, Hash, FileText, Upload, Paperclip, Check } from "lucide-react";
 import { useIsClient } from "@/lib/useIsClient";
-import { actionRegistrarPago } from "../../actions/comercial.actions";
+import { actionRegistrarPago, actionSubirComprobantePago } from "../../actions/comercial.actions";
 import styles from "./modalEmitirConfirmacion.module.css";
 
 interface ModalRegistrarPagoProps {
@@ -33,6 +33,9 @@ export function ModalRegistrarPago({
   const [numeroOperacion, setNumeroOperacion] = useState("");
   const [fechaPago, setFechaPago] = useState(new Date().toISOString().split("T")[0]);
   const [notas, setNotas] = useState("");
+  const [comprobanteFile, setComprobanteFile] = useState<File | null>(null);
+  const [comprobanteUrl, setComprobanteUrl] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen || !isClient) return null;
 
@@ -50,10 +53,24 @@ export function ModalRegistrarPago({
     }
 
     startTransition(async () => {
+      let finalComprobanteUrl = comprobanteUrl.trim() || undefined;
+
+      if (comprobanteFile) {
+        const formData = new FormData();
+        formData.append("archivo", comprobanteFile);
+        const uploadRes = await actionSubirComprobantePago(formData);
+        if (!uploadRes.ok) {
+          setErrorMsg(uploadRes.error || "No se pudo subir el comprobante.");
+          return;
+        }
+        finalComprobanteUrl = uploadRes.url;
+      }
+
       const res = await actionRegistrarPago(pedidoId, {
         monto: montoNum,
         medio,
         numeroOperacion: numeroOperacion.trim() || undefined,
+        comprobanteUrl: finalComprobanteUrl,
         fechaPago: fechaPago ? new Date(fechaPago).toISOString() : undefined,
         notas: notas.trim() || undefined,
       });
@@ -195,6 +212,74 @@ export function ModalRegistrarPago({
               onChange={(e) => setNotas(e.target.value)}
               disabled={isPending}
             />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>
+              <Paperclip size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+              Comprobante / Voucher (Captura o PDF)
+            </label>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/png,image/jpeg,image/webp,application/pdf"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setComprobanteFile(e.target.files[0]);
+                }
+              }}
+              disabled={isPending}
+            />
+            {comprobanteFile ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px 12px", borderRadius: "6px", fontSize: "12px" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#166534" }}>
+                  <Check size={14} /> {comprobanteFile.name} ({(comprobanteFile.size / 1024).toFixed(1)} KB)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setComprobanteFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  style={{ background: "none", border: "none", color: "#dc2626", cursor: "pointer", fontSize: "11px", fontWeight: "600" }}
+                >
+                  Quitar
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    background: "#f1f5f9",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "6px",
+                    padding: "7px 12px",
+                    fontSize: "12px",
+                    color: "#334155",
+                    cursor: "pointer",
+                    fontWeight: 500,
+                  }}
+                  disabled={isPending}
+                >
+                  <Upload size={14} /> Adjuntar archivo...
+                </button>
+                <input
+                  type="text"
+                  placeholder="O pegar URL del comprobante..."
+                  className={styles.input}
+                  style={{ flex: 1, fontSize: "12px" }}
+                  value={comprobanteUrl}
+                  onChange={(e) => setComprobanteUrl(e.target.value)}
+                  disabled={isPending}
+                />
+              </div>
+            )}
           </div>
 
           <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px", padding: "10px", marginTop: "4px" }}>

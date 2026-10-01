@@ -23,6 +23,7 @@ interface ModalSubirDisenoProps {
   pedidoId: string;
   disenoId?: string;
   versionNumero?: number;
+  initialAprobadoPorWhatsApp?: boolean;
 }
 
 function formatBytes(bytes: number): string {
@@ -39,6 +40,7 @@ export function ModalSubirDiseno({
   pedidoId,
   disenoId,
   versionNumero,
+  initialAprobadoPorWhatsApp = false,
 }: ModalSubirDisenoProps) {
   const isClient = useIsClient();
   const router = useRouter();
@@ -46,6 +48,7 @@ export function ModalSubirDiseno({
   const [mockupFile, setMockupFile] = useState<File | null>(null);
   const [mockupPreview, setMockupPreview] = useState<string | null>(null);
   const [vectorFile, setVectorFile] = useState<File | null>(null);
+  const [aprobadoPorWhatsApp, setAprobadoPorWhatsApp] = useState(initialAprobadoPorWhatsApp);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -78,8 +81,10 @@ export function ModalSubirDiseno({
       setVectorFile(null);
       setError(null);
       setIsDragging(false);
+    } else {
+      setAprobadoPorWhatsApp(initialAprobadoPorWhatsApp);
     }
-  }, [isOpen]);
+  }, [isOpen, initialAprobadoPorWhatsApp]);
 
   if (!isOpen || !isClient) return null;
 
@@ -130,7 +135,7 @@ export function ModalSubirDiseno({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isReemplazo && !mockupFile) {
-      setError("Debes seleccionar la imagen del mockup.");
+      setError("Debes seleccionar la imagen del mockup o captura de WhatsApp.");
       return;
     }
     if (isReemplazo && !mockupFile && !vectorFile) {
@@ -143,6 +148,9 @@ export function ModalSubirDiseno({
       const formData = new FormData();
       if (mockupFile) formData.append("mockup", mockupFile);
       if (vectorFile) formData.append("vector", vectorFile);
+      if (!isReemplazo && aprobadoPorWhatsApp) {
+        formData.append("aprobadoPorWhatsApp", "true");
+      }
 
       const res = isReemplazo
         ? await actionActualizarArtefactos(disenoId!, pedidoId, formData)
@@ -166,10 +174,14 @@ export function ModalSubirDiseno({
           <div className={styles.headerTitleGroup}>
             <div className={styles.titleRow}>
               <h3 className={styles.title}>
-                {isReemplazo ? "Reemplazar Arte y Mockup" : "Cargar Propuesta de Diseño"}
+                {isReemplazo
+                  ? "Reemplazar Arte y Mockup"
+                  : versionNumero && versionNumero > 1
+                  ? `Subir Nueva Versión (v${versionNumero})`
+                  : "Cargar Propuesta de Diseño"}
               </h3>
               <span className={styles.versionBadge}>
-                {isReemplazo ? `v${versionNumero}` : "Nueva Versión"}
+                {versionNumero ? `v${versionNumero}` : "Nueva Versión"}
               </span>
             </div>
             <p className={styles.subtitle}>
@@ -199,10 +211,51 @@ export function ModalSubirDiseno({
               </div>
             )}
 
+            {/* Opción rápida: Aprobado por WhatsApp */}
+            {!isReemplazo && (
+              <div
+                style={{
+                  background: aprobadoPorWhatsApp ? "#f0fdf4" : "#f8fafc",
+                  border: `1.5px solid ${aprobadoPorWhatsApp ? "#86efac" : "#e2e8f0"}`,
+                  borderRadius: "10px",
+                  padding: "12px 14px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "12px",
+                  transition: "background 0.2s, border-color 0.2s",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  id="chk-whatsapp-approval"
+                  checked={aprobadoPorWhatsApp}
+                  onChange={(e) => setAprobadoPorWhatsApp(e.target.checked)}
+                  style={{
+                    marginTop: "3px",
+                    width: "18px",
+                    height: "18px",
+                    accentColor: "#16a34a",
+                    cursor: "pointer",
+                  }}
+                />
+                <label
+                  htmlFor="chk-whatsapp-approval"
+                  style={{ cursor: "pointer", fontSize: "0.86rem", color: "#1e293b", userSelect: "none" }}
+                >
+                  <strong style={{ display: "block", color: aprobadoPorWhatsApp ? "#15803d" : "#0f172a", fontSize: "0.9rem" }}>
+                    Según modelo aprobado por WhatsApp (Aprobación directa)
+                  </strong>
+                  <span style={{ fontSize: "0.78rem", color: "#64748b", display: "block", marginTop: "2px" }}>
+                    Marca el diseño como aprobado inmediatamente con esta captura o mockup y congela el bloque de diseño para taller, sin requerir el flujo largo de propuesta formal.
+                  </span>
+                </label>
+              </div>
+            )}
+
             {/* SECCIÓN 1: Mockup Principal */}
             <div>
               <div className={styles.sectionLabel}>
-                <span>Mockup de la Prenda (Imagen Visual)</span>
+                <span>Mockup de la Prenda o Captura de WhatsApp</span>
                 {!isReemplazo ? (
                   <span className={styles.requiredTag}>Requerido</span>
                 ) : (
@@ -305,13 +358,13 @@ export function ModalSubirDiseno({
             <div>
               <div className={styles.sectionLabel}>
                 <span>Archivo Vectorial para Taller</span>
-                <span className={styles.optionalTag}>Opcional (.AI, .CDR, .PDF)</span>
+                <span className={styles.optionalTag}>Opcional (.CDR, .ZIP, .AI, .PDF)</span>
               </div>
 
               <input
                 ref={vectorInputRef}
                 type="file"
-                accept=".ai,.cdr,.pdf,.tif"
+                accept=".cdr,.zip,.ai,.pdf,.tif"
                 style={{ display: "none" }}
                 onChange={(e) => {
                   const file = e.target.files?.[0] || null;
@@ -331,7 +384,7 @@ export function ModalSubirDiseno({
                     <span className={styles.vectorDesc}>
                       {vectorFile
                         ? `${formatBytes(vectorFile.size)} · Vector adjunto`
-                        : "Archivos de Illustrator (.ai), Corel (.cdr) o PDF de impresión"}
+                        : "Archivos CorelDRAW (.cdr), comprimidos (.zip), Illustrator (.ai) o PDF"}
                     </span>
                   </div>
                 </div>
@@ -383,6 +436,8 @@ export function ModalSubirDiseno({
                 ? "Subiendo a Storage..."
                 : isReemplazo
                 ? "Guardar Cambios"
+                : aprobadoPorWhatsApp
+                ? "✓ Aprobar según WhatsApp"
                 : "Subir y Registrar Propuesta"}
             </button>
           </div>

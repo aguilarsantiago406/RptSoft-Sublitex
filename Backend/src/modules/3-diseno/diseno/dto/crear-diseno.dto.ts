@@ -16,4 +16,13 @@ export class CrearDisenoDto {
   @IsString()
   @IsOptional()
   imagenUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Indica si el diseño fue aprobado directamente por el cliente vía WhatsApp' })
+  @IsOptional()
+  aprobadoPorWhatsApp?: boolean;
+
+  @ApiPropertyOptional({ description: 'ID del usuario autor (si aplica)' })
+  @IsString()
+  @IsOptional()
+  usuarioId?: string;
 }

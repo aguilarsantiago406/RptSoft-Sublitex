@@ -36,7 +36,7 @@ describe('DisenoService', () => {
     [{ data: Record<string, unknown> }]
   >();
   const txUpdateMock = jest.fn<
-    Promise<{ id: string; estado?: string }>,
+    Promise<any>,
     [UpdateArgs]
   >();
 
@@ -123,6 +123,29 @@ describe('DisenoService', () => {
       expect(txCreateMock).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ pedidoId: 'p1', version: 1 }),
+        }),
+      );
+    });
+
+    it('crea directamente como APROBADO si se indica aprobadoPorWhatsApp y cierra bloque DISENO', async () => {
+      txCreateMock.mockResolvedValue({ id: 'd1', pedidoId: 'p1', version: 1, estado: 'APROBADO', aprobadoPorWhatsApp: true });
+
+      const res = await service.crear({ pedidoId: 'p1', imagenUrl: 'captura.png', aprobadoPorWhatsApp: true, usuarioId: 'u1' });
+
+      expect(res.estado).toBe('APROBADO');
+      expect(txCreateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            pedidoId: 'p1',
+            estado: 'APROBADO',
+            aprobadoPorWhatsApp: true,
+          }),
+        }),
+      );
+      expect(txMock.bloquePedido.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { pedidoId_tipo: { pedidoId: 'p1', tipo: 'DISENO' } },
+          update: expect.objectContaining({ estado: 'CERRADO' }),
         }),
       );
     });
@@ -309,7 +332,10 @@ describe('DisenoService', () => {
 
       expect(txUpdateMock).toHaveBeenCalledWith({
         where: { id: 'd1' },
-        data: { estado: 'RECHAZADO' },
+        data: expect.objectContaining({
+          estado: 'RECHAZADO',
+          motivoRechazo: 'colores incompletos',
+        }),
       });
       expect(registrarMock).toHaveBeenCalledTimes(2);
       const primera = registrarMock.mock.calls[0][0];
@@ -328,6 +354,41 @@ describe('DisenoService', () => {
         }),
       );
       expect(motivo.valorNuevo).not.toContain('RECHAZADO');
+    });
+  });
+
+  describe('aprobarPorWhatsApp', () => {
+    it('marca diseño como APROBADO con flag aprobadoPorWhatsApp y cierra bloque DISENO', async () => {
+      disenoFindUniqueMock.mockResolvedValue({
+        id: 'd1',
+        pedidoId: 'p1',
+        estado: 'BORRADOR',
+      });
+      txUpdateMock.mockResolvedValue({
+        id: 'd1',
+        estado: 'APROBADO',
+        aprobadoPorWhatsApp: true,
+      });
+
+      const res = await service.aprobarPorWhatsApp('d1', 'u1');
+
+      expect(res.estado).toBe('APROBADO');
+      expect(txUpdateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'd1' },
+          data: expect.objectContaining({
+            estado: 'APROBADO',
+            aprobadoPorWhatsApp: true,
+            aprobadoPorId: 'u1',
+          }),
+        }),
+      );
+      expect(txMock.bloquePedido.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { pedidoId_tipo: { pedidoId: 'p1', tipo: 'DISENO' } },
+          update: expect.objectContaining({ estado: 'CERRADO' }),
+        }),
+      );
     });
   });
 

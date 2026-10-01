@@ -6,9 +6,11 @@ import type { DisenoItem, EstadoDiseno } from "../types/diseno";
 import {
   actionProponerDiseno,
   actionAprobarDiseno,
+  actionAprobarDisenoPorWhatsApp,
   actionEliminarArchivoEnNube,
 } from "../actions/disenos.actions";
-import { ExternalLink, Sparkles } from "lucide-react";
+import { ExternalLink, Sparkles, AlertTriangle, Upload, MessageCircle, CheckCircle2, Zap } from "lucide-react";
+import { formatDateTime } from "@/lib/format/date";
 import { ModalSubirDiseno } from "./ModalSubirDiseno";
 import { ModalRechazarDiseno } from "./ModalRechazarDiseno";
 import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
@@ -47,6 +49,7 @@ export function PedidoDiseno({ pedidoId, disenos, userRol }: PedidoDisenoProps) 
     userRol === "COORDINADOR_CLIENTE" ||
     userRol === "DISENO";
   const [modalUploadOpen, setModalUploadOpen] = useState(false);
+  const [modalWhatsAppOpen, setModalWhatsAppOpen] = useState(false);
   const [modalRechazoOpen, setModalRechazoOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<"aprobar" | "quitar" | null>(null);
   const [isReemplazo, setIsReemplazo] = useState(false);
@@ -61,6 +64,16 @@ export function PedidoDiseno({ pedidoId, disenos, userRol }: PedidoDisenoProps) 
     startTransition(async () => {
       const res = await actionProponerDiseno(disenoActivo.id, pedidoId);
       if (!res.ok) setErrorMsg(res.error || "No se pudo proponer el diseño.");
+      else router.refresh();
+    });
+  }
+
+  function handleAprobarPorWhatsApp() {
+    if (!disenoActivo) return;
+    setErrorMsg(null);
+    startTransition(async () => {
+      const res = await actionAprobarDisenoPorWhatsApp(disenoActivo.id, pedidoId);
+      if (!res.ok) setErrorMsg(res.error || "No se pudo aprobar el diseño por WhatsApp.");
       else router.refresh();
     });
   }
@@ -93,17 +106,128 @@ export function PedidoDiseno({ pedidoId, disenos, userRol }: PedidoDisenoProps) 
           <h2 className={styles.sectionTitle}>Arte y Mockup Activo</h2>
           {disenoActivo && <p className={styles.sectionSubtitle}>Versión activa v{disenoActivo.version}</p>}
         </div>
-        {badgeInfo && (
-          <span style={{ fontSize: "0.78rem", fontWeight: 650, padding: "4px 10px", borderRadius: "999px", color: badgeInfo.color, background: badgeInfo.bg }}>
-            {badgeInfo.label}
-          </span>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          {disenoActivo?.aprobadoPorWhatsApp && (
+            <span
+              style={{
+                fontSize: "0.78rem",
+                fontWeight: 650,
+                padding: "4px 10px",
+                borderRadius: "999px",
+                color: "#15803d",
+                background: "#dcfce7",
+                border: "1px solid #bbf7d0",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              <CheckCircle2 size={13} />
+              Según modelo aprobado por WhatsApp
+            </span>
+          )}
+          {badgeInfo && (
+            <span style={{ fontSize: "0.78rem", fontWeight: 650, padding: "4px 10px", borderRadius: "999px", color: badgeInfo.color, background: badgeInfo.bg }}>
+              {badgeInfo.label}
+            </span>
+          )}
+        </div>
       </div>
 
       {errorMsg && (
         <div className={styles.groupActionError} role="alert">
           <span>{errorMsg}</span>
           <button type="button" onClick={() => setErrorMsg(null)} aria-label="Cerrar">✕</button>
+        </div>
+      )}
+
+      {disenoActivo && disenoActivo.estado === "RECHAZADO" && (
+        <div
+          style={{
+            background: "#fff1f2",
+            border: "1px solid #fecdd3",
+            borderRadius: "12px",
+            padding: "16px",
+            marginBottom: "18px",
+            display: "grid",
+            gap: "12px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                background: "#ffe4e6",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                color: "#e11d48",
+              }}
+            >
+              <AlertTriangle size={20} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                <strong style={{ color: "#9f1239", fontSize: "0.98rem" }}>
+                  Diseño Rechazado (Versión v{disenoActivo.version})
+                </strong>
+                {disenoActivo.rechazadoEn && (
+                  <span
+                    suppressHydrationWarning
+                    style={{ fontSize: "0.78rem", color: "#be123c" }}
+                  >
+                    · {formatDateTime(disenoActivo.rechazadoEn)}
+                  </span>
+                )}
+              </div>
+              <div
+                style={{
+                  marginTop: "8px",
+                  background: "#ffffff",
+                  border: "1px solid #fecdd3",
+                  borderRadius: "8px",
+                  padding: "10px 14px",
+                }}
+              >
+                <div style={{ fontSize: "0.76rem", fontWeight: 700, color: "#9f1239", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  Motivo de rechazo / Observación técnica para corregir:
+                </div>
+                <p style={{ margin: "4px 0 0", color: "#881337", fontSize: "0.92rem", fontWeight: 500, whiteSpace: "pre-wrap" }}>
+                  {disenoActivo.motivoRechazo || "El cliente o coordinación devolvió el diseño con observaciones."}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {puedeGestionarDiseno && (
+            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+              <button
+                type="button"
+                className={styles.advanceStateButton}
+                onClick={() => {
+                  setIsReemplazo(false);
+                  setModalUploadOpen(true);
+                }}
+                disabled={isPending}
+                style={{
+                  background: "#0284c7",
+                  borderColor: "#0284c7",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 18px",
+                  fontSize: "0.88rem",
+                  fontWeight: 650,
+                }}
+              >
+                <Upload size={16} />
+                Subir Nueva Versión (v{disenoActivo.version + 1})
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -114,13 +238,35 @@ export function PedidoDiseno({ pedidoId, disenos, userRol }: PedidoDisenoProps) 
               <p style={{ margin: "0 0 12px", color: "#64748b", fontSize: "0.92rem" }}>
                 Este pedido todavía no tiene un mockup de diseño registrado.
               </p>
-              <button
-                type="button"
-                className={styles.addGrupoButton}
-                onClick={() => { setIsReemplazo(false); setModalUploadOpen(true); }}
-              >
-                + Cargar Propuesta Gráfica
-              </button>
+              <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap", marginTop: "12px" }}>
+                <button
+                  type="button"
+                  className={styles.addGrupoButton}
+                  onClick={() => { setIsReemplazo(false); setModalWhatsAppOpen(false); setModalUploadOpen(true); }}
+                >
+                  + Cargar Propuesta Gráfica
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setIsReemplazo(false); setModalWhatsAppOpen(true); setModalUploadOpen(true); }}
+                  style={{
+                    background: "#16a34a",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "8px 16px",
+                    fontSize: "0.88rem",
+                    fontWeight: 650,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <Zap size={15} />
+                  ⚡ Según modelo aprobado por WhatsApp
+                </button>
+              </div>
             </>
           ) : (
             <>
@@ -163,15 +309,17 @@ export function PedidoDiseno({ pedidoId, disenos, userRol }: PedidoDisenoProps) 
                     disabled={isPending || disenoActivo.estado === "APROBADO"}
                     title={disenoActivo.estado === "APROBADO" ? "No modificable en estado aprobado" : "Reemplazar archivos"}
                   >
-                    Reemplazar archivos
+                    Reemplazar archivos (v{disenoActivo.version})
                   </button>
                   <button
                     type="button"
                     className={styles.secondaryButton}
                     onClick={() => { setIsReemplazo(false); setModalUploadOpen(true); }}
                     disabled={isPending}
+                    style={{ fontWeight: 600, color: "#0369a1" }}
                   >
-                    + Nueva versión (v{disenoActivo.version + 1})
+                    <Upload size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                    Subir Nueva Versión (v{disenoActivo.version + 1})
                   </button>
                 </>
               )}
@@ -228,6 +376,51 @@ export function PedidoDiseno({ pedidoId, disenos, userRol }: PedidoDisenoProps) 
                   </button>
                 </>
               )}
+              {puedeGestionarDiseno && disenoActivo.estado === "RECHAZADO" && (
+                <button
+                  type="button"
+                  className={styles.advanceStateButton}
+                  onClick={() => {
+                    setIsReemplazo(false);
+                    setModalUploadOpen(true);
+                  }}
+                  disabled={isPending}
+                  style={{
+                    background: "#0284c7",
+                    borderColor: "#0284c7",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <Upload size={14} />
+                  Subir Nueva Versión (v{disenoActivo.version + 1})
+                </button>
+              )}
+              {puedeAprobarRechazar && disenoActivo.estado !== "APROBADO" && (
+                <button
+                  type="button"
+                  onClick={handleAprobarPorWhatsApp}
+                  disabled={isPending}
+                  style={{
+                    background: "#f0fdf4",
+                    border: "1px solid #86efac",
+                    color: "#15803d",
+                    borderRadius: "8px",
+                    padding: "8px 14px",
+                    fontSize: "0.85rem",
+                    fontWeight: 650,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                  title="Aprobar inmediatamente según modelo validado por chat de WhatsApp"
+                >
+                  <MessageCircle size={14} color="#16a34a" />
+                  {isPending ? "Aprobando..." : "Marcar aprobado por WhatsApp"}
+                </button>
+              )}
             </div>
 
             <DisenoHistorial versiones={disenos} />
@@ -236,9 +429,15 @@ export function PedidoDiseno({ pedidoId, disenos, userRol }: PedidoDisenoProps) 
       )}
 
       <ModalSubirDiseno
-        isOpen={modalUploadOpen} onClose={() => setModalUploadOpen(false)} pedidoId={pedidoId}
+        isOpen={modalUploadOpen}
+        onClose={() => {
+          setModalUploadOpen(false);
+          setModalWhatsAppOpen(false);
+        }}
+        pedidoId={pedidoId}
         disenoId={isReemplazo && disenoActivo ? disenoActivo.id : undefined}
-        versionNumero={isReemplazo && disenoActivo ? disenoActivo.version : undefined}
+        versionNumero={isReemplazo && disenoActivo ? disenoActivo.version : ((disenoActivo?.version ?? 0) + 1)}
+        initialAprobadoPorWhatsApp={modalWhatsAppOpen}
       />
       {disenoActivo && (
         <ModalRechazarDiseno isOpen={modalRechazoOpen} onClose={() => setModalRechazoOpen(false)} disenoId={disenoActivo.id} pedidoId={pedidoId} />

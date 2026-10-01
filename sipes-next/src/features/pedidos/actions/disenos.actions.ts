@@ -28,10 +28,13 @@ export async function actionSubirYCrearDiseno(
       archivoUrl = resVector.url;
     }
 
+    const aprobadoPorWhatsApp = formData.get("aprobadoPorWhatsApp") === "true";
+
     await apiPost("/api/disenos", {
       pedidoId,
       imagenUrl: resMockup.url,
       archivoUrl,
+      aprobadoPorWhatsApp,
     });
 
     revalidatePath(`/pedidos/${pedidoId}`);
@@ -106,6 +109,20 @@ export async function actionAprobarDiseno(
   } catch (error) {
     if (error instanceof SipesApiError) return { ok: false, error: error.message };
     return { ok: false, error: "No se pudo aprobar el diseño." };
+  }
+}
+
+export async function actionAprobarDisenoPorWhatsApp(
+  disenoId: string,
+  pedidoId: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await apiPatch(`/api/disenos/${encodeURIComponent(disenoId)}/aprobar-whatsapp`, {});
+    revalidatePath(`/pedidos/${pedidoId}`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) return { ok: false, error: error.message };
+    return { ok: false, error: "No se pudo registrar la aprobación por WhatsApp." };
   }
 }
 

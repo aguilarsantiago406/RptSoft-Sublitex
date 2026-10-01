@@ -172,6 +172,23 @@ export function PortalParticipanteView({
               ? "Tus especificaciones ya están confirmadas y listas para corte."
               : "Completá los datos de tu prenda para iniciar la confección."}
           </p>
+
+          {participante.disenoImagenUrl && (
+            <div className={styles.disenoBanner}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={participante.disenoImagenUrl}
+                alt={`Diseño aprobado de ${participante.grupo.nombre}`}
+                className={styles.disenoBannerImage}
+              />
+              <div className={styles.disenoBannerFooter}>
+                <span>👕 Modelo oficial aprobado</span>
+                {participante.pedidoCodigo && (
+                  <strong>{participante.pedidoCodigo}</strong>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className={styles.cardBody}>

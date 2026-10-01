@@ -12,6 +12,7 @@ import { PedidoEnvio } from "@/features/pedidos/components/PedidoEnvio";
 import { PedidoColores } from "@/features/pedidos/components/PedidoColores";
 import { PedidoVistaPrevia } from "@/features/pedidos/components/PedidoVistaPrevia";
 import { BitacoraCambios } from "@/features/pedidos/components/BitacoraCambios";
+import { TablaPagosHistoricos } from "@/features/pedidos/components/proforma/TablaPagosHistoricos";
 import styles from "@/features/pedidos/components/pedidos.module.css";
 import shared from "@/components/ui/table/tableShared.module.css";
 import { SipesApiError } from "@/lib/api/http";
@@ -120,6 +121,14 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
           <PedidoColores colores={pedido.colores} pedidoId={pedido.id} />
           <PedidoVistaPrevia pedido={pedido} disenos={disenos} />
         </div>
+
+        <TablaPagosHistoricos
+          pedidoId={pedido.id}
+          pagos={pagosRes?.data?.pagos ?? []}
+          totalPedido={pagosRes?.data?.totalPedido ?? 0}
+          totalPagado={pagosRes?.data?.totalPagado ?? 0}
+          saldoPendiente={saldoPendiente}
+        />
 
         <BitacoraCambios
           pedidoId={pedido.id}

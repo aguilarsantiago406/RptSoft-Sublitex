@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Printer, X, PackageCheck, AlertCircle } from "lucide-react";
+import { useIsClient } from "@/lib/useIsClient";
 import type { DatosEnvioItem } from "../api/comercial.api";
 import styles from "./etiqueta.module.css";
 
@@ -20,6 +22,7 @@ export function EtiquetaDespacho({
   datosEnvio,
   totalPrendas,
 }: EtiquetaDespachoProps) {
+  const isClient = useIsClient();
   const [bultosEstimados, setBultosEstimados] = useState("1 Bulto");
   const [pesoEstimado, setPesoEstimado] = useState(
     totalPrendas > 0 ? `${(totalPrendas * 0.28).toFixed(1)} kg aprox.` : "Aprox. 5.0 kg"
@@ -39,7 +42,7 @@ export function EtiquetaDespacho({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !isClient) return null;
 
   const handleImprimir = () => {
     window.print();
@@ -49,12 +52,20 @@ export function EtiquetaDespacho({
     `SUBLITEX-PEDIDO:${pedidoCodigo}-DEST:${datosEnvio?.nombreCompleto || ""}-CIUDAD:${datosEnvio?.ciudad || ""}`
   )}`;
 
-  return (
-    <div className={styles.modalOverlay} role="dialog" aria-modal="true">
-      <div className={styles.modalContent}>
+  return createPortal(
+    <div
+      className={styles.modalOverlay}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className={styles.modalContent}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className={`${styles.modalHeader} ${styles.noPrint}`}>
           <div className={styles.modalTitle}>
-            <Printer size={18} />
+            <Printer size={16} />
             <span>Generador de Etiqueta A5 para Despacho</span>
           </div>
           <button
@@ -63,7 +74,7 @@ export function EtiquetaDespacho({
             onClick={onClose}
             aria-label="Cerrar modal"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
@@ -73,17 +84,17 @@ export function EtiquetaDespacho({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "10px",
+                gap: "8px",
                 background: "#fef2f2",
                 border: "1px solid #fecaca",
                 color: "#991b1b",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                marginBottom: "16px",
-                fontSize: "0.85rem",
+                padding: "8px 12px",
+                borderRadius: "6px",
+                marginBottom: "10px",
+                fontSize: "0.8rem",
               }}
             >
-              <AlertCircle size={18} />
+              <AlertCircle size={16} />
               <span>
                 Faltan datos de envío registrados. Por favor completa los datos de rotulado antes de imprimir la etiqueta.
               </span>
@@ -94,22 +105,22 @@ export function EtiquetaDespacho({
             className={styles.noPrint}
             style={{
               display: "flex",
-              gap: "16px",
-              marginBottom: "14px",
+              gap: "12px",
+              marginBottom: "8px",
               background: "#ffffff",
-              padding: "10px 14px",
-              borderRadius: "8px",
+              padding: "6px 10px",
+              borderRadius: "6px",
               border: "1px solid #cbd5e1",
-              fontSize: "0.82rem",
+              fontSize: "0.78rem",
               alignItems: "center",
               flexWrap: "wrap",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <PackageCheck size={16} color="#0284c7" />
-              <strong>Parámetros de embalaje:</strong>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <PackageCheck size={15} color="#0284c7" />
+              <strong>Embalaje:</strong>
             </div>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
               <span>Bultos:</span>
               <input
                 type="text"
@@ -118,14 +129,14 @@ export function EtiquetaDespacho({
                 style={{
                   border: "1px solid #cbd5e1",
                   borderRadius: "4px",
-                  padding: "4px 8px",
-                  fontSize: "0.82rem",
-                  width: "100px",
+                  padding: "2px 6px",
+                  fontSize: "0.78rem",
+                  width: "85px",
                 }}
               />
             </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span>Peso estimado:</span>
+            <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <span>Peso:</span>
               <input
                 type="text"
                 value={pesoEstimado}
@@ -133,9 +144,9 @@ export function EtiquetaDespacho({
                 style={{
                   border: "1px solid #cbd5e1",
                   borderRadius: "4px",
-                  padding: "4px 8px",
-                  fontSize: "0.82rem",
-                  width: "120px",
+                  padding: "2px 6px",
+                  fontSize: "0.78rem",
+                  width: "110px",
                 }}
               />
             </label>
@@ -158,7 +169,7 @@ export function EtiquetaDespacho({
                 <div className={styles.etiquetaBadgeArea}>
                   <span className={styles.badgeDespacho}>ROTULADO DE ENVÍO</span>
                   <div className={styles.pedidoCodigoText}>{pedidoCodigo}</div>
-                  <div style={{ fontSize: "0.7rem", color: "#444444", marginTop: "2px" }}>
+                  <div style={{ fontSize: "0.65rem", color: "#444444", marginTop: "1px" }}>
                     FECHA: {new Date().toLocaleDateString("es-PE")}
                   </div>
                 </div>
@@ -176,12 +187,12 @@ export function EtiquetaDespacho({
                     <div>
                       <strong>DNI / RUC:</strong> {datosEnvio?.dni || "---"}
                     </div>
-                    <div style={{ fontSize: "1rem", fontWeight: 800, marginTop: "2px" }}>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 800, marginTop: "2px" }}>
                       <strong>TELÉFONO:</strong> {datosEnvio?.celular || "---"}
                     </div>
                     {datosEnvio?.referencia && (
-                      <div style={{ marginTop: "4px", fontSize: "0.78rem" }}>
-                        <strong>Referencia / Dir:</strong> {datosEnvio.referencia}
+                      <div style={{ marginTop: "2px", fontSize: "0.72rem" }}>
+                        <strong>Ref / Dir:</strong> {datosEnvio.referencia}
                       </div>
                     )}
                   </div>
@@ -209,13 +220,13 @@ export function EtiquetaDespacho({
               {/* Footer de la etiqueta: Carga + QR */}
               <div className={styles.etiquetaFooterGrid}>
                 <div className={styles.footerInfoBlock}>
-                  <div><strong>CONTENIDO:</strong> Prendas deportivas de confección</div>
+                  <div><strong>CONTENIDO:</strong> Confección textil deportiva</div>
                   <div><strong>CANTIDAD:</strong> {totalPrendas > 0 ? `${totalPrendas} prendas` : "Prendas según pedido"}</div>
                 </div>
 
                 <div className={styles.footerInfoBlock}>
-                  <div><strong>BULTOS ESTIMADOS:</strong> {bultosEstimados}</div>
-                  <div><strong>PESO ESTIMADO:</strong> {pesoEstimado}</div>
+                  <div><strong>BULTOS:</strong> {bultosEstimados}</div>
+                  <div><strong>PESO EST.:</strong> {pesoEstimado}</div>
                 </div>
 
                 <div className={styles.qrContainer}>
@@ -237,11 +248,12 @@ export function EtiquetaDespacho({
             Cerrar
           </button>
           <button type="button" className={styles.btnPrint} onClick={handleImprimir}>
-            <Printer size={16} />
+            <Printer size={15} />
             <span>Imprimir Etiqueta A5</span>
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

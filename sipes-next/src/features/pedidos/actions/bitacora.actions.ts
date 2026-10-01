@@ -7,6 +7,7 @@ export type BitacoraForm = {
   descripcionCambio: string;
   solicitadoPor: string;
   prendaId?: string;
+  avisadoATaller?: boolean;
 };
 
 export async function actionRegistrarBitacora(
@@ -25,6 +26,7 @@ export async function actionRegistrarBitacora(
       descripcionCambio: data.descripcionCambio.trim(),
       solicitadoPor: data.solicitadoPor.trim(),
       prendaId: data.prendaId ? data.prendaId.trim() : undefined,
+      avisadoATaller: data.avisadoATaller,
     });
     revalidatePath(`/pedidos/${pedidoId}`);
     return { ok: true };

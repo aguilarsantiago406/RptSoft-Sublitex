@@ -347,3 +347,32 @@
   font-size: 0.74rem;
   color: #94a3b8;
 }
+
+.disenoBanner {
+  margin: 14px 0 18px 0;
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.disenoBannerImage {
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  display: block;
+  background: #0f172a;
+}
+
+.disenoBannerFooter {
+  padding: 8px 12px;
+  background: #1e293b;
+  color: #f1f5f9;
+  font-size: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+

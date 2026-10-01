@@ -9,6 +9,10 @@ export interface DisenoItem {
   imagenUrl: string | null;
   aprobadoEn: string | null;
   aprobadoPorId: string | null;
+  motivoRechazo?: string | null;
+  rechazadoEn?: string | null;
+  rechazadoPorId?: string | null;
+  aprobadoPorWhatsApp?: boolean;
   creadoEn: string;
 }
 

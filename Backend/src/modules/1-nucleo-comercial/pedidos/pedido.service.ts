@@ -680,14 +680,22 @@ export class PedidoService {
     };
   }
 
-  async crearBitacora(pedidoId: string, dto: { descripcionCambio: string; solicitadoPor: string; prendaId?: string }) {
+  async crearBitacora(
+    pedidoId: string,
+    dto: { descripcionCambio: string; solicitadoPor: string; prendaId?: string; avisadoATaller?: boolean },
+    userId?: string,
+  ) {
     const pedido = await this.findOne(pedidoId);
+    const avisado = dto.avisadoATaller === true;
     return this.prisma.bitacoraModificacion.create({
       data: {
         pedidoId: pedido.id,
         prendaId: dto.prendaId || null,
         descripcionCambio: dto.descripcionCambio,
         solicitadoPor: dto.solicitadoPor,
+        avisadoATaller: avisado,
+        avisadoEn: avisado ? new Date() : null,
+        avisadoPorId: avisado ? (userId ?? null) : null,
       },
       include: {
         prenda: { select: { id: true, nombreEnPrenda: true, numero: true } },

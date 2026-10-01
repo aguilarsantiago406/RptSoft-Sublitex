@@ -24,6 +24,8 @@ export interface ParticipantePublicoDetalle {
   enlaceToken: string;
   enlaceRevocado: boolean;
   enlaceExpiraEn: string | null;
+  disenoImagenUrl?: string | null;
+  pedidoCodigo?: string | null;
   grupo: {
     id: string;
     pedidoId: string;

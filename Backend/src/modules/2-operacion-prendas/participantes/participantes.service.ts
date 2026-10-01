@@ -83,7 +83,16 @@ export class ParticipantesService {
     const p = await this.prisma.participante.findUnique({
       where: { enlaceToken: token },
       include: {
-        grupo: true,
+        grupo: {
+          include: {
+            pedido: {
+              select: {
+                id: true,
+                codigo: true,
+              },
+            },
+          },
+        },
         prendas: {
           include: {
             color: true,
@@ -106,7 +115,31 @@ export class ParticipantesService {
       throw new GoneException('Este enlace ha expirado.');
     }
 
-    return p;
+    let disenoImagenUrl: string | null = null;
+    const pedidoId = p.grupo?.pedidoId || (p.grupo as any)?.pedido?.id;
+    if (pedidoId && typeof this.prisma.diseno?.findFirst === 'function') {
+      const disenoAprobado = await this.prisma.diseno.findFirst({
+        where: { pedidoId, estado: 'APROBADO' },
+        orderBy: { version: 'desc' },
+      });
+      const disenoReciente =
+        disenoAprobado ||
+        (await this.prisma.diseno.findFirst({
+          where: {
+            pedidoId,
+            OR: [{ imagenUrl: { not: null } }, { archivoUrl: { not: null } }],
+          },
+          orderBy: { version: 'desc' },
+        }));
+
+      disenoImagenUrl = disenoReciente?.imagenUrl || disenoReciente?.archivoUrl || null;
+    }
+
+    return {
+      ...p,
+      pedidoCodigo: (p.grupo as any)?.pedido?.codigo ?? null,
+      disenoImagenUrl,
+    };
   }
 
   async guardarFichaEnlace(token: string, dto: GuardarFichaEnlaceDto) {

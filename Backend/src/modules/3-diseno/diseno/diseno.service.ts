@@ -47,6 +47,7 @@ export class DisenoService {
     }
 
     const version = await this.siguienteVersion(dto.pedidoId);
+    const ahora = new Date();
 
     return this.prisma.$transaction(async (tx) => {
       const diseno = await tx.diseno.create({
@@ -55,6 +56,10 @@ export class DisenoService {
           version,
           archivoUrl: dto.archivoUrl,
           imagenUrl: dto.imagenUrl,
+          estado: dto.aprobadoPorWhatsApp ? 'APROBADO' : 'BORRADOR',
+          aprobadoPorWhatsApp: Boolean(dto.aprobadoPorWhatsApp),
+          aprobadoEn: dto.aprobadoPorWhatsApp ? ahora : null,
+          aprobadoPorId: dto.aprobadoPorWhatsApp ? (dto.usuarioId ?? null) : null,
         },
       });
 
@@ -69,6 +74,55 @@ export class DisenoService {
         },
         tx,
       );
+
+      if (dto.aprobadoPorWhatsApp) {
+        await this.auditoria.registrar(
+          {
+            pedidoId: dto.pedidoId,
+            entidad: 'Diseno',
+            entidadId: diseno.id,
+            campo: 'estado',
+            valorNuevo: 'APROBADO',
+            origen: 'USUARIO',
+            autorUsuarioId: dto.usuarioId,
+          },
+          tx,
+        );
+        await this.auditoria.registrar(
+          {
+            pedidoId: dto.pedidoId,
+            entidad: 'Diseno',
+            entidadId: diseno.id,
+            campo: 'aprobadoPorWhatsApp',
+            valorNuevo: 'true',
+            origen: 'USUARIO',
+            autorUsuarioId: dto.usuarioId,
+          },
+          tx,
+        );
+
+        // Regla R-H01: Cerrar el bloque DISENO automáticamente
+        await tx.bloquePedido.upsert({
+          where: {
+            pedidoId_tipo: {
+              pedidoId: dto.pedidoId,
+              tipo: 'DISENO',
+            },
+          },
+          update: {
+            estado: 'CERRADO',
+            cerradoEn: ahora,
+            cerradoPorId: dto.usuarioId ?? null,
+          },
+          create: {
+            pedidoId: dto.pedidoId,
+            tipo: 'DISENO',
+            estado: 'CERRADO',
+            cerradoEn: ahora,
+            cerradoPorId: dto.usuarioId ?? null,
+          },
+        });
+      }
 
       return diseno;
     });
@@ -335,7 +389,12 @@ export class DisenoService {
     await this.prisma.$transaction(async (tx) => {
       await tx.diseno.update({
         where: { id },
-        data: { estado: 'RECHAZADO' },
+        data: {
+          estado: 'RECHAZADO',
+          motivoRechazo: dto.motivo ?? null,
+          rechazadoEn: new Date(),
+          rechazadoPorId: dto.usuarioId ?? null,
+        },
       });
 
       await this.auditoria.registrar(
@@ -367,6 +426,73 @@ export class DisenoService {
     });
 
     return this.obtenerDetalle(id);
+  }
+
+  async aprobarPorWhatsApp(id: string, usuarioId?: string) {
+    const diseno = await this.obtenerExistente(id);
+    const ahora = new Date();
+
+    return this.prisma.$transaction(async (tx) => {
+      const disenoActualizado = await tx.diseno.update({
+        where: { id },
+        data: {
+          estado: 'APROBADO',
+          aprobadoPorWhatsApp: true,
+          aprobadoEn: ahora,
+          aprobadoPorId: usuarioId ?? null,
+        },
+      });
+
+      await this.auditoria.registrar(
+        {
+          pedidoId: diseno.pedidoId,
+          entidad: 'Diseno',
+          entidadId: id,
+          campo: 'estado',
+          valorAnterior: diseno.estado,
+          valorNuevo: 'APROBADO',
+          origen: 'USUARIO',
+          autorUsuarioId: usuarioId,
+        },
+        tx,
+      );
+
+      await this.auditoria.registrar(
+        {
+          pedidoId: diseno.pedidoId,
+          entidad: 'Diseno',
+          entidadId: id,
+          campo: 'aprobadoPorWhatsApp',
+          valorNuevo: 'true',
+          origen: 'USUARIO',
+          autorUsuarioId: usuarioId,
+        },
+        tx,
+      );
+
+      await tx.bloquePedido.upsert({
+        where: {
+          pedidoId_tipo: {
+            pedidoId: diseno.pedidoId,
+            tipo: 'DISENO',
+          },
+        },
+        update: {
+          estado: 'CERRADO',
+          cerradoEn: ahora,
+          cerradoPorId: usuarioId ?? null,
+        },
+        create: {
+          pedidoId: diseno.pedidoId,
+          tipo: 'DISENO',
+          estado: 'CERRADO',
+          cerradoEn: ahora,
+          cerradoPorId: usuarioId ?? null,
+        },
+      });
+
+      return disenoActualizado;
+    });
   }
 
   // ==========================================================================

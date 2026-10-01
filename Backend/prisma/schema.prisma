@@ -687,6 +687,12 @@ model Diseno {
   aprobadoPorId String?
   aprobadoPor   Usuario? @relation(fields: [aprobadoPorId], references: [id])
 
+  motivoRechazo String?
+  rechazadoEn   DateTime?
+  rechazadoPorId String?
+
+  aprobadoPorWhatsApp Boolean @default(false)
+
   creadoEn DateTime @default(now())
 
   @@unique([pedidoId, version])

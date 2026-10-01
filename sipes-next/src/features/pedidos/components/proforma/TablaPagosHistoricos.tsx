@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { DollarSign, Plus, Trash2, Calendar, CreditCard, CheckCircle2, AlertCircle } from "lucide-react";
+import { DollarSign, Plus, Trash2, Calendar, CreditCard, CheckCircle2, AlertCircle, Paperclip, ExternalLink } from "lucide-react";
 import type { PagoItem } from "../../api/comercial.api";
 import { actionEliminarPago } from "../../actions/comercial.actions";
 import { ModalRegistrarPago } from "./ModalRegistrarPago";
@@ -151,6 +151,7 @@ export function TablaPagosHistoricos({
                 <th style={{ padding: "10px 12px" }}>Fecha</th>
                 <th style={{ padding: "10px 12px" }}>Medio</th>
                 <th style={{ padding: "10px 12px" }}>N° Operación / Referencia</th>
+                <th style={{ padding: "10px 12px" }}>Comprobante</th>
                 <th style={{ padding: "10px 12px" }}>Registrado por</th>
                 <th style={{ padding: "10px 12px", textAlign: "right" }}>Monto</th>
                 <th style={{ padding: "10px 12px", textAlign: "center", width: "48px" }}></th>
@@ -191,6 +192,30 @@ export function TablaPagosHistoricos({
                     <td style={{ padding: "10px 12px", color: "#334155" }}>
                       <div>{p.numeroOperacion || "—"}</div>
                       {p.notas && <div style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}>{p.notas}</div>}
+                    </td>
+                    <td style={{ padding: "10px 12px" }}>
+                      {p.comprobanteUrl ? (
+                        <a
+                          href={p.comprobanteUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            color: "#0284c7",
+                            fontSize: "12px",
+                            fontWeight: "500",
+                            textDecoration: "none",
+                          }}
+                        >
+                          <Paperclip size={13} />
+                          <span>Ver voucher</span>
+                          <ExternalLink size={11} />
+                        </a>
+                      ) : (
+                        <span style={{ color: "#94a3b8" }}>—</span>
+                      )}
                     </td>
                     <td style={{ padding: "10px 12px", color: "#64748b", fontSize: "12px" }}>
                       {p.registradoPor?.nombre || "Sistema"}
