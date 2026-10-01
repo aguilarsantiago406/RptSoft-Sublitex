@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Clock } from "lucide-react";
+import { FileText } from "lucide-react";
 import type { PedidoDetalle } from "../types/pedido";
 import { formatDate } from "@/lib/format/date";
 import { ModalEditarPedido } from "./ModalEditarPedido";
@@ -20,7 +20,7 @@ export function PedidoIdentificacion({ pedido, vendedoras = [] }: PedidoIdentifi
       <div className={styles.sectionHeaderRow}>
         <div className={styles.sectionTitleRow}>
           <span className={styles.cardIcon}>
-            <Clock size={16} />
+            <FileText size={16} />
           </span>
           <h2 className={styles.sectionTitle}>Identificación</h2>
         </div>

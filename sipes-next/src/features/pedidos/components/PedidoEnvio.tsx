@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { MapPin, CircleAlert } from "lucide-react";
+import { Truck, CircleAlert } from "lucide-react";
 import type { DatosEnvioItem } from "../api/comercial.api";
 import { actionEliminarDatosEnvio } from "../actions/envio.actions";
 import { ModalEnvioForm } from "./ModalEnvioForm";
@@ -42,9 +42,9 @@ export function PedidoEnvio({ pedidoId, datosEnvio }: PedidoEnvioProps) {
       <div className={styles.sectionHeaderRow}>
         <div className={styles.sectionTitleRow}>
           <span className={styles.cardIcon}>
-            <MapPin size={16} />
+            <Truck size={16} />
           </span>
-          <h2 className={styles.sectionTitle}>Envío a provincia</h2>
+          <h2 className={styles.sectionTitle}>Datos de envío</h2>
         </div>
         <button
           type="button"

@@ -65,54 +65,7 @@ export function PedidoGuiaEtapa({
   return (
     <div className={styles.guiaContainer}>
       <div className={styles.guiaHeader}>
-        <div className={styles.guiaTitleRow}>
-          <span className={styles.etapaBadge}>
-            Etapa {config.numero}
-            {config.numero > 0 ? " de 7" : ""}
-          </span>
-          <h2 className={styles.guiaTitle}>{config.titulo}</h2>
-        </div>
-        <p className={styles.guiaSubtitle}>{config.detalle}</p>
-      </div>
-
-      <div className={styles.guiaContent}>
-        <div className={styles.estadoRow}>
-          {!puedeAvanzar && faltantes.length > 0 ? (
-            <>
-              <span className={styles.bloqueoIcon}>
-                <CircleAlert size={16} />
-              </span>
-              <span className={styles.bloqueoTexto}>
-                {resumenFaltantes(faltantes.length)}
-              </span>
-            </>
-          ) : (
-            <>
-              <span className={styles.listoIcon}>
-                <CheckCircle2 size={16} />
-              </span>
-              <span className={styles.listoTexto}>
-                {puedeAvanzar ? "Todo listo para avanzar" : "Etapa completada"}
-              </span>
-            </>
-          )}
-        </div>
-
-        {checks.length > 0 && (
-          <ol className={styles.checkList}>
-            {checks.map((item, idx) => (
-              <li
-                key={item.id}
-                className={item.ok ? styles.checkItemOk : styles.checkItemPending}
-              >
-                {item.ok ? <CheckCircle2 size={14} /> : <CircleAlert size={14} />}
-                <span>
-                  {idx + 1}. {item.label}
-                </span>
-              </li>
-            ))}
-          </ol>
-        )}
+        <h2 className={styles.guiaTitle}>{config.titulo}</h2>
 
         {config.siguiente && (
           <div className={styles.actionsSection}>
@@ -125,12 +78,77 @@ export function PedidoGuiaEtapa({
             >
               {isPending ? "Avanzando…" : (
                 <>
-                  {config.siguienteLabel}
-                  <ArrowRight size={16} />
+                  <span>{config.siguienteLabel}</span>
+                  <ArrowRight size={15} />
                 </>
               )}
             </button>
             {errorMsg && <span className={styles.advanceHelper}>{errorMsg}</span>}
+          </div>
+        )}
+      </div>
+
+      <div className={styles.guiaContent}>
+        <div className={styles.estadoRow}>
+          {!puedeAvanzar && faltantes.length > 0 ? (
+            <>
+              <span className={styles.bloqueoIcon}>
+                <CircleAlert size={15} />
+              </span>
+              <span className={styles.bloqueoTexto}>
+                {resumenFaltantes(faltantes.length)} para continuar
+              </span>
+            </>
+          ) : (
+            <>
+              <span className={styles.listoIcon}>
+                <CheckCircle2 size={15} />
+              </span>
+              <span className={styles.listoTexto}>
+                {puedeAvanzar ? "Requisitos completados · Listo para avanzar" : "Etapa completada"}
+              </span>
+            </>
+          )}
+        </div>
+
+        {checks.length > 0 && (
+          <div className={styles.requirementsGrid}>
+            {checks.map((item) => (
+              <div
+                key={item.id}
+                className={item.ok ? styles.requirementCardOk : styles.requirementCardPending}
+              >
+                <div className={styles.requirementHeader}>
+                  <div className={styles.requirementIndicator}>
+                    {item.ok ? (
+                      <CheckCircle2 size={15} className={styles.iconOk} />
+                    ) : (
+                      <CircleAlert size={15} className={styles.iconPending} />
+                    )}
+                    <span className={styles.requirementLabel}>{item.label}</span>
+                  </div>
+                  <span className={item.ok ? styles.tagCumplido : styles.tagPendiente}>
+                    {item.ok ? "Cumplido" : "Pendiente"}
+                  </span>
+                </div>
+                {item.subitems && item.subitems.length > 0 ? (
+                  <div className={styles.subitemList}>
+                    {item.subitems.map((sub, idx) => (
+                      <div key={idx} className={sub.ok ? styles.subitemOk : styles.subitemPending}>
+                        {sub.ok ? (
+                          <CheckCircle2 size={13} className={styles.iconOk} />
+                        ) : (
+                          <CircleAlert size={13} className={styles.iconPending} />
+                        )}
+                        <span>{sub.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : item.detalle ? (
+                  <p className={styles.requirementDetalle}>{item.detalle}</p>
+                ) : null}
+              </div>
+            ))}
           </div>
         )}
       </div>

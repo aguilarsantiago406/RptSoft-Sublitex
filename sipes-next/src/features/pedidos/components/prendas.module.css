@@ -117,10 +117,10 @@
 
 .tableCard {
   margin-top: 20px;
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -132,7 +132,7 @@
   width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   text-align: left;
   min-width: 1140px;
 }
@@ -140,22 +140,24 @@
 .prendasTable th {
   background: #f8fafc;
   color: #64748b;
-  font-size: 0.72rem;
+  font-size: 0.70rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 12px 10px;
-  border-bottom: 1px solid #e2e8f0;
+  letter-spacing: 0.05em;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .prendasTable td {
-  padding: 11px 10px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--border-soft);
   color: var(--navy);
   vertical-align: middle;
   overflow: hidden;
+  font-size: 0.82rem;
 }
 
 .cellTruncate {

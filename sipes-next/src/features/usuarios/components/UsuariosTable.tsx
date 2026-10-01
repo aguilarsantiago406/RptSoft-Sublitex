@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/format/date";
 import { useTableState } from "@/lib/useTableState";
 import { Pagination } from "@/components/ui/table/Pagination";
 import { SortableTh } from "@/components/ui/table/SortableTh";
+import { Pencil, Trash2 } from "lucide-react";
 import type { UsuarioItem, RolUsuario } from "../types/usuario";
 import styles from "./usuarios.module.css";
 
@@ -130,8 +131,11 @@ export function UsuariosTable({
                       type="button"
                       className={styles.actionButton}
                       onClick={() => onEdit(usr)}
+                      title={`Editar usuario ${usr.nombre}`}
+                      aria-label={`Editar usuario ${usr.nombre}`}
+                      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "5px 7px" }}
                     >
-                      Editar
+                      <Pencil size={13} />
                     </button>
                     <button
                       type="button"
@@ -147,9 +151,10 @@ export function UsuariosTable({
                         className={styles.secondaryActionButton}
                         onClick={() => onDelete(usr)}
                         title={`Eliminar usuario ${usr.nombre}`}
-                        style={{ color: "#e11d48", borderColor: "#fecdd3" }}
+                        aria-label={`Eliminar usuario ${usr.nombre}`}
+                        style={{ color: "#e11d48", borderColor: "#fecdd3", display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "5px 7px" }}
                       >
-                        Eliminar
+                        <Trash2 size={13} />
                       </button>
                     )}
                   </div>

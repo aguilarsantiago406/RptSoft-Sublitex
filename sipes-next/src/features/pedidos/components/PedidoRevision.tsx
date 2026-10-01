@@ -81,14 +81,14 @@ export function PedidoRevision({
   ];
 
   // 3. Checklist Bloque Comercial
-  const hayEnvio = Boolean(datosEnvio?.ciudad || datosEnvio?.agencia || pedido.cliente?.ciudad);
+  const hayEnvio = Boolean(datosEnvio && (datosEnvio.ciudad || datosEnvio.agencia));
   const listaConfirmaciones = Array.isArray(confirmaciones) ? confirmaciones : [];
   const hayConfirmacion = listaConfirmaciones.length > 0;
   const primeraConfirmacion = listaConfirmaciones[0];
   const adelantoNum = Number(primeraConfirmacion?.adelantoRecibido ?? 0);
   const hayAdelanto = !isNaN(adelantoNum) && adelantoNum > 0;
   const checksComercial: BloqueCheckItem[] = [
-    { id: "com-env", label: "Datos de despacho y entrega", ok: hayEnvio, detalle: datosEnvio?.ciudad || pedido.cliente?.ciudad || "Sin destino" },
+    { id: "com-env", label: "Datos de despacho y entrega", ok: hayEnvio, detalle: hayEnvio ? `Envío a ${datosEnvio?.ciudad || "destino"}` : "Sin registrar" },
     { id: "com-prof", label: "Proforma comercial emitida", ok: hayConfirmacion, detalle: hayConfirmacion ? `v${primeraConfirmacion?.version ?? 1}` : "Sin emitir" },
     { id: "com-adel", label: "Adelanto 50% confirmado", ok: hayAdelanto, detalle: hayAdelanto ? `S/ ${adelantoNum.toFixed(2)}` : "Pendiente" },
     { id: "com-cierre", label: "Bloque comercial cerrado", ok: gobernanza.comercial.cerrado, detalle: gobernanza.comercial.cerrado ? "Cerrado" : "Abierto" },

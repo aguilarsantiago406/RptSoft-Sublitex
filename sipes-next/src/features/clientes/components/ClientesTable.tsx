@@ -7,6 +7,7 @@ import { useTableState } from "@/lib/useTableState";
 import { Pagination } from "@/components/ui/table/Pagination";
 import { SortableTh } from "@/components/ui/table/SortableTh";
 import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
+import { Pencil, Trash2 } from "lucide-react";
 import shared from "@/components/ui/table/tableShared.module.css";
 import type { Cliente, TipoCliente } from "../types/cliente";
 import { actionEliminarCliente } from "../actions/clientes.actions";
@@ -18,38 +19,13 @@ interface ClientesTableProps {
   error?: string | null;
 }
 
-function getBadgeClass(tipo: TipoCliente): string {
-  switch (tipo) {
-    case "COLEGIO":
-      return `${styles.badge} ${styles.badgeColegio}`;
-    case "PROMOCION":
-      return `${styles.badge} ${styles.badgePromocion}`;
-    case "CLUB":
-      return `${styles.badge} ${styles.badgeClub}`;
-    case "EMPRESA":
-      return `${styles.badge} ${styles.badgeEmpresa}`;
-    case "PARTICULAR":
-    default:
-      return `${styles.badge} ${styles.badgeParticular}`;
-  }
-}
-
-function getTipoLabel(tipo: TipoCliente): string {
-  switch (tipo) {
-    case "COLEGIO":
-      return "Colegio";
-    case "PROMOCION":
-      return "Promoción";
-    case "CLUB":
-      return "Club";
-    case "EMPRESA":
-      return "Empresa";
-    case "PARTICULAR":
-      return "Particular";
-    default:
-      return tipo;
-  }
-}
+const TIPO_MAP: Record<TipoCliente, { badge: string; label: string }> = {
+  COLEGIO: { badge: `${styles.badge} ${styles.badgeColegio}`, label: "Colegio" },
+  PROMOCION: { badge: `${styles.badge} ${styles.badgePromocion}`, label: "Promoción" },
+  CLUB: { badge: `${styles.badge} ${styles.badgeClub}`, label: "Club" },
+  EMPRESA: { badge: `${styles.badge} ${styles.badgeEmpresa}`, label: "Empresa" },
+  PARTICULAR: { badge: `${styles.badge} ${styles.badgeParticular}`, label: "Particular" },
+};
 
 export function ClientesTable({ clientes, error }: ClientesTableProps) {
   const table = useTableState<Cliente>(clientes);
@@ -97,29 +73,9 @@ export function ClientesTable({ clientes, error }: ClientesTableProps) {
               <thead>
                 <tr>
                   <th className={styles.colIndex}>#</th>
-                  <SortableTh<Cliente>
-                    label="Organización / Cliente"
-                    sortKey="nombre"
-                    activeKey={table.sortKey}
-                    dir={table.sortDir}
-                    onSort={table.toggleSort}
-                  />
-                  <SortableTh<Cliente>
-                    label="Tipo"
-                    sortKey="tipo"
-                    activeKey={table.sortKey}
-                    dir={table.sortDir}
-                    onSort={table.toggleSort}
-                    width={140}
-                  />
-                  <SortableTh<Cliente>
-                    label="Ciudad / Sede"
-                    sortKey="ciudad"
-                    activeKey={table.sortKey}
-                    dir={table.sortDir}
-                    onSort={table.toggleSort}
-                    width={150}
-                  />
+                  <SortableTh<Cliente> label="Organización / Cliente" sortKey="nombre" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} />
+                  <SortableTh<Cliente> label="Tipo" sortKey="tipo" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} width={140} />
+                  <SortableTh<Cliente> label="Ciudad / Sede" sortKey="ciudad" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} width={150} />
                   <th style={{ width: "140px" }}>Teléfono</th>
                   <th style={{ width: "130px" }}>Registrado</th>
                   <th style={{ width: "200px", textAlign: "right" }}>Acciones</th>
@@ -140,8 +96,8 @@ export function ClientesTable({ clientes, error }: ClientesTableProps) {
                         </Link>
                       </td>
                       <td>
-                        <span className={getBadgeClass(cliente.tipo)}>
-                          {getTipoLabel(cliente.tipo)}
+                        <span className={TIPO_MAP[cliente.tipo]?.badge ?? styles.badge}>
+                          {TIPO_MAP[cliente.tipo]?.label ?? cliente.tipo}
                         </span>
                       </td>
                       <td>{cliente.ciudad || "—"}</td>
@@ -151,18 +107,18 @@ export function ClientesTable({ clientes, error }: ClientesTableProps) {
                       </td>
                       <td>
                         <div className={styles.actionsCell}>
-                          <Link
-                            href={`/clientes/${cliente.id}`}
-                            className={styles.actionBtnView}
-                          >
+                          <Link href={`/clientes/${cliente.id}`} className={styles.actionBtnView}>
                             Ver Ficha
                           </Link>
                           <button
                             type="button"
                             className={styles.actionBtnEdit}
                             onClick={() => setClienteAEditar(cliente)}
+                            title={`Editar ${cliente.nombre}`}
+                            aria-label={`Editar ${cliente.nombre}`}
+                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "5px 7px" }}
                           >
-                            Editar
+                            <Pencil size={13} />
                           </button>
                           <button
                             type="button"
@@ -171,8 +127,11 @@ export function ClientesTable({ clientes, error }: ClientesTableProps) {
                               setErrorAccion(null);
                               setClienteAEliminar(cliente);
                             }}
+                            title={`Eliminar ${cliente.nombre}`}
+                            aria-label={`Eliminar ${cliente.nombre}`}
+                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "5px 7px" }}
                           >
-                            Eliminar
+                            <Trash2 size={13} />
                           </button>
                         </div>
                       </td>
@@ -208,14 +167,9 @@ export function ClientesTable({ clientes, error }: ClientesTableProps) {
         onConfirm={handleConfirmEliminar}
         title="Eliminar Cliente"
         description={
-          clienteAEliminar ? (
-            <>
-              ¿Deseas eliminar a <strong>{clienteAEliminar.nombre}</strong>?
-              <br />
-              <br />
-              Solo se podrá eliminar si no tiene pedidos registrados en el sistema.
-            </>
-          ) : ""
+          clienteAEliminar
+            ? `¿Deseas eliminar a ${clienteAEliminar.nombre}? Solo se podrá eliminar si no tiene pedidos registrados en el sistema.`
+            : ""
         }
         confirmText="Eliminar Cliente"
         variant="danger"

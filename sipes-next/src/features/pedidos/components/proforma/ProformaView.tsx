@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
-import { FileCheck, FileDown, AlertTriangle, Image as ImageIcon, Printer, Share2 } from "lucide-react";
+import { FileCheck, FileDown, AlertTriangle, Image as ImageIcon, Printer, DollarSign, Loader2 } from "lucide-react";
 import type { PedidoDetalle } from "../../types/pedido";
 import { formatDate } from "@/lib/format/date";
 import type { TarifaItem, DatosEnvioItem, ConfirmacionItem } from "../../api/comercial.api";
 import { calcularProformaCompleta, type PrendaProformaItem } from "../../utils/proforma.utils";
-import { ModalEmitirConfirmacion } from "./ModalEmitirConfirmacion";
+import { actionEmitirConfirmacion } from "../../actions/comercial.actions";
+import { ModalRegistrarAdelanto } from "./ModalRegistrarAdelanto";
 import styles from "./proforma.module.css";
 
 interface ProformaViewProps {
@@ -27,8 +28,10 @@ export function ProformaView({
   prendas,
   mockupUrl,
 }: ProformaViewProps) {
-  const [copied, setCopied] = useState(false);
-  const [isModalEmitirOpen, setIsModalEmitirOpen] = useState(false);
+  const [isEmitting, startEmitTransition] = useTransition();
+  const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
+  const [isAdelantoModalOpen, setIsAdelantoModalOpen] = useState(false);
+  const [selectedConfirmacion, setSelectedConfirmacion] = useState<ConfirmacionItem | null>(null);
 
   // Cálculo matemático dinámico sobre cantidades contratadas oficiales
   const calculo = useMemo(() => {
@@ -39,49 +42,32 @@ export function ProformaView({
     return pedido.grupos.reduce((acc, g) => acc + g.cantidadContratada, 0);
   }, [pedido.grupos]);
 
+  const ultimaConfirmacion = confirmaciones && confirmaciones.length > 0 ? confirmaciones[0] : null;
+
   function handlePrint() {
     window.print();
   }
 
-  function handleCopyWhatsApp() {
-    const lines = [
-      `📄 *PROFORMA COMERCIAL — SUBLITEX*`,
-      `*Folio:* ${pedido.codigo}`,
-      `*Cliente:* ${pedido.cliente.nombre}`,
-      `*Fecha de entrega compromiso:* ${pedido.fechaCompromiso ? new Date(pedido.fechaCompromiso).toLocaleDateString("es-PE") : "Por definir"}`,
-      `-----------------------------------`,
-      `*Detalle de prendas:*`,
-      ...calculo.itemsCotizados.map(
-        (it) => `• ${it.nombre} (${it.tipoProductoNombre}) x ${it.cantidad} = S/ ${it.subtotal.toFixed(2)}`
-      ),
-    ];
+  function handleEmitirProformaDirecta() {
+    startEmitTransition(async () => {
+      // Se emite directamente con adelanto inicial en 0 sin pedir recargos manuales (calcula el sistema)
+      const res = await actionEmitirConfirmacion(pedido.id, {
+        adelantoRecibido: 0,
+        comprobante: "NINGUNO",
+      });
 
-    if (calculo.recargoTallas.total > 0) {
-      lines.push(`• Recargo tallas especiales: S/ ${calculo.recargoTallas.total.toFixed(2)}`);
-      for (const d of calculo.recargoTallas.detalle) {
-        lines.push(`   └ Talla ${d.talla} x ${d.cantidad} (+S/ ${d.subtotal.toFixed(2)})`);
+      if (res.ok) {
+        setFeedbackMsg("¡Proforma oficial emitida y PDF generado con éxito!");
+        setTimeout(() => setFeedbackMsg(null), 4000);
+      } else {
+        setFeedbackMsg(res.error || "Ocurrió un error al emitir la proforma.");
       }
-    }
+    });
+  }
 
-    lines.push(`-----------------------------------`);
-    lines.push(`*TOTAL SIN IGV:* S/ ${calculo.totalSinIgv.toFixed(2)}`);
-    lines.push(`*Adelanto 50% (para iniciar corte):* S/ ${calculo.adelanto50.toFixed(2)}`);
-    lines.push(`*Saldo a la entrega:* S/ ${calculo.saldo50.toFixed(2)}`);
-
-    if (datosEnvio?.ciudad || datosEnvio?.agencia) {
-      lines.push(`-----------------------------------`);
-      lines.push(`*Despacho:* ${datosEnvio.agencia ?? "Agencia"} — ${datosEnvio.ciudad ?? ""}`);
-    }
-
-    lines.push(`-----------------------------------`);
-    lines.push(`*Cuentas de pago:*`);
-    lines.push(`• Plin / Transferencia: Wilber Peralta Flores — 944 941 179`);
-    lines.push(`• Scotiabank Cta: GRAN CARTEL S.A.C. — 0448814517`);
-    lines.push(`• Scotiabank CCI: 00923020044881451748`);
-
-    navigator.clipboard.writeText(lines.join("\n"));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  function handleOpenRegistrarAdelanto(conf: ConfirmacionItem) {
+    setSelectedConfirmacion(conf);
+    setIsAdelantoModalOpen(true);
   }
 
   const fechaEmision = new Date().toLocaleDateString("es-PE", {
@@ -100,15 +86,6 @@ export function ProformaView({
         <div className={styles.toolbarActions}>
           <button
             type="button"
-            className={styles.btnSecondary}
-            onClick={handleCopyWhatsApp}
-            title="Copiar resumen para WhatsApp"
-          >
-            <Share2 size={14} />
-            {copied ? "¡Copiado!" : "Copiar WhatsApp"}
-          </button>
-          <button
-            type="button"
             className={styles.btnPrimary}
             onClick={handlePrint}
             title="Imprimir o guardar como PDF"
@@ -116,17 +93,47 @@ export function ProformaView({
             <Printer size={14} />
             Imprimir A4
           </button>
+
+          {ultimaConfirmacion && (
+            <button
+              type="button"
+              className={styles.btnSecondary}
+              style={{ background: "#ecfdf5", color: "#065f46", borderColor: "#a7f3d0" }}
+              onClick={() => handleOpenRegistrarAdelanto(ultimaConfirmacion)}
+              title="Registrar el abono del cliente"
+            >
+              <DollarSign size={14} />
+              Registrar Adelanto (v{ultimaConfirmacion.version})
+            </button>
+          )}
+
           <button
             type="button"
             className={styles.btnEmitir}
-            onClick={() => setIsModalEmitirOpen(true)}
-            title="Congelar orden y generar PDF oficial en backend"
+            onClick={handleEmitirProformaDirecta}
+            disabled={isEmitting}
+            title="Genera y descarga el PDF oficial sin trabas"
           >
-            <FileCheck size={14} />
-            Emitir Confirmación
+            {isEmitting ? <Loader2 size={14} className={styles.spin} /> : <FileCheck size={14} />}
+            {isEmitting ? "Generando PDF..." : "Emitir Proforma (PDF Inmediato)"}
           </button>
         </div>
       </div>
+
+      {feedbackMsg && (
+        <div style={{
+          padding: "10px 16px",
+          background: "#ecfdf5",
+          border: "1px solid #10b981",
+          borderRadius: "8px",
+          color: "#065f46",
+          fontSize: "0.85rem",
+          fontWeight: 600,
+          marginBottom: "16px",
+        }}>
+          {feedbackMsg}
+        </div>
+      )}
 
       {/* Alerta si faltan tarifas en la base de datos */}
       {calculo.tieneTarifasFaltantes && (
@@ -177,9 +184,29 @@ export function ProformaView({
                         className={styles.btnPdfDownload}
                       >
                         <FileDown size={14} />
-                        Ver PDF Oficial (v{c.version})
+                        Descargar PDF Oficial (v{c.version})
                       </a>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenRegistrarAdelanto(c)}
+                      style={{
+                        background: "#10b981",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: "6px",
+                        padding: "4px 8px",
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      <DollarSign size={12} />
+                      Registrar Adelanto
+                    </button>
                   </div>
                 </div>
 
@@ -225,7 +252,16 @@ export function ProformaView({
       <div className={styles.sheet}>
         <header className={styles.headerGrid}>
           <div className={styles.brandCol}>
-            <div className={styles.brandLogo}>SUBLITEX</div>
+            <div className={styles.logoWrapper}>
+              <Image
+                src="/logo-sublitex.png"
+                alt="Sublitex"
+                width={160}
+                height={42}
+                className={styles.brandLogoImg}
+                priority
+              />
+            </div>
             <div className={styles.brandSub}>
               <strong>GRAN CARTEL S.A.C.</strong> · RUC 20544457846<br />
               Av. Aramburú cuadra 7 — Surquillo, Lima<br />
@@ -242,74 +278,90 @@ export function ProformaView({
           </div>
         </header>
 
-        {/* Datos del Cliente y Condiciones */}
-        <section className={styles.infoGrid}>
-          <div>
-            <div className={styles.infoBlockTitle}>1 · Identificación del Cliente</div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Cliente / Grupo:</span>
-              <span className={styles.infoValue}>{pedido.cliente.nombre}</span>
-            </div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Destino / Ciudad:</span>
-              <span className={styles.infoValue}>
-                {pedido.cliente.ciudad || datosEnvio?.ciudad || "Lima"}
-              </span>
-            </div>
-            {pedido.cliente.telefono && (
+        {/* 1 y 2. Cabecera: Datos del Cliente, Condiciones y Mockup Oficial al Costado */}
+        <section className={styles.clientAndMockupGrid}>
+          {/* Columna Izquierda: Datos del Cliente y Condiciones en columna amplia */}
+          <div className={styles.clientDetailsCard}>
+            <div>
+              <div className={styles.infoBlockTitle}>1 · Identificación del Cliente</div>
               <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Teléfono:</span>
-                <span className={styles.infoValue}>{pedido.cliente.telefono}</span>
+                <span className={styles.infoLabel}>Cliente / Grupo:</span>
+                <span className={styles.infoValue}>{pedido.cliente.nombre}</span>
               </div>
-            )}
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Destino / Ciudad:</span>
+                <span className={styles.infoValue}>
+                  {pedido.cliente.ciudad || datosEnvio?.ciudad || "Lima"}
+                </span>
+              </div>
+              {pedido.cliente.telefono && (
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Teléfono:</span>
+                  <span className={styles.infoValue}>{pedido.cliente.telefono}</span>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.clientDetailsDivider} />
+
+            <div>
+              <div className={styles.infoBlockTitle}>Condiciones Comerciales</div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Fecha Entrega:</span>
+                <span className={styles.infoValue} suppressHydrationWarning>
+                  {formatDate(pedido.fechaCompromiso)}
+                </span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Moneda:</span>
+                <span className={styles.infoValue}>Soles (PEN)</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Forma de Pago:</span>
+                <span className={styles.infoValue}>50% Adelanto (iniciar corte) / 50% Saldo a entrega</span>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <div className={styles.infoBlockTitle}>Condiciones Comerciales</div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Fecha Entrega:</span>
-              <span className={styles.infoValue} suppressHydrationWarning>
-                {formatDate(pedido.fechaCompromiso)}
-              </span>
+          {/* Columna Derecha: Mockup Oficial al Costado */}
+          <div className={styles.mockupSideCard}>
+            <div className={styles.mockupCardHeader}>
+              <span>2 · Diseño Aprobado</span>
+              <span className={styles.mockupBadge}>Mockup Oficial</span>
             </div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Moneda:</span>
-              <span className={styles.infoValue}>Soles (PEN)</span>
-            </div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Forma de Pago:</span>
-              <span className={styles.infoValue}>50% Adelanto / 50% Saldo a entrega</span>
+            <div className={styles.mockupImgWrapper}>
+              {mockupUrl ? (
+                <a
+                  href={mockupUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.mockupLink}
+                  title="Click para ver mockup oficial en alta resolución"
+                >
+                  <Image
+                    src={mockupUrl}
+                    alt="Mockup de Diseño Aprobado"
+                    className={styles.mockupImg}
+                    width={400}
+                    height={220}
+                    unoptimized
+                  />
+                </a>
+              ) : (
+                <div className={styles.mockupPlaceholder}>
+                  <ImageIcon size={32} />
+                  <span>Mockup oficial de confección en proceso de validación técnica</span>
+                </div>
+              )}
             </div>
           </div>
         </section>
 
-        {/* Recuadro de Diseño Aprobado */}
-        <div className={styles.mockupCard}>
-          <div className={styles.mockupCardHeader}>
-            <span>Diseño Aprobado por el Cliente</span>
-            <span>Mockup oficial de confección</span>
-          </div>
-          <div className={styles.mockupImgWrapper}>
-            {mockupUrl ? (
-              <Image
-                src={mockupUrl}
-                alt="Mockup de Diseño Aprobado"
-                className={styles.mockupImg}
-                width={380}
-                height={200}
-                unoptimized
-              />
-            ) : (
-              <div className={styles.mockupPlaceholder}>
-                <ImageIcon size={28} />
-                <span>Mockup aprobado en proceso de carga o validación por WhatsApp</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Tabla de Cotización Itemizada */}
+        {/* 3. Tabla de Cotización Itemizada */}
         <div className={styles.tableContainer}>
+          <div className={styles.infoBlockTitle} style={{ padding: "8px 12px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+            3 · Detalle de Cotización
+          </div>
           <table className={styles.table}>
             <thead>
               <tr>
@@ -369,13 +421,13 @@ export function ProformaView({
           </table>
         </div>
 
-        {/* Desglose Financiero y Despacho */}
+        {/* 4. Desglose Financiero y Despacho */}
         <div className={styles.summaryLayout}>
           <div>
             {datosEnvio ? (
               <div className={styles.shippingCard}>
                 <div className={styles.shippingTitle}>
-                  Datos de Rotulado y Envío a Provincia
+                  4 · Datos de Entrega y Envío
                 </div>
                 <div style={{ fontSize: "0.82rem", display: "grid", gap: "4px" }}>
                   <div>
@@ -384,12 +436,12 @@ export function ProformaView({
                   {datosEnvio.dni && <div><strong>DNI:</strong> {datosEnvio.dni}</div>}
                   {datosEnvio.celular && <div><strong>Celular:</strong> {datosEnvio.celular}</div>}
                   {datosEnvio.agencia && <div><strong>Agencia:</strong> {datosEnvio.agencia}</div>}
-                  {datosEnvio.ciudad && <div><strong>Ciudad:</strong> {datosEnvio.ciudad}</div>}
+                  {datosEnvio.ciudad && <div><strong>Ciudad / Destino:</strong> {datosEnvio.ciudad}</div>}
                 </div>
               </div>
             ) : (
               <div className={styles.shippingCard}>
-                <div className={styles.shippingTitle}>Despacho y Entrega</div>
+                <div className={styles.shippingTitle}>4 · Despacho y Entrega</div>
                 <p style={{ margin: 0, fontSize: "0.82rem", color: "#64748b" }}>
                   Entrega en taller de confección o despacho en agencia coordinado por vendedora.
                 </p>
@@ -419,7 +471,7 @@ export function ProformaView({
             {/* Matriz de Pagos */}
             <div className={styles.advanceBox}>
               <div className={styles.advanceTitle}>
-                <span>Adelanto sugerido (50%):</span>
+                <span>Inicial sugerida (50%):</span>
                 <span>S/ {calculo.adelanto50.toFixed(2)}</span>
               </div>
               <div className={styles.advanceDesc}>
@@ -433,7 +485,7 @@ export function ProformaView({
           </div>
         </div>
 
-        {/* Cuentas de Pago Bancarias y Condiciones */}
+        {/* 5. Cuentas de Pago Bancarias y Condiciones */}
         <div className={styles.bankAccountsGrid}>
           <div>
             <div className={styles.bankBoxTitle}>Condiciones Comerciales</div>
@@ -444,9 +496,9 @@ export function ProformaView({
             </div>
           </div>
           <div>
-            <div className={styles.bankBoxTitle}>Cuentas Oficiales para Transferencia</div>
+            <div className={styles.bankBoxTitle}>5 · Cuentas Oficiales para Transferencia</div>
             <div className={styles.bankItem}>
-              <strong>Plin:</strong> Wilber Peralta Flores — 944 941 179
+              <strong>Plin / Transferencia:</strong> Wilber Peralta Flores — 944 941 179
             </div>
             <div className={styles.bankItem}>
               <strong>Scotiabank Cta:</strong> GRAN CARTEL S.A.C. — 0448814517
@@ -457,6 +509,39 @@ export function ProformaView({
           </div>
         </div>
 
+        {/* 6. Lista de Prendas Registradas (si existen) */}
+        {prendas && prendas.length > 0 && (
+          <div style={{ marginTop: "24px" }}>
+            <div className={styles.infoBlockTitle} style={{ padding: "8px 12px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+              6 · Lista de Prendas Registradas ({prendas.length} prendas)
+            </div>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th style={{ width: "40px" }}>#</th>
+                  <th style={{ width: "70px" }}>Talla</th>
+                  <th>Nombre en Prenda</th>
+                  <th style={{ width: "60px", textAlign: "center" }}>N.°</th>
+                  <th>Prenda</th>
+                  <th style={{ width: "100px" }}>Género</th>
+                </tr>
+              </thead>
+              <tbody>
+                {prendas.map((p, idx) => (
+                  <tr key={p.id || idx}>
+                    <td style={{ color: "#64748b" }}>{idx + 1}</td>
+                    <td style={{ fontWeight: 700 }}>{p.tallaCodigo || "—"}</td>
+                    <td>{p.nombreEnPrenda || p.participanteNombre || "—"}</td>
+                    <td style={{ textAlign: "center", fontWeight: 700 }}>{p.numero || "—"}</td>
+                    <td>{p.productoNombre || "Prenda"}</td>
+                    <td>{p.genero === "MUJER" ? "Dama" : p.genero === "HOMBRE" ? "Caballero" : "Estándar"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         <div className={styles.signatureSection}>
           <div className={styles.signatureBox}>
             Conformidad del Cliente<br />
@@ -465,16 +550,19 @@ export function ProformaView({
         </div>
       </div>
 
-      {/* Modal para emitir confirmación oficial */}
-      {isModalEmitirOpen && (
-        <ModalEmitirConfirmacion
-          key={String(isModalEmitirOpen)}
-          isOpen={isModalEmitirOpen}
-          onClose={() => setIsModalEmitirOpen(false)}
+      {/* Modal para registrar el adelanto recibido (sin trabas) */}
+      {isAdelantoModalOpen && selectedConfirmacion && (
+        <ModalRegistrarAdelanto
+          isOpen={isAdelantoModalOpen}
+          onClose={() => {
+            setIsAdelantoModalOpen(false);
+            setSelectedConfirmacion(null);
+          }}
           pedidoId={pedido.id}
-          pedidoCodigo={pedido.codigo}
-          basePrendas={calculo.baseProductos}
-          recargoTallasInicial={calculo.recargoTallas.total}
+          confirmacionId={selectedConfirmacion.id}
+          version={selectedConfirmacion.version}
+          totalSinIgv={Number(selectedConfirmacion.totalSinIgv)}
+          adelantoActual={Number(selectedConfirmacion.adelantoRecibido)}
         />
       )}
     </div>

@@ -5,6 +5,7 @@ import type { UbicacionPersonalizacionCatalogo } from "@/features/catalogos/type
 import type { AtributoCatalogoItem } from "../api/pedidos.api";
 import type { PrendaDetalle } from "../types/pedido";
 import { actionEliminarPrenda } from "../actions/prendas.actions";
+import { Pencil, Trash2 } from "lucide-react";
 import { ModalEditarPrenda } from "./ModalEditarPrenda";
 import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import styles from "./prendas.module.css";
@@ -19,20 +20,12 @@ interface PrendaRowProps {
   ubicacionesCatalogo?: UbicacionPersonalizacionCatalogo[];
 }
 
-function formatGenero(g: string): string {
-  if (g === "HOMBRE") return "Hombre";
-  if (g === "MUJER") return "Mujer";
-  if (g === "NINO") return "Niño";
-  if (g === "NINA") return "Niña";
-  return "Estándar";
-}
+const GENERO_MAP: Record<string, string> = { HOMBRE: "Hombre", MUJER: "Mujer", NINO: "Niño", NINA: "Niña" };
 
-function getGroupBadgeClass(nombreGrupo?: string | null): string {
-  if (!nombreGrupo) return styles.groupBadgeDefault;
-  const l = nombreGrupo.toLowerCase();
-  if (l.includes("kit")) return styles.groupBadgeKit;
-  if (l.includes("camiseta")) return styles.groupBadgeCamiseta;
-  return styles.groupBadgeDefault;
+function getTipoPrendaInfo(tipo: string) {
+  if (tipo === "OBSEQUIO") return { label: "Obsequio", bg: "#dcfce7", color: "#166534", border: "#bbf7d0" };
+  if (tipo === "MUESTRA") return { label: "Muestra", bg: "#e0f2fe", color: "#0369a1", border: "#bae6fd" };
+  return { label: "Venta", bg: "#f1f5f9", color: "#334155", border: "#e2e8f0" };
 }
 
 export function PrendaRow({
@@ -46,8 +39,8 @@ export function PrendaRow({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  const nombreGrupo = prenda.grupo?.nombre ?? "Sin grupo";
-  const badgeClass = getGroupBadgeClass(nombreGrupo);
+  const colorEfectivo = prenda.color ?? coloresDisponibles?.[0] ?? null;
+  const tipoInfo = getTipoPrendaInfo(prenda.tipoPrenda);
   const esSinNumero = !prenda.numero || prenda.numero === "S/N";
   const etiqueta = prenda.participante?.nombrePersona || prenda.nombreEnPrenda || "la prenda";
   const detalleNumero = esSinNumero ? "" : ` (N° ${prenda.numero})`;
@@ -82,32 +75,36 @@ export function PrendaRow({
         <span className={styles.tallaBadge}>{prenda.talla?.codigo || "—"}</span>
       </td>
       <td>
-        <span className={styles.generoBadge}>{formatGenero(prenda.genero)}</span>
+        <span className={styles.generoBadge}>{GENERO_MAP[prenda.genero] ?? "Estándar"}</span>
       </td>
       <td>
-        {prenda.color ? (
-          <span className={styles.colorPill} title={prenda.color.nombre}>
-            <span className={styles.colorCircle} style={{ backgroundColor: prenda.color.codigoHex }} />
-            {prenda.color.nombre}
+        {colorEfectivo ? (
+          <span className={styles.colorCell} title={colorEfectivo.nombre}>
+            <span className={styles.colorDot} style={{ backgroundColor: colorEfectivo.codigoHex }} />
+            <span className={styles.colorName}>{colorEfectivo.nombre}</span>
           </span>
         ) : (
-          <span className={styles.colorInherited} title="Hereda el color general del grupo">Heredado</span>
+          <span style={{ color: "#cbd5e1" }}>—</span>
         )}
       </td>
       <td>
-        <span className={badgeClass}>{nombreGrupo}</span>
-        {prenda.tipoPrenda === "OBSEQUIO" && (
-          <span style={{ marginLeft: "4px", padding: "1px 5px", borderRadius: "3px", fontSize: "0.68rem", fontWeight: 400, background: "#dcfce7", color: "#166534" }}>
-            Obsequio
-          </span>
-        )}
-        {prenda.tipoPrenda === "MUESTRA" && (
-          <span style={{ marginLeft: "4px", padding: "1px 5px", borderRadius: "3px", fontSize: "0.68rem", fontWeight: 400, background: "#e0f2fe", color: "#0369a1" }}>
-            Muestra
-          </span>
-        )}
+        <span
+          style={{
+            display: "inline-block", padding: "2px 7px", borderRadius: "5px", fontSize: "0.72rem",
+            fontWeight: 400, background: tipoInfo.bg, color: tipoInfo.color,
+            border: `1px solid ${tipoInfo.border}`, whiteSpace: "nowrap",
+          }}
+        >
+          {tipoInfo.label}
+        </span>
         {prenda.esArquero && (
-          <span style={{ marginLeft: "4px", padding: "1px 5px", borderRadius: "3px", fontSize: "0.68rem", fontWeight: 400, background: "#fef9c3", color: "#854d0e" }}>
+          <span
+            style={{
+              display: "inline-block", marginLeft: "4px", padding: "2px 6px", borderRadius: "5px",
+              fontSize: "0.7rem", fontWeight: 400, background: "#fef9c3", color: "#854d0e",
+              border: "1px solid #fde047", whiteSpace: "nowrap",
+            }}
+          >
             Arquero
           </span>
         )}
@@ -141,11 +138,26 @@ export function PrendaRow({
       </td>
       <td>
         <div className={styles.rowActions}>
-          <button type="button" className={styles.actionButton} onClick={() => setIsEditing(true)} title="Editar prenda">
-            Editar
+          <button
+            type="button"
+            className={styles.actionButton}
+            onClick={() => setIsEditing(true)}
+            title="Editar prenda"
+            aria-label="Editar prenda"
+            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "5px 7px" }}
+          >
+            <Pencil size={13} />
           </button>
-          <button type="button" className={styles.deleteButton} onClick={() => setIsConfirmOpen(true)} disabled={isDeleting} title="Eliminar prenda">
-            {isDeleting ? "..." : "Eliminar"}
+          <button
+            type="button"
+            className={styles.deleteButton}
+            onClick={() => setIsConfirmOpen(true)}
+            disabled={isDeleting}
+            title="Eliminar prenda"
+            aria-label="Eliminar prenda"
+            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "5px 7px" }}
+          >
+            <Trash2 size={13} />
           </button>
         </div>
 
@@ -153,26 +165,16 @@ export function PrendaRow({
 
         {isEditing && (
           <ModalEditarPrenda
-            isOpen={isEditing}
-            onClose={() => setIsEditing(false)}
-            prenda={prenda}
-            pedidoId={pedidoId}
-            tallasDisponibles={tallasDisponibles}
-            atributosCatalogo={atributosCatalogo}
-            coloresDisponibles={coloresDisponibles}
-            ubicacionesCatalogo={ubicacionesCatalogo}
+            isOpen={isEditing} onClose={() => setIsEditing(false)} prenda={prenda} pedidoId={pedidoId}
+            tallasDisponibles={tallasDisponibles} atributosCatalogo={atributosCatalogo}
+            coloresDisponibles={coloresDisponibles} ubicacionesCatalogo={ubicacionesCatalogo}
           />
         )}
 
         <ModalConfirmacion
-          isOpen={isConfirmOpen}
-          onClose={() => setIsConfirmOpen(false)}
-          onConfirm={handleConfirmEliminar}
-          title="Eliminar Prenda"
+          isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} onConfirm={handleConfirmEliminar}
+          title="Eliminar Prenda" confirmText="Eliminar Prenda" variant="danger" isPending={isDeleting}
           description={`¿Eliminar la prenda de ${etiqueta}${detalleNumero}? La prenda se quitará del pedido de forma permanente.`}
-          confirmText="Eliminar Prenda"
-          variant="danger"
-          isPending={isDeleting}
         />
       </td>
     </tr>

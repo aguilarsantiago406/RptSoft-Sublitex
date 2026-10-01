@@ -2,28 +2,29 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .filterLabel {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  font-size: 0.86rem;
+  gap: 8px;
+  font-size: 0.80rem;
   font-weight: 500;
   color: var(--muted);
 }
 
 .filterSelect {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
-  font-size: 0.86rem;
+  font-size: 0.80rem;
   font-weight: 500;
   color: var(--navy);
   cursor: pointer;
   outline: none;
+  min-height: 34px;
 }
 
 .filterSelect:focus {
@@ -32,45 +33,57 @@
 
 .kpiGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .tableCard {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--surface);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .tableScroll { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; min-width: 760px; }
 .table th {
-  padding: 14px 18px;
+  padding: 9px 14px;
   background: #f8fafc;
   color: var(--muted);
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
+  font-size: 0.70rem;
+  letter-spacing: 0.05em;
   text-align: left;
   text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
 }
-.table td { padding: 16px 18px; border-top: 1px solid var(--border-soft); }
+.table td {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 0.82rem;
+}
 .table tbody tr { transition: background-color var(--duration-fast) var(--ease-out); }
 .table tbody tr:hover { background: var(--sky-soft); }
-.code { color: var(--navy); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 550; }
+.colIndex {
+  width: 40px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+.code { color: var(--navy); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; font-size: 0.80rem; }
 .actionCell { text-align: right; }
-.linkButton { color: var(--sky-dark); font-size: 0.86rem; font-weight: 550; text-decoration: none; }
+.linkButton { color: var(--sky-dark); font-size: 0.80rem; font-weight: 600; text-decoration: none; }
 .linkButton:hover { text-decoration: underline; }
 
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 0.78rem;
+  padding: 2px 8px;
+  font-size: 0.74rem;
   font-weight: 500;
   white-space: nowrap;
   border: 1px solid transparent;
@@ -80,10 +93,10 @@
 }
 
 .badgeLg {
-  padding: 5px 14px;
-  font-size: 0.82rem;
+  padding: 3px 10px;
+  font-size: 0.76rem;
   font-weight: 500;
-  gap: 8px;
+  gap: 6px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
@@ -700,20 +713,20 @@
 .dataGrid4 dt {
   color: var(--muted);
   font-size: 0.72rem;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .dataGrid4 dd {
   margin: 0;
-  font-weight: 700;
-  font-size: 0.875rem;
+  font-weight: 400;
+  font-size: 0.82rem;
   color: var(--navy);
   overflow-wrap: anywhere;
 }
 
 .dataGrid4 dd.valueMuted {
   color: var(--muted);
-  font-weight: 500;
+  font-weight: 400;
   font-style: italic;
 }
 

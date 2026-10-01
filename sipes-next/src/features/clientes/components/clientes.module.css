@@ -1,27 +1,27 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
 
 .filtersBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .searchWrapper {
   position: relative;
   flex: 1;
-  max-width: 380px;
-  min-width: 240px;
+  max-width: 360px;
+  min-width: 220px;
 }
 
 .searchIcon {
   position: absolute;
-  left: 12px;
+  left: 10px;
   top: 50%;
   transform: translateY(-50%);
   color: #94a3b8;
@@ -30,13 +30,14 @@
 
 .searchInput {
   width: 100%;
-  padding: 9px 12px 9px 38px;
+  padding: 6px 10px 6px 32px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   color: var(--navy);
   outline: none;
+  min-height: 35px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -48,25 +49,26 @@
 .filterGroup {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .filterLabel {
-  font-size: 0.86rem;
+  font-size: 0.80rem;
   font-weight: 500;
   color: var(--muted);
 }
 
 .filterSelect {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
-  font-size: 0.86rem;
+  font-size: 0.80rem;
   font-weight: 500;
   color: var(--navy);
   cursor: pointer;
   outline: none;
+  min-height: 35px;
   transition: border-color 0.15s ease;
 }
 
@@ -77,9 +79,9 @@
 .tableCard {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--surface);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .tableScroll {
@@ -93,10 +95,10 @@
 }
 
 .table th {
-  padding: 13px 18px;
+  padding: 9px 14px;
   background: #f8fafc;
   color: #64748b;
-  font-size: 0.72rem;
+  font-size: 0.70rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-align: left;
@@ -105,9 +107,9 @@
 }
 
 .table td {
-  padding: 14px 18px;
+  padding: 10px 14px;
   border-top: 1px solid var(--border-soft);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   color: #334155;
 }
 
@@ -120,11 +122,11 @@
 }
 
 .colIndex {
-  width: 46px;
+  width: 40px;
   text-align: center;
   color: #94a3b8;
   font-weight: 500;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
 }
 
 .clientName {
@@ -460,24 +462,24 @@
 
 .detailKpiGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .detailKpiCard {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .detailKpiLabel {
-  font-size: 0.78rem;
+  font-size: 0.70rem;
   font-weight: 600;
   color: var(--muted);
   text-transform: uppercase;
@@ -485,51 +487,51 @@
 }
 
 .detailKpiValue {
-  font-size: 1.8rem;
-  font-weight: 800;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--navy);
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .detailInfoCard {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 22px 24px;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
   box-shadow: var(--shadow-sm);
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 
 .detailInfoTitle {
-  font-size: 1.05rem;
+  font-size: 0.90rem;
   font-weight: 700;
   color: var(--navy);
-  margin: 0 0 16px;
+  margin: 0 0 10px;
   border-bottom: 1px solid var(--border-soft);
-  padding-bottom: 10px;
+  padding-bottom: 8px;
 }
 
 .detailInfoGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
 }
 
 .detailInfoItem {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .detailInfoLabel {
-  font-size: 0.76rem;
+  font-size: 0.70rem;
   font-weight: 600;
   color: var(--muted);
   text-transform: uppercase;
 }
 
 .detailInfoVal {
-  font-size: 0.95rem;
+  font-size: 0.84rem;
   font-weight: 600;
   color: var(--navy);
 }
