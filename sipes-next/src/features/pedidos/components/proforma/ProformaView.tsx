@@ -5,10 +5,11 @@ import Image from "next/image";
 import { FileCheck, FileDown, AlertTriangle, Image as ImageIcon, Printer, DollarSign, Loader2 } from "lucide-react";
 import type { PedidoDetalle } from "../../types/pedido";
 import { formatDate } from "@/lib/format/date";
-import type { TarifaItem, DatosEnvioItem, ConfirmacionItem } from "../../api/comercial.api";
-import { calcularProformaCompleta, type PrendaProformaItem } from "../../utils/proforma.utils";
+import type { TarifaItem, DatosEnvioItem, ConfirmacionItem, ResumenPagos } from "../../api/comercial.api";
+import { calcularProformaCompleta, buscarTarifaVigente, type PrendaProformaItem } from "../../utils/proforma.utils";
 import { actionEmitirConfirmacion } from "../../actions/comercial.actions";
 import { ModalRegistrarAdelanto } from "./ModalRegistrarAdelanto";
+import { TablaPagosHistoricos } from "./TablaPagosHistoricos";
 import styles from "./proforma.module.css";
 
 interface ProformaViewProps {
@@ -16,6 +17,7 @@ interface ProformaViewProps {
   tarifas: TarifaItem[];
   datosEnvio: DatosEnvioItem | null;
   confirmaciones: ConfirmacionItem[];
+  resumenPagos?: ResumenPagos;
   prendas: PrendaProformaItem[];
   mockupUrl: string | null;
 }
@@ -25,6 +27,7 @@ export function ProformaView({
   tarifas,
   datosEnvio,
   confirmaciones,
+  resumenPagos,
   prendas,
   mockupUrl,
 }: ProformaViewProps) {
@@ -75,6 +78,11 @@ export function ProformaView({
     month: "long",
     day: "numeric",
   });
+
+  const totalSinIgvReal = ultimaConfirmacion ? Number(ultimaConfirmacion.totalSinIgv) : calculo.totalSinIgv;
+  const totalPagadoReal = resumenPagos ? resumenPagos.totalPagado : (ultimaConfirmacion ? Number(ultimaConfirmacion.adelantoRecibido) : 0);
+  const saldoPendienteReal = Math.max(0, Math.round((totalSinIgvReal - totalPagadoReal) * 100) / 100);
+  const pagosList = resumenPagos?.pagos ?? [];
 
   return (
     <div className={styles.container}>
@@ -144,6 +152,15 @@ export function ProformaView({
           </div>
         </div>
       )}
+
+      {/* Módulo de Pagos y Abonos Parciales (R-PAGOS) */}
+      <TablaPagosHistoricos
+        pedidoId={pedido.id}
+        pagos={pagosList}
+        totalPedido={totalSinIgvReal}
+        totalPagado={totalPagadoReal}
+        saldoPendiente={saldoPendienteReal}
+      />
 
       {/* Historial de Confirmaciones Oficiales emitidas */}
       {confirmaciones && confirmaciones.length > 0 && (
@@ -354,6 +371,53 @@ export function ProformaView({
                 </div>
               )}
             </div>
+
+            {pedido.colores && pedido.colores.length > 0 && (
+              <div style={{ marginTop: "10px", borderTop: "1px solid #e2e8f0", paddingTop: "8px" }}>
+                <div style={{ fontSize: "11px", fontWeight: "700", color: "#475569", textTransform: "uppercase", marginBottom: "6px" }}>
+                  Calibración CMYK de Taller
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                  {pedido.colores.map((c) => {
+                    const hasCmyk = c.cmykC != null || c.cmykM != null || c.cmykY != null || c.cmykK != null;
+                    return (
+                      <div
+                        key={c.id}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          background: "#ffffff",
+                          border: "1px solid #cbd5e1",
+                          borderRadius: "4px",
+                          padding: "3px 6px",
+                          fontSize: "11px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: "12px",
+                            height: "12px",
+                            borderRadius: "2px",
+                            backgroundColor: c.codigoHex,
+                            display: "inline-block",
+                            border: "1px solid rgba(0,0,0,0.15)",
+                          }}
+                        />
+                        <span style={{ fontWeight: 600 }}>{c.nombre}</span>
+                        {hasCmyk ? (
+                          <span style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "1px 4px", borderRadius: "3px", fontWeight: "700", color: "#1e293b", fontSize: "10px" }}>
+                            C:{c.cmykC ?? 0} M:{c.cmykM ?? 0} Y:{c.cmykY ?? 0} K:{c.cmykK ?? 0}
+                          </span>
+                        ) : (
+                          <span style={{ color: "#94a3b8", fontSize: "10px" }}>CMYK pendiente</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -523,20 +587,45 @@ export function ProformaView({
                   <th>Nombre en Prenda</th>
                   <th style={{ width: "60px", textAlign: "center" }}>N.°</th>
                   <th>Prenda</th>
-                  <th style={{ width: "100px" }}>Género</th>
+                  <th style={{ width: "100px" }}>Corte</th>
+                  <th style={{ width: "90px", textAlign: "right" }}>Recargo</th>
                 </tr>
               </thead>
               <tbody>
-                {prendas.map((p, idx) => (
-                  <tr key={p.id || idx}>
-                    <td style={{ color: "#64748b" }}>{idx + 1}</td>
-                    <td style={{ fontWeight: 700 }}>{p.tallaCodigo || "—"}</td>
-                    <td>{p.nombreEnPrenda || p.participanteNombre || "—"}</td>
-                    <td style={{ textAlign: "center", fontWeight: 700 }}>{p.numero || "—"}</td>
-                    <td>{p.productoNombre || "Prenda"}</td>
-                    <td>{p.genero === "MUJER" ? "Dama" : p.genero === "HOMBRE" ? "Caballero" : "Estándar"}</td>
-                  </tr>
-                ))}
+                {prendas.map((p, idx) => {
+                  // Buscar recargo de talla para esta prenda
+                  const recargoPrenda = p.tallaCodigo
+                    ? (() => {
+                        const { valor, encontrada } = buscarTarifaVigente("RECARGO_TALLA", p.tallaCodigo, tarifas);
+                        return encontrada && valor > 0 ? valor : 0;
+                      })()
+                    : 0;
+
+                  // Mapear corte: usar campo corte si existe, sino derivar de genero
+                  const corteLabel = p.corte
+                    ? p.corte
+                    : p.genero === "MUJER"
+                    ? "Dama"
+                    : p.genero === "NINO"
+                    ? "Niño"
+                    : p.genero === "NINA"
+                    ? "Niña"
+                    : "Estándar";
+
+                  return (
+                    <tr key={p.id || idx}>
+                      <td style={{ color: "#64748b" }}>{idx + 1}</td>
+                      <td style={{ fontWeight: 700 }}>{p.tallaCodigo || "—"}</td>
+                      <td>{p.nombreEnPrenda || p.participanteNombre || "—"}</td>
+                      <td style={{ textAlign: "center", fontWeight: 700 }}>{p.numero || "—"}</td>
+                      <td>{p.productoNombre || "Prenda"}</td>
+                      <td>{corteLabel}</td>
+                      <td style={{ textAlign: "right", color: recargoPrenda > 0 ? "#b45309" : "#94a3b8", fontWeight: recargoPrenda > 0 ? 600 : 400 }}>
+                        {recargoPrenda > 0 ? `+ S/ ${recargoPrenda.toFixed(2)}` : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

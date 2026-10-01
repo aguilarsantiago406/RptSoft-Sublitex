@@ -1,14 +1,17 @@
 import { notFound } from "next/navigation";
 import { getPedido, getTiposProducto, getAtributosCatalogo } from "@/features/pedidos/api/pedidos.api";
-import { getDatosEnvio } from "@/features/pedidos/api/comercial.api";
+import { getDatosEnvio, getPagos } from "@/features/pedidos/api/comercial.api";
 import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
+import { getBitacoras } from "@/features/pedidos/api/bitacora.api";
 import { getUsuarios } from "@/features/usuarios/api/usuarios.api";
+import { getUserFromToken } from "@/lib/auth/session";
 import { PedidoHeader } from "@/features/pedidos/components/PedidoHeader";
 import { PedidoIdentificacion } from "@/features/pedidos/components/PedidoIdentificacion";
 import { PedidoGrupos } from "@/features/pedidos/components/PedidoGrupos";
 import { PedidoEnvio } from "@/features/pedidos/components/PedidoEnvio";
 import { PedidoColores } from "@/features/pedidos/components/PedidoColores";
 import { PedidoVistaPrevia } from "@/features/pedidos/components/PedidoVistaPrevia";
+import { BitacoraCambios } from "@/features/pedidos/components/BitacoraCambios";
 import styles from "@/features/pedidos/components/pedidos.module.css";
 import shared from "@/components/ui/table/tableShared.module.css";
 import { SipesApiError } from "@/lib/api/http";
@@ -28,23 +31,32 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   let atributosRes;
   let disenosRes;
   let usuariosRes;
+  let pagosRes;
+  let bitacorasRes;
+  let currentUser = null;
 
   try {
     pedido = await getPedido(id);
     const pedidoRealId = pedido.id;
 
-    const [tiposRes, envioResult, atributosResult, disenosResult, uRes] = await Promise.all([
+    const [tiposRes, envioResult, atributosResult, disenosResult, uRes, pagosResult, userSession, bRes] = await Promise.all([
       loadData(() => getTiposProducto()),
       loadData(() => getDatosEnvio(pedidoRealId)),
       loadData(() => getAtributosCatalogo()),
       loadData(() => getDisenosPedido(pedidoRealId)),
       loadData(() => getUsuarios()),
+      loadData(() => getPagos(pedidoRealId)),
+      getUserFromToken(),
+      loadData(() => getBitacoras(pedidoRealId)),
     ]);
     tiposProductoRes = tiposRes;
     envioRes = envioResult;
     atributosRes = atributosResult;
     disenosRes = disenosResult;
     usuariosRes = uRes;
+    pagosRes = pagosResult;
+    currentUser = userSession;
+    bitacorasRes = bRes;
   } catch (error) {
     if (error instanceof SipesApiError && error.status === 404) notFound();
     throw error;
@@ -55,6 +67,8 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
   const atributosCatalogo = atributosRes.data ?? [];
   const disenos = disenosRes.data ?? [];
   const usuarios = usuariosRes?.data ?? [];
+  const saldoPendiente = pagosRes?.data?.saldoPendiente ?? 0;
+  const bitacoras = bitacorasRes?.data ?? [];
 
   let vendedoras = usuarios
     .filter((u) => u.activo && (u.rol === "VENDEDORA" || u.rol === "VENDEDOR"))
@@ -85,7 +99,14 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
       <div className={styles.sheetContainer}>
         <div className={styles.splitRow}>
           <PedidoIdentificacion pedido={pedido} vendedoras={vendedoras} />
-          <PedidoEnvio pedidoId={pedido.id} datosEnvio={datosEnvio} />
+          <PedidoEnvio
+            pedidoId={pedido.id}
+            datosEnvio={datosEnvio}
+            saldoPendiente={saldoPendiente}
+            userRole={currentUser?.rol}
+            pedidoCodigo={pedido.codigo}
+            totalPrendas={totalPrendas}
+          />
         </div>
         <PedidoGrupos
           grupos={pedido.grupos}
@@ -99,6 +120,12 @@ export default async function PedidoDetallePage({ params }: PedidoPageProps) {
           <PedidoColores colores={pedido.colores} pedidoId={pedido.id} />
           <PedidoVistaPrevia pedido={pedido} disenos={disenos} />
         </div>
+
+        <BitacoraCambios
+          pedidoId={pedido.id}
+          bitacoras={bitacoras}
+          userRole={currentUser?.rol}
+        />
       </div>
     </main>
   );

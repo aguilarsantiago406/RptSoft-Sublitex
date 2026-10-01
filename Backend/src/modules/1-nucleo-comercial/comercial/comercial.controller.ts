@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../../../core/guards/roles.guard';
@@ -15,6 +15,7 @@ import { UpdateTarifaDto } from './dto/update-tarifa.dto';
 import { CreateDatosEnvioDto } from './dto/create-datos-envio.dto';
 import { UpdateDatosEnvioDto } from './dto/update-datos-envio.dto';
 import { EmitirConfirmacionDto } from './dto/emitir-confirmacion.dto';
+import { CreatePagoDto } from './dto/create-pago.dto';
 
 @ApiTags('Comercial / Tarifas y Envios')
 @Controller('api/comercial')
@@ -159,6 +160,48 @@ export class ComercialController {
   @ApiResponse({ status: 404, description: 'Pedido no encontrado' })
   findConfirmaciones(@Param('pedidoId') pedidoId: string) {
     return this.comercialService.findConfirmaciones(pedidoId);
+  }
+
+  @Post('pedidos/:pedidoId/pagos')
+  @Roles(...ROLES_COMERCIAL)
+  @ApiOperation({ summary: 'Registrar pago o abono parcial en el pedido' })
+  @ApiParam({ name: 'pedidoId', description: 'ID unico del pedido (CUID)' })
+  @ApiResponse({ status: 201, description: 'Pago registrado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Datos de pago invalidos' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Requiere JWT' })
+  @ApiResponse({ status: 404, description: 'Pedido no encontrado' })
+  createPago(
+    @Param('pedidoId') pedidoId: string,
+    @Body() dto: CreatePagoDto,
+    @Req() req: any,
+  ) {
+    return this.comercialService.createPago(pedidoId, dto, req.user?.id);
+  }
+
+  @Get('pedidos/:pedidoId/pagos')
+  @Roles(...ROLES_TODOS)
+  @ApiOperation({ summary: 'Listar historial de pagos / abonos y saldo dinámico de un pedido' })
+  @ApiParam({ name: 'pedidoId', description: 'ID unico del pedido (CUID)' })
+  @ApiResponse({ status: 200, description: 'Historial de pagos con acumulado y saldo' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Requiere JWT' })
+  @ApiResponse({ status: 404, description: 'Pedido no encontrado' })
+  findPagos(@Param('pedidoId') pedidoId: string) {
+    return this.comercialService.findPagos(pedidoId);
+  }
+
+  @Delete('pedidos/:pedidoId/pagos/:pagoId')
+  @Roles(...ROLES_COORDINACION)
+  @ApiOperation({ summary: 'Eliminar pago registrado (solo coordinación/admin)' })
+  @ApiParam({ name: 'pedidoId', description: 'ID unico del pedido (CUID)' })
+  @ApiParam({ name: 'pagoId', description: 'ID unico del pago a eliminar' })
+  @ApiResponse({ status: 200, description: 'Pago eliminado y saldo recalculado' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Requiere JWT' })
+  @ApiResponse({ status: 404, description: 'Pago no encontrado' })
+  removePago(
+    @Param('pedidoId') pedidoId: string,
+    @Param('pagoId') pagoId: string,
+  ) {
+    return this.comercialService.removePago(pedidoId, pagoId);
   }
 }
 

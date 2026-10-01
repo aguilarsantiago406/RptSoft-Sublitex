@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { apiPost, apiPatch, SipesApiError } from "@/lib/api/http";
+import { apiPost, apiPatch, apiDelete, SipesApiError } from "@/lib/api/http";
 import type { EmitirConfirmacionParams } from "../api/comercial.api";
 
 export interface EmitirConfirmacionResult {
@@ -58,5 +58,67 @@ export async function actionRegistrarAdelanto(
       return { ok: false, error: error.message };
     }
     return { ok: false, error: "No se pudo registrar el adelanto." };
+  }
+}
+
+export interface RegistrarPagoParams {
+  monto: number;
+  medio: "YAPE" | "PLIN" | "TRANSFERENCIA" | "EFECTIVO";
+  numeroOperacion?: string;
+  comprobanteUrl?: string;
+  fechaPago?: string;
+  notas?: string;
+}
+
+export async function actionRegistrarPago(
+  pedidoId: string,
+  params: RegistrarPagoParams
+): Promise<{ ok: boolean; error?: string; data?: unknown }> {
+  try {
+    if (!params.monto || Number(params.monto) <= 0) {
+      return { ok: false, error: "El monto debe ser mayor a 0." };
+    }
+
+    const payload = {
+      monto: Number(params.monto),
+      medio: params.medio,
+      numeroOperacion: params.numeroOperacion?.trim() || undefined,
+      comprobanteUrl: params.comprobanteUrl?.trim() || undefined,
+      fechaPago: params.fechaPago || new Date().toISOString(),
+      notas: params.notas?.trim() || undefined,
+    };
+
+    const res = await apiPost(`/api/comercial/pedidos/${encodeURIComponent(pedidoId)}/pagos`, payload);
+
+    revalidatePath(`/pedidos/${pedidoId}/proforma`);
+    revalidatePath(`/pedidos/${pedidoId}`);
+    revalidatePath(`/pedidos/${pedidoId}/estado`);
+    revalidatePath("/pedidos");
+
+    return { ok: true, data: res };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo registrar el pago." };
+  }
+}
+
+export async function actionEliminarPago(
+  pedidoId: string,
+  pagoId: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await apiDelete(`/api/comercial/pedidos/${encodeURIComponent(pedidoId)}/pagos/${encodeURIComponent(pagoId)}`);
+
+    revalidatePath(`/pedidos/${pedidoId}/proforma`);
+    revalidatePath(`/pedidos/${pedidoId}`);
+    revalidatePath(`/pedidos/${pedidoId}/estado`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "No se pudo eliminar el pago." };
   }
 }

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, Matches } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, Matches, IsInt, Min, Max } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AddColorDto {
@@ -16,4 +16,32 @@ export class AddColorDto {
   @IsOptional()
   @IsString()
   referenciaFisica?: string;
+
+  @ApiPropertyOptional({ example: 100, description: 'Cian (0-100)' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  cmykC?: number;
+
+  @ApiPropertyOptional({ example: 85, description: 'Magenta (0-100)' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  cmykM?: number;
+
+  @ApiPropertyOptional({ example: 5, description: 'Amarillo (0-100)' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  cmykY?: number;
+
+  @ApiPropertyOptional({ example: 20, description: 'Negro (0-100)' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  cmykK?: number;
 }

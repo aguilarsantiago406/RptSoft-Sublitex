@@ -4,6 +4,7 @@ import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { PedidoDiseno } from "@/features/pedidos/components/PedidoDiseno";
 import { loadData } from "@/lib/api/loadData";
 import { SipesApiError } from "@/lib/api/http";
+import { getUserFromToken } from "@/lib/auth/session";
 import styles from "@/features/pedidos/components/pedidos.module.css";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +33,8 @@ export default async function DisenoPage({ params }: DisenoPageProps) {
   }
 
   const disenos = disenosRes.data ?? [];
+  const usuario = await getUserFromToken();
+  const userRol = usuario?.rol;
 
   return (
     <main>
@@ -45,7 +48,7 @@ export default async function DisenoPage({ params }: DisenoPageProps) {
       </div>
 
       <div style={{ maxWidth: "1000px" }}>
-        <PedidoDiseno pedidoId={pedido.id} disenos={disenos} />
+        <PedidoDiseno pedidoId={pedido.id} disenos={disenos} userRol={userRol} />
       </div>
     </main>
   );

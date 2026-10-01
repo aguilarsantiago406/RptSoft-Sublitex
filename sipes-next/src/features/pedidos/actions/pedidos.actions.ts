@@ -37,6 +37,10 @@ export interface AgregarColorParams {
   nombre: string;
   codigoHex: string;
   referenciaFisica?: string;
+  cmykC?: number | null;
+  cmykM?: number | null;
+  cmykY?: number | null;
+  cmykK?: number | null;
 }
 
 const hexRegex = /^#([0-9A-F]{6})$/;
@@ -50,7 +54,22 @@ function sanitizarColor(item: AgregarColorParams) {
   if (!hexRegex.test(codigoHex)) {
     throw new Error(`Código HEX '${codigoHex}' inválido. Debe tener formato #RRGGBB.`);
   }
-  return { nombre, codigoHex, referenciaFisica };
+
+  const parseCMYK = (val?: number | null) => {
+    if (val === undefined || val === null || isNaN(Number(val))) return undefined;
+    const num = Math.round(Number(val));
+    return Math.max(0, Math.min(100, num));
+  };
+
+  return {
+    nombre,
+    codigoHex,
+    referenciaFisica,
+    cmykC: parseCMYK(item.cmykC),
+    cmykM: parseCMYK(item.cmykM),
+    cmykY: parseCMYK(item.cmykY),
+    cmykK: parseCMYK(item.cmykK),
+  };
 }
 
 export async function actionAgregarColorPedido(
@@ -74,6 +93,42 @@ export async function actionAgregarColorPedido(
       return { ok: false, error: error.message };
     }
     return { ok: false, error: error instanceof Error ? error.message : "No se pudo registrar el color en el pedido." };
+  }
+}
+
+export async function actionActualizarColorPedido(
+  pedidoId: string,
+  colorId: string,
+  data: Partial<AgregarColorParams>
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const parseCMYK = (val?: number | null) => {
+      if (val === undefined || val === null || isNaN(Number(val))) return undefined;
+      const num = Math.round(Number(val));
+      return Math.max(0, Math.min(100, num));
+    };
+
+    const payload: Record<string, any> = {};
+    if (data.nombre !== undefined) payload.nombre = data.nombre.trim();
+    if (data.codigoHex !== undefined) {
+      const hex = data.codigoHex.trim().toUpperCase();
+      if (!hexRegex.test(hex)) throw new Error(`Código HEX '${hex}' inválido.`);
+      payload.codigoHex = hex;
+    }
+    if (data.referenciaFisica !== undefined) payload.referenciaFisica = data.referenciaFisica.trim() || null;
+    if (data.cmykC !== undefined) payload.cmykC = parseCMYK(data.cmykC);
+    if (data.cmykM !== undefined) payload.cmykM = parseCMYK(data.cmykM);
+    if (data.cmykY !== undefined) payload.cmykY = parseCMYK(data.cmykY);
+    if (data.cmykK !== undefined) payload.cmykK = parseCMYK(data.cmykK);
+
+    await apiPatch(`/api/pedidos/${encodeURIComponent(pedidoId)}/colores/${encodeURIComponent(colorId)}`, payload);
+    revalidatePath(`/pedidos/${pedidoId}`);
+    return { ok: true };
+  } catch (error: unknown) {
+    if (error instanceof SipesApiError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: error instanceof Error ? error.message : "No se pudo actualizar el color." };
   }
 }
 

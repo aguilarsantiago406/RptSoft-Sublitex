@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { apiGet, apiPost, apiPatch, SipesApiError } from "@/lib/api/http";
-import { revocarEnlaceParticipante, eliminarParticipante } from "../api/participantes.api";
+import { revocarEnlaceParticipante, eliminarParticipante, actualizarParticipante } from "../api/participantes.api";
 
 export interface CrearParticipanteResult {
   ok: boolean;
@@ -157,6 +157,27 @@ export async function actionObtenerEnlacesGrupo(
       return { ok: false, error: error.message };
     }
     return { ok: false, error: "No se pudieron obtener los enlaces del grupo." };
+  }
+}
+
+export async function actionActualizarParticipante(
+  participanteId: string,
+  nombrePersona: string,
+  pedidoId: string
+): Promise<{ ok: boolean; error?: string; nombrePersona?: string }> {
+  const nombreTrimmed = nombrePersona.trim();
+  if (!nombreTrimmed) {
+    return { ok: false, error: "El nombre no puede estar vacío." };
+  }
+
+  try {
+    const res = await actualizarParticipante(participanteId, { nombrePersona: nombreTrimmed });
+    revalidatePath(`/pedidos/${pedidoId}/participantes`);
+    revalidatePath(`/pedidos/${pedidoId}/prendas`);
+    return { ok: true, nombrePersona: res.nombrePersona };
+  } catch (error) {
+    if (error instanceof SipesApiError) return { ok: false, error: error.message };
+    return { ok: false, error: "No se pudo actualizar el nombre del participante." };
   }
 }
 

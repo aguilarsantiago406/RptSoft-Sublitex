@@ -26,6 +26,10 @@ export class CreatePrendaDto {
 
   @IsString()
   @IsOptional()
+  tallaShortId?: string;
+
+  @IsString()
+  @IsOptional()
   numero?: string;
 
   @IsEnum(GeneroEnum)

@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import process from 'process';
-import { PRODUCTOS, ATRIBUTOS, UBICACIONES, COLORES, PEDIDO_PROMO_2002 } from './promo2002.data';
+import { PRODUCTOS, ATRIBUTOS, UBICACIONES, COLORES, PEDIDO_PROMO_2002, TARIFAS_SEED } from './promo2002.data';
 
 const prisma = new PrismaClient();
 
@@ -84,6 +84,33 @@ async function seedCatalogos() {
       where: { codigo: ubicacion.codigo },
       update: { etiqueta: ubicacion.etiqueta, orden: ubicacion.orden },
       create: { codigo: ubicacion.codigo, etiqueta: ubicacion.etiqueta, orden: ubicacion.orden },
+    });
+  }
+
+  // Sembrar tarifas oficiales (precios base y recargos por tallas especiales)
+  const fechaVigenciaBase = new Date('2026-01-01T00:00:00.000Z');
+  for (const t of TARIFAS_SEED) {
+    await prisma.tarifa.upsert({
+      where: {
+        tipo_concepto_vigenteDesde: {
+          tipo: t.tipo as any,
+          concepto: t.concepto,
+          vigenteDesde: fechaVigenciaBase,
+        },
+      },
+      update: {
+        valor: t.valor,
+        nota: t.nota,
+        activo: true,
+      },
+      create: {
+        tipo: t.tipo as any,
+        concepto: t.concepto,
+        valor: t.valor,
+        nota: t.nota,
+        vigenteDesde: fechaVigenciaBase,
+        activo: true,
+      },
     });
   }
 

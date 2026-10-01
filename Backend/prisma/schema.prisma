@@ -140,6 +140,13 @@ enum OrigenCambio {
   GHL
 }
 
+enum MedioPago {
+  YAPE
+  PLIN
+  TRANSFERENCIA
+  EFECTIVO
+}
+
 // =============================================================================
 // USUARIOS
 // =============================================================================
@@ -165,6 +172,8 @@ model Usuario {
   disenosAprobados    Diseno[]
   confirmacionesEmitidas Confirmacion[]
   nestingsCreados        Nesting[] @relation("NestingCreador")
+  pagosRegistrados       Pago[]
+  bitacorasAvisadas      BitacoraModificacion[] @relation("BitacoraAvisadaPor")
 
   @@index([rol])
 }
@@ -265,6 +274,8 @@ model Pedido {
   confirmaciones Confirmacion[]
   datosEnvio     DatosEnvio?
   nestingPartes  NestingParte[]
+  pagos          Pago[]
+  bitacoras      BitacoraModificacion[]
 
   @@index([estado])
   @@index([ghlContactId])
@@ -370,7 +381,8 @@ model TallaCatalogo {
   orden    Int    @default(0)
   activo   Boolean @default(true)
 
-  prendas Prenda[]
+  prendas      Prenda[] @relation("PrendaTalla")
+  prendasShort Prenda[] @relation("PrendaTallaShort")
 
   @@unique([tipoProductoId, codigo])
   /// Clave compuesta: permite que Prenda referencie (tipoProducto, talla) a la
@@ -544,7 +556,12 @@ model Prenda {
   /// R-E04 · Referencia compuesta: una talla de otro tipo de producto no se
   /// puede guardar. No es una validación: es imposible.
   tallaId String?
-  talla   TallaCatalogo? @relation(fields: [tipoProductoId, tallaId], references: [tipoProductoId, id])
+  talla   TallaCatalogo? @relation("PrendaTalla", fields: [tipoProductoId, tallaId], references: [tipoProductoId, id])
+
+  /// R-E04b · Talla del SHORT cuando difiere de la camiseta en un conjunto.
+  /// Caso real: "Camiseta M / Short L". Null cuando es igual a tallaId o no aplica.
+  tallaShortId String?
+  tallaShort   TallaCatalogo? @relation("PrendaTallaShort", fields: [tipoProductoId, tallaShortId], references: [tipoProductoId, id])
 
   /// R-E03 · Nombre, número y talla son la ficha mínima. Nulos mientras el
   /// participante no ha registrado; obligatorios para cerrar (R-H03).
@@ -583,6 +600,7 @@ model Prenda {
 
   excepciones       ExcepcionPrenda[]
   personalizaciones Personalizacion[]
+  bitacoras         BitacoraModificacion[]
 
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
@@ -770,6 +788,12 @@ model ColorPedido {
   codigoHex        String?
   referenciaFisica String?
 
+  /// Valores CMYK para calibración de taller (0-100)
+  cmykC            Int?
+  cmykM            Int?
+  cmykY            Int?
+  cmykK            Int?
+
   prendas Prenda[]
 
   @@unique([pedidoId, nombre])
@@ -846,6 +870,30 @@ model DatosEnvio {
   agencia        String?
   referencia     String?
   correo         String?
+
+  /// Clave o código de recojo en agencia (sujeto a semáforo de retención por saldo)
+  codigoRecojo   String?
+}
+
+/// Historial y gestión de pagos parciales / abonos por pedido
+model Pago {
+  id              String    @id @default(cuid())
+  pedidoId        String
+  pedido          Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  monto           Decimal   @db.Decimal(10, 2)
+  medio           MedioPago
+  numeroOperacion String?
+  comprobanteUrl  String?
+  fechaPago       DateTime  @default(now())
+
+  registradoPorId String?
+  registradoPor   Usuario?  @relation(fields: [registradoPorId], references: [id])
+
+  notas           String?
+  creadoEn        DateTime  @default(now())
+
+  @@index([pedidoId])
 }
 
 /// R-K11 · UN NESTING PUEDE MEZCLAR PIEZAS DE VARIOS PEDIDOS.
@@ -910,4 +958,23 @@ model ArchivoTif {
   totalSerie   Int
 
   entregadoEn DateTime?
+}
+
+model BitacoraModificacion {
+  id                String    @id @default(cuid())
+  pedidoId          String
+  pedido            Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  prendaId          String?
+  prenda            Prenda?   @relation(fields: [prendaId], references: [id], onDelete: SetNull)
+  descripcionCambio String
+  solicitadoPor     String
+  fechaSolicitud    DateTime  @default(now())
+  avisadoATaller    Boolean   @default(false)
+  avisadoEn         DateTime?
+  avisadoPorId      String?
+  avisadoPor        Usuario?  @relation("BitacoraAvisadaPor", fields: [avisadoPorId], references: [id])
+  creadoEn          DateTime  @default(now())
+
+  @@index([pedidoId])
+  @@index([prendaId])
 }

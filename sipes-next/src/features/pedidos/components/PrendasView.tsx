@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Download } from "lucide-react";
 import shared from "@/components/ui/table/tableShared.module.css";
 import type { UbicacionPersonalizacionCatalogo } from "@/features/catalogos/types/catalogo";
 import type { AtributoCatalogoItem, TallaCatalogoItem } from "../api/pedidos.api";
@@ -101,7 +101,17 @@ export function PrendasView({
           })}
         </div>
 
-        <div className={styles.actionBarRight}>
+        <div className={styles.actionBarRight} style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <a
+            href={`/api/pedidos/${encodeURIComponent(pedidoId)}/export-diseno`}
+            download
+            className={styles.btnExportDiseno}
+            title="Exportar planilla nominal limpia para CorelDRAW / Sublimación"
+          >
+            <Download size={15} />
+            <span>Exportar para Corel</span>
+          </a>
+
           <div className={styles.searchBox}>
             <Search size={14} className={styles.searchIcon} />
             <input

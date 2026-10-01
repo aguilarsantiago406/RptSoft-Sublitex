@@ -56,6 +56,10 @@ export function buscarTarifaVigente(
   const match = tarifas.find((t) => {
     if (t.tipo && t.tipo !== tipo) return false;
     const c = t.concepto.trim().toLowerCase();
+    // Para recargo de tallas, la comparación debe ser exacta para evitar que "L" coincida con "XL"
+    if (tipo === "RECARGO_TALLA") {
+      return c === norm;
+    }
     return c === norm || norm.includes(c) || c.includes(norm);
   });
 

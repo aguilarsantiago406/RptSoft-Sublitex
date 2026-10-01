@@ -8,6 +8,7 @@ import {
   actionAprobarDiseno,
   actionEliminarArchivoEnNube,
 } from "../actions/disenos.actions";
+import { ExternalLink, Sparkles } from "lucide-react";
 import { ModalSubirDiseno } from "./ModalSubirDiseno";
 import { ModalRechazarDiseno } from "./ModalRechazarDiseno";
 import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
@@ -18,6 +19,7 @@ import styles from "./pedidos.module.css";
 interface PedidoDisenoProps {
   pedidoId: string;
   disenos: DisenoItem[];
+  userRol?: string;
 }
 
 const ESTADO_LABELS: Record<EstadoDiseno, { label: string; color: string; bg: string }> = {
@@ -27,8 +29,23 @@ const ESTADO_LABELS: Record<EstadoDiseno, { label: string; color: string; bg: st
   RECHAZADO: { label: "Rechazado con observaciones", color: "#e11d48", bg: "#ffe4e6" },
 };
 
-export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
+export function PedidoDiseno({ pedidoId, disenos, userRol }: PedidoDisenoProps) {
   const router = useRouter();
+
+  // Roles que pueden gestionar/cargar propuestas gráficas (R-H02)
+  const puedeGestionarDiseno =
+    !userRol ||
+    userRol === "ADMINISTRADOR" ||
+    userRol === "DISENO" ||
+    userRol === "COORDINADOR_OPERATIVO";
+
+  // Roles que pueden aprobar o rechazar propuestas
+  const puedeAprobarRechazar =
+    !userRol ||
+    userRol === "ADMINISTRADOR" ||
+    userRol === "COORDINADOR_OPERATIVO" ||
+    userRol === "COORDINADOR_CLIENTE" ||
+    userRol === "DISENO";
   const [modalUploadOpen, setModalUploadOpen] = useState(false);
   const [modalRechazoOpen, setModalRechazoOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<"aprobar" | "quitar" | null>(null);
@@ -91,24 +108,43 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
       )}
 
       {!disenoActivo ? (
-        <div style={{ textAlign: "center", padding: "32px 16px", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
-          <p style={{ margin: "0 0 12px", color: "#64748b", fontSize: "0.92rem" }}>
-            Este pedido todavía no tiene un mockup de diseño registrado.
-          </p>
-          <button
-            type="button" className={styles.addGrupoButton}
-            onClick={() => { setIsReemplazo(false); setModalUploadOpen(true); }}
-          >
-            + Subir Primer Mockup
-          </button>
+        <div style={{ textAlign: "center", padding: "36px 20px", background: "#f8fafc", borderRadius: "14px", border: "1px dashed #cbd5e1" }}>
+          {puedeGestionarDiseno ? (
+            <>
+              <p style={{ margin: "0 0 12px", color: "#64748b", fontSize: "0.92rem" }}>
+                Este pedido todavía no tiene un mockup de diseño registrado.
+              </p>
+              <button
+                type="button"
+                className={styles.addGrupoButton}
+                onClick={() => { setIsReemplazo(false); setModalUploadOpen(true); }}
+              >
+                + Cargar Propuesta Gráfica
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "#e0f2fe", color: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                <Sparkles size={24} />
+              </div>
+              <h4 style={{ margin: "0 0 6px", fontSize: "1rem", fontWeight: 600, color: "#1e293b" }}>
+                Propuesta gráfica en preparación
+              </h4>
+              <p style={{ margin: 0, color: "#64748b", fontSize: "0.84rem" }}>
+                El equipo de diseño cargará aquí el mockup y arte oficial una vez asignada la orden.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className={styles.twoColsLayout} style={{ gap: "20px", alignItems: "start" }}>
           <div>
             {disenoActivo.imagenUrl ? (
               <div style={{ position: "relative", borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0", background: "#ffffff" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={disenoActivo.imagenUrl} alt={`Mockup v${disenoActivo.version}`}
+                  src={disenoActivo.imagenUrl}
+                  alt={`Mockup v${disenoActivo.version}`}
                   style={{ width: "100%", height: "auto", display: "block", maxHeight: "360px", objectFit: "contain" }}
                 />
               </div>
@@ -118,21 +154,39 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
               </div>
             )}
             <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
-              <button
-                type="button" className={styles.secondaryButton}
-                onClick={() => { setIsReemplazo(true); setModalUploadOpen(true); }}
-                disabled={isPending || disenoActivo.estado === "APROBADO"}
-                title={disenoActivo.estado === "APROBADO" ? "No modificable en estado aprobado" : "Reemplazar archivos"}
-              >
-                Reemplazar archivos
-              </button>
-              <button
-                type="button" className={styles.secondaryButton}
-                onClick={() => { setIsReemplazo(false); setModalUploadOpen(true); }}
-                disabled={isPending}
-              >
-                + Nueva versión (v{disenoActivo.version + 1})
-              </button>
+              {puedeGestionarDiseno && (
+                <>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => { setIsReemplazo(true); setModalUploadOpen(true); }}
+                    disabled={isPending || disenoActivo.estado === "APROBADO"}
+                    title={disenoActivo.estado === "APROBADO" ? "No modificable en estado aprobado" : "Reemplazar archivos"}
+                  >
+                    Reemplazar archivos
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => { setIsReemplazo(false); setModalUploadOpen(true); }}
+                    disabled={isPending}
+                  >
+                    + Nueva versión (v{disenoActivo.version + 1})
+                  </button>
+                </>
+              )}
+              {disenoActivo.imagenUrl && (
+                <a
+                  href={disenoActivo.imagenUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.secondaryButton}
+                  style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                >
+                  <ExternalLink size={13} />
+                  Ver imagen completa
+                </a>
+              )}
             </div>
           </div>
 
@@ -144,25 +198,31 @@ export function PedidoDiseno({ pedidoId, disenos }: PedidoDisenoProps) {
             />
 
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              {disenoActivo.estado === "BORRADOR" && (
+              {puedeGestionarDiseno && disenoActivo.estado === "BORRADOR" && (
                 <button
-                  type="button" className={styles.advanceStateButton}
-                  onClick={handleProponer} disabled={isPending}
+                  type="button"
+                  className={styles.advanceStateButton}
+                  onClick={handleProponer}
+                  disabled={isPending}
                 >
                   {isPending ? "Procesando..." : "Proponer al cliente"}
                 </button>
               )}
-              {disenoActivo.estado === "PROPUESTO" && (
+              {puedeAprobarRechazar && disenoActivo.estado === "PROPUESTO" && (
                 <>
                   <button
-                    type="button" className={styles.advanceStateButton}
-                    onClick={() => setConfirmAction("aprobar")} disabled={isPending}
+                    type="button"
+                    className={styles.advanceStateButton}
+                    onClick={() => setConfirmAction("aprobar")}
+                    disabled={isPending}
                   >
                     {isPending ? "Aprobando..." : "✓ Aprobar diseño (Cierra bloque)"}
                   </button>
                   <button
-                    type="button" className={styles.cancelStateButton}
-                    onClick={() => setModalRechazoOpen(true)} disabled={isPending}
+                    type="button"
+                    className={styles.cancelStateButton}
+                    onClick={() => setModalRechazoOpen(true)}
+                    disabled={isPending}
                   >
                     ✕ Rechazar con observaciones
                   </button>

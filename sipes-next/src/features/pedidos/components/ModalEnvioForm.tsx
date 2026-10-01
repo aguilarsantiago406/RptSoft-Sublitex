@@ -27,6 +27,7 @@ export function ModalEnvioForm({ isOpen, onClose, pedidoId, initial }: ModalEnvi
   const [agencia, setAgencia] = useState(initial?.agencia ?? "");
   const [referencia, setReferencia] = useState(initial?.referencia ?? "");
   const [correo, setCorreo] = useState(initial?.correo ?? "");
+  const [codigoRecojo, setCodigoRecojo] = useState(initial?.codigoRecojo ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -86,6 +87,7 @@ export function ModalEnvioForm({ isOpen, onClose, pedidoId, initial }: ModalEnvi
       agencia: agenciaLimpia,
       referencia: referenciaLimpia || undefined,
       correo: correoLimpio || undefined,
+      codigoRecojo: codigoRecojo.trim() || undefined,
     };
 
     setError(null);
@@ -234,6 +236,24 @@ export function ModalEnvioForm({ isOpen, onClose, pedidoId, initial }: ModalEnvi
               />
               <small className={styles.formHint}>Para aviso de entrega</small>
             </div>
+          </div>
+
+          <div className={styles.formField}>
+            <label htmlFor="envio-codigoRecojo" style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Clave / Código de Recojo en Agencia (Confidencial)</span>
+              <span style={{ fontSize: "11px", color: "#b45309", fontWeight: 600 }}>🔒 Retenido según saldo</span>
+            </label>
+            <input
+              id="envio-codigoRecojo"
+              type="text"
+              placeholder="Ej: 7492-X / Clave de retiro Shalom o Marvisur"
+              value={codigoRecojo}
+              onChange={(e) => setCodigoRecojo(e.target.value)}
+              className={styles.formInput}
+            />
+            <small className={styles.formHint}>
+              Solo se liberará y mostrará para entrega al cliente si el saldo pendiente de pago es S/ 0.00.
+            </small>
           </div>
 
           <div className={styles.modalFooter}>

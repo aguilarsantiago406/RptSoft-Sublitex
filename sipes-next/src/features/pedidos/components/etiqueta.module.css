@@ -1,0 +1,324 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.modalContent {
+  background: #ffffff;
+  border-radius: 12px;
+  max-width: 780px;
+  width: 100%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.modalTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.closeButton {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.closeButton:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.modalBody {
+  padding: 20px;
+  overflow-y: auto;
+  background: #f1f5f9;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.btnPrint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.btnPrint:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.btnCancel {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 9px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btnCancel:hover {
+  background: #f8fafc;
+}
+
+/* Etiqueta A5 Container */
+.etiquetaCard {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 8px;
+  padding: 18px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000000;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.etiquetaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #000000;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.remitenteCol {
+  flex: 1;
+}
+
+.brandTitle {
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #000000;
+  margin: 0 0 2px 0;
+}
+
+.brandSub {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #333333;
+  margin: 0 0 6px 0;
+}
+
+.remitenteDetails {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #222222;
+}
+
+.etiquetaBadgeArea {
+  text-align: right;
+  min-width: 140px;
+}
+
+.badgeDespacho {
+  display: inline-block;
+  background: #000000;
+  color: #ffffff;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+}
+
+.pedidoCodigoText {
+  font-size: 1.1rem;
+  font-weight: 900;
+  margin-top: 4px;
+  color: #000000;
+}
+
+.etiquetaGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  border-bottom: 2px solid #000000;
+  padding-bottom: 14px;
+  margin-bottom: 12px;
+}
+
+.destinatarioBox {
+  border: 1.5px solid #000000;
+  border-radius: 6px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.sectionLabel {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: #000000;
+  color: #ffffff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.destinatarioNombre {
+  font-size: 1.15rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin: 0 0 6px 0;
+  line-height: 1.2;
+}
+
+.destinatarioDatos {
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.agenciaCiudadBox {
+  border: 1.5px solid #000000;
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ciudadText {
+  font-size: 1.35rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #000000;
+  margin: 4px 0 2px 0;
+  line-height: 1.15;
+}
+
+.agenciaText {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #1e293b;
+}
+
+.etiquetaFooterGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 14px;
+  align-items: center;
+}
+
+.footerInfoBlock {
+  font-size: 0.78rem;
+}
+
+.footerInfoBlock strong {
+  font-size: 0.82rem;
+}
+
+.qrContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qrImage {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.qrCaption {
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-top: 2px;
+  text-align: center;
+}
+
+/* CSS Print Media Rules */
+@media print {
+  @page {
+    size: A5 landscape;
+    margin: 8mm;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .printOnlyArea,
+  .printOnlyArea * {
+    visibility: visible !important;
+  }
+
+  .printOnlyArea {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    z-index: 9999999 !important;
+    box-sizing: border-box !important;
+  }
+
+  .etiquetaCard {
+    border: 2px solid #000000 !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+  }
+
+  .noPrint {
+    display: none !important;
+  }
+}

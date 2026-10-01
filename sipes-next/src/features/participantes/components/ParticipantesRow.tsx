@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import type { ParticipanteConPrendas } from "@/features/pedidos/api/pedidos.api";
 import {
   actionRegenerarEnlace,
   actionRevocarEnlace,
   actionConfirmarManual,
   actionEliminarParticipante,
+  actionActualizarParticipante,
 } from "../actions/participantes.actions";
-import { Trash2 } from "lucide-react";
+import { Trash2, Pencil, Check, X } from "lucide-react";
 import { ModalConfirmacion } from "@/components/ui/ModalConfirmacion";
 import styles from "./participantes.module.css";
 
@@ -33,6 +34,63 @@ export function ParticipantesRow({
   const [modalAction, setModalAction] = useState<"revocar" | "confirmar" | "eliminar" | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Estado de edición inline del nombre
+  const [isEditing, setIsEditing] = useState(false);
+  const [nombreEdit, setNombreEdit] = useState(participante.nombrePersona);
+  const [nombreActual, setNombreActual] = useState(participante.nombrePersona);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  function handleStartEdit() {
+    setNombreEdit(nombreActual);
+    setErrorMsg(null);
+    setIsEditing(true);
+  }
+
+  function handleCancelEdit() {
+    setNombreEdit(nombreActual);
+    setIsEditing(false);
+  }
+
+  function handleSaveEdit() {
+    const trimmed = nombreEdit.trim();
+    if (!trimmed) {
+      setErrorMsg("El nombre no puede estar vacío.");
+      return;
+    }
+    if (trimmed === nombreActual) {
+      setIsEditing(false);
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await actionActualizarParticipante(participante.id, trimmed, pedidoId);
+      if (res.ok) {
+        setNombreActual(trimmed);
+        setIsEditing(false);
+        setErrorMsg(null);
+      } else {
+        setErrorMsg(res.error || "No se pudo actualizar el nombre.");
+      }
+    });
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSaveEdit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      handleCancelEdit();
+    }
+  }
 
   function handleCopy() {
     if (!token) return;
@@ -77,9 +135,50 @@ export function ParticipantesRow({
     <tr>
       <td className={styles.colIndex}>{index + 1}</td>
       <td className={styles.cellTruncate}>
-        <span className={styles.participanteNombre} title={participante.nombrePersona}>
-          {participante.nombrePersona}
-        </span>
+        {isEditing ? (
+          <div className={styles.participanteNombreWrapper}>
+            <input
+              ref={inputRef}
+              type="text"
+              className={styles.editNameInput}
+              value={nombreEdit}
+              onChange={(e) => setNombreEdit(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isPending}
+              maxLength={100}
+              aria-label="Editar nombre del participante"
+            />
+            <div className={styles.editNameActions}>
+              <button
+                type="button"
+                className={styles.editConfirmBtn}
+                onClick={handleSaveEdit}
+                disabled={isPending}
+                title="Guardar nombre (Enter)"
+                aria-label="Guardar nombre"
+              >
+                <Check size={13} />
+              </button>
+              <button
+                type="button"
+                className={styles.editCancelBtn}
+                onClick={handleCancelEdit}
+                disabled={isPending}
+                title="Cancelar (Esc)"
+                aria-label="Cancelar edición"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <span
+            className={styles.participanteNombre}
+            title={`${nombreActual} · Clic en Editar para modificar`}
+          >
+            {nombreActual}
+          </span>
+        )}
       </td>
       <td>
         <span className={statusConfig.cls}>{statusConfig.text}</span>
@@ -138,6 +237,18 @@ export function ParticipantesRow({
               Confirmar
             </button>
           )}
+
+          <button
+            type="button"
+            className={styles.editBtn}
+            onClick={isEditing ? handleCancelEdit : handleStartEdit}
+            disabled={isPending}
+            title="Editar nombre del participante"
+            aria-label="Editar nombre del participante"
+          >
+            <Pencil size={13} />
+          </button>
+
           <button
             type="button"
             className={styles.revokeButton}
@@ -160,9 +271,9 @@ export function ParticipantesRow({
             modalAction === "confirmar" ? "Confirmar Participante" : "Eliminar Participante"
           }
           description={
-            modalAction === "revocar" ? `¿Revocar el enlace público de ${participante.nombrePersona}? El enlace dejará de funcionar.` :
-            modalAction === "confirmar" ? `¿Confirmar manualmente la ficha de ${participante.nombrePersona}? El estado pasará a Confirmado.` :
-            `¿Eliminar a ${participante.nombrePersona} y todas sus prendas asignadas del pedido? Esta acción es irreversible.`
+            modalAction === "revocar" ? `¿Revocar el enlace público de ${nombreActual}? El enlace dejará de funcionar.` :
+            modalAction === "confirmar" ? `¿Confirmar manualmente la ficha de ${nombreActual}? El estado pasará a Confirmado.` :
+            `¿Eliminar a ${nombreActual} y todas sus prendas asignadas del pedido? Esta acción es irreversible.`
           }
           confirmText={modalAction === "revocar" ? "Revocar" : modalAction === "confirmar" ? "Confirmar" : "Eliminar"}
           variant={modalAction === "confirmar" ? "primary" : "danger"}

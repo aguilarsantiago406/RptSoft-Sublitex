@@ -7,6 +7,7 @@ import { UpdateTarifaDto } from './dto/update-tarifa.dto';
 import { CreateDatosEnvioDto } from './dto/create-datos-envio.dto';
 import { UpdateDatosEnvioDto } from './dto/update-datos-envio.dto';
 import { EmitirConfirmacionDto } from './dto/emitir-confirmacion.dto';
+import { CreatePagoDto } from './dto/create-pago.dto';
 
 @Injectable()
 export class ComercialService {
@@ -279,4 +280,149 @@ export class ComercialService {
       include: { emitidaPor: true },
     });
   }
+
+  async createPago(pedidoId: string, dto: CreatePagoDto, registradoPorId?: string) {
+    const pedido = await this.prisma.pedido.findUnique({
+      where: { id: pedidoId },
+      include: {
+        grupos: {
+          include: {
+            tipoProducto: true,
+            prendas: { where: { tipoPrenda: 'VENTA' } },
+          },
+        },
+      },
+    });
+
+    if (!pedido) {
+      throw new NotFoundException('Pedido no encontrado: ' + pedidoId);
+    }
+
+    const fechaPago = dto.fechaPago ? new Date(dto.fechaPago) : new Date();
+
+    const pago = await this.prisma.pago.create({
+      data: {
+        pedidoId,
+        monto: dto.monto,
+        medio: dto.medio,
+        numeroOperacion: dto.numeroOperacion,
+        comprobanteUrl: dto.comprobanteUrl,
+        fechaPago,
+        notas: dto.notas,
+        ...(registradoPorId ? { registradoPorId } : {}),
+      },
+      include: {
+        registradoPor: {
+          select: { id: true, nombre: true, email: true, rol: true },
+        },
+      },
+    });
+
+    const todosPagos = await this.prisma.pago.findMany({ where: { pedidoId } });
+    const totalPagado = Math.round(todosPagos.reduce((acc, p) => acc + Number(p.monto), 0) * 100) / 100;
+
+    const ultimaConfirmacion = await this.prisma.confirmacion.findFirst({
+      where: { pedidoId },
+      orderBy: { version: 'desc' },
+    });
+
+    let totalPedido = 0;
+    if (ultimaConfirmacion) {
+      totalPedido = Number(ultimaConfirmacion.totalSinIgv);
+      const nuevoSaldo = Math.max(0, Math.round((totalPedido - totalPagado) * 100) / 100);
+      await this.prisma.confirmacion.update({
+        where: { id: ultimaConfirmacion.id },
+        data: {
+          adelantoRecibido: totalPagado,
+          saldo: nuevoSaldo,
+        },
+      });
+    }
+
+    const saldoPendiente = Math.max(0, Math.round((totalPedido - totalPagado) * 100) / 100);
+
+    return {
+      pago,
+      totalPedido,
+      totalPagado,
+      saldoPendiente,
+    };
+  }
+
+  async findPagos(pedidoId: string) {
+    const pedido = await this.prisma.pedido.findUnique({ where: { id: pedidoId } });
+    if (!pedido) {
+      throw new NotFoundException('Pedido no encontrado: ' + pedidoId);
+    }
+
+    const pagos = await this.prisma.pago.findMany({
+      where: { pedidoId },
+      orderBy: [{ fechaPago: 'desc' }, { creadoEn: 'desc' }],
+      include: {
+        registradoPor: {
+          select: { id: true, nombre: true, email: true, rol: true },
+        },
+      },
+    });
+
+    const totalPagado = Math.round(pagos.reduce((acc, p) => acc + Number(p.monto), 0) * 100) / 100;
+
+    const ultimaConfirmacion = await this.prisma.confirmacion.findFirst({
+      where: { pedidoId },
+      orderBy: { version: 'desc' },
+    });
+
+    const totalPedido = ultimaConfirmacion ? Number(ultimaConfirmacion.totalSinIgv) : 0;
+    const saldoPendiente = Math.max(0, Math.round((totalPedido - totalPagado) * 100) / 100);
+
+    return {
+      pagos,
+      totalPedido,
+      totalPagado,
+      saldoPendiente,
+    };
+  }
+
+  async removePago(pedidoId: string, pagoId: string) {
+    const pago = await this.prisma.pago.findFirst({
+      where: { id: pagoId, pedidoId },
+    });
+
+    if (!pago) {
+      throw new NotFoundException('Pago no encontrado o no pertenece al pedido');
+    }
+
+    await this.prisma.pago.delete({ where: { id: pagoId } });
+
+    const todosPagos = await this.prisma.pago.findMany({ where: { pedidoId } });
+    const totalPagado = Math.round(todosPagos.reduce((acc, p) => acc + Number(p.monto), 0) * 100) / 100;
+
+    const ultimaConfirmacion = await this.prisma.confirmacion.findFirst({
+      where: { pedidoId },
+      orderBy: { version: 'desc' },
+    });
+
+    let totalPedido = 0;
+    if (ultimaConfirmacion) {
+      totalPedido = Number(ultimaConfirmacion.totalSinIgv);
+      const nuevoSaldo = Math.max(0, Math.round((totalPedido - totalPagado) * 100) / 100);
+      await this.prisma.confirmacion.update({
+        where: { id: ultimaConfirmacion.id },
+        data: {
+          adelantoRecibido: totalPagado,
+          saldo: nuevoSaldo,
+        },
+      });
+    }
+
+    const saldoPendiente = Math.max(0, Math.round((totalPedido - totalPagado) * 100) / 100);
+
+    return {
+      id: pagoId,
+      totalPedido,
+      totalPagado,
+      saldoPendiente,
+    };
+  }
 }
+

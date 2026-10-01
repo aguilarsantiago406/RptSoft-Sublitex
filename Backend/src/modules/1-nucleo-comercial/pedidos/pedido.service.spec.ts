@@ -41,6 +41,18 @@ function buildPrismaMock() {
       findFirst: jest.fn(),
       delete: jest.fn(),
     },
+    prenda: {
+      findMany: jest.fn(),
+      create: jest.fn(),
+      groupBy: jest.fn(),
+    },
+    bitacoraModificacion: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
   };
 }
 
@@ -247,4 +259,122 @@ describe('PATCH /api/pedidos/:id · Actualizar datos generales del pedido', () =
     const llamado = prisma.pedido.update.mock.calls[0][0].data;
     expect(llamado.vendedoraId).toBe('vend_nuevo');
   });
-});
+});
+
+describe('EXPORT_DISENO · Exportador para Diseño / Corel', () => {
+  it('genera CSV con columnas requeridas y orden ascendente desde nino 10 hasta 3XL', async () => {
+    const prisma = buildPrismaMock();
+    prisma.pedido.findUnique.mockResolvedValue(pedidoBORRADOR);
+
+    const mockPrendas = [
+      {
+        id: 'p_3xl',
+        nombreEnPrenda: 'CARLOS',
+        numero: '10',
+        tipoPrenda: 'VENTA',
+        talla: { codigo: '3XL' },
+        tallaShort: null,
+        color: { nombre: 'Azul Marino', codigoHex: '#000080' },
+        excepciones: [],
+        grupo: { configuracion: [{ atributo: { codigo: 'CORTE' }, valor: { etiqueta: 'Recto' } }] },
+      },
+      {
+        id: 'p_10',
+        nombreEnPrenda: 'JUANITO',
+        numero: '7',
+        tipoPrenda: 'VENTA',
+        talla: { codigo: '10' },
+        tallaShort: null,
+        color: { nombre: 'Azul Marino', codigoHex: '#000080' },
+        excepciones: [],
+        grupo: { configuracion: [{ atributo: { codigo: 'CORTE' }, valor: { etiqueta: 'Recto' } }] },
+      },
+      {
+        id: 'p_m',
+        nombreEnPrenda: 'MIGUEL',
+        numero: '9',
+        tipoPrenda: 'VENTA',
+        talla: { codigo: 'M' },
+        tallaShort: { codigo: 'L' },
+        color: { nombre: 'Azul Marino', codigoHex: '#000080' },
+        excepciones: [{ atributo: { codigo: 'CORTE' }, valor: { etiqueta: 'Entallado' } }],
+        grupo: { configuracion: [] },
+      },
+      {
+        id: 'p_s',
+        nombreEnPrenda: 'ANA',
+        numero: 'S/N',
+        tipoPrenda: 'OBSEQUIO',
+        talla: { codigo: 'S' },
+        tallaShort: null,
+        color: null,
+        excepciones: [],
+        grupo: { configuracion: [{ atributo: { codigo: 'COLOR' }, valor: { etiqueta: 'Blanco' } }] },
+      },
+    ];
+
+    prisma.prenda.findMany.mockResolvedValue(mockPrendas);
+    const service = await crearServicio(prisma);
+
+    const resultado = await service.exportDiseno('ped_1');
+
+    expect(resultado.filename).toBe('EXPORT_COREL_SUB-0001.csv');
+    expect(resultado.csvContent.startsWith('\uFEFF')).toBe(true);
+
+    const lineas = resultado.csvContent.replace('\uFEFF', '').split('\r\n');
+    expect(lineas[0]).toBe('Talla,Nombre en prenda,Número,Tipo prenda,Corte,Color');
+
+    // Niño 10 debe ir primero, luego S, luego M, luego 3XL
+    expect(lineas[1]).toContain('10,JUANITO,7,VENTA,Recto,Azul Marino');
+    expect(lineas[2]).toContain('S,ANA,S/N,OBSEQUIO');
+    expect(lineas[3]).toContain('M (Short L),MIGUEL,9,VENTA,Entallado');
+    expect(lineas[4]).toContain('3XL,CARLOS,10,VENTA');
+  });
+});
+
+describe('BITACORA · Bitácora de modificaciones post-cierre', () => {
+  it('registra una nueva modificación solicitada', async () => {
+    const prisma = buildPrismaMock();
+    prisma.pedido.findUnique.mockResolvedValue(pedidoBORRADOR);
+    prisma.bitacoraModificacion.create.mockResolvedValue({
+      id: 'bit_1',
+      pedidoId: 'ped_1',
+      descripcionCambio: 'Cambiar talla de M a L',
+      solicitadoPor: 'Cliente por WhatsApp',
+      fechaSolicitud: new Date(),
+      avisadoATaller: false,
+    });
+
+    const service = await crearServicio(prisma);
+    const result = await service.crearBitacora('ped_1', {
+      descripcionCambio: 'Cambiar talla de M a L',
+      solicitadoPor: 'Cliente por WhatsApp',
+    });
+
+    expect(result.id).toBe('bit_1');
+    expect(result.avisadoATaller).toBe(false);
+  });
+
+  it('permite al coordinador marcar como avisado a taller con fecha y usuario', async () => {
+    const prisma = buildPrismaMock();
+    prisma.pedido.findUnique.mockResolvedValue(pedidoBORRADOR);
+    prisma.bitacoraModificacion.findFirst.mockResolvedValue({
+      id: 'bit_1',
+      pedidoId: 'ped_1',
+      avisadoATaller: false,
+    });
+    prisma.bitacoraModificacion.update.mockResolvedValue({
+      id: 'bit_1',
+      avisadoATaller: true,
+      avisadoEn: new Date(),
+      avisadoPorId: 'usr_coord',
+    });
+
+    const service = await crearServicio(prisma);
+    const result = await service.avisarTallerBitacora('ped_1', 'bit_1', true, 'usr_coord');
+
+    expect(result.avisadoATaller).toBe(true);
+    expect(result.avisadoPorId).toBe('usr_coord');
+  });
+});
+

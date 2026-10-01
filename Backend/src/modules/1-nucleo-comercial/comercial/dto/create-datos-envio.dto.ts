@@ -48,4 +48,10 @@ export class CreateDatosEnvioDto {
   @IsEmail()
   @MaxLength(100)
   correo?: string;
+
+  @ApiPropertyOptional({ example: 'REC-8942-X', description: 'Clave o código de recojo en agencia' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  codigoRecojo?: string;
 }

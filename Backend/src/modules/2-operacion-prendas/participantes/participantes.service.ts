@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, GoneException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CreateParticipanteDto } from './dto/create-participante.dto';
+import { UpdateParticipanteDto } from './dto/update-participante.dto';
 import { GuardarFichaEnlaceDto } from './dto/guardar-ficha-enlace.dto';
 import * as crypto from 'crypto';
 
@@ -239,6 +240,31 @@ export class ParticipantesService {
         enlaceToken: token,
         enlaceExpiraEn: expira,
         enlaceRevocado: false,
+      },
+    });
+  }
+
+  async actualizar(id: string, dto: UpdateParticipanteDto) {
+    const p = await this.prisma.participante.findUnique({
+      where: { id },
+      include: { grupo: true },
+    });
+    if (!p) throw new NotFoundException('Participante no encontrado.');
+
+    // R-H03: Validar que el bloque LISTA esté abierto
+    if (p.grupo?.pedidoId) {
+      const bloqueLista = await this.prisma.bloquePedido?.findFirst?.({
+        where: { pedidoId: p.grupo.pedidoId, tipo: 'LISTA', estado: 'CERRADO' },
+      });
+      if (bloqueLista) {
+        throw new BadRequestException('El bloque LISTA está CERRADO. No se puede editar el participante.');
+      }
+    }
+
+    return this.prisma.participante.update({
+      where: { id },
+      data: {
+        nombrePersona: dto.nombrePersona.trim(),
       },
     });
   }

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CreatePrendaDto } from './dto/create-prenda.dto';
 import { UpdateFichaMinimaDto } from './dto/update-ficha-minima.dto';
+import { CargaMasivaFilaDto } from './dto/carga-masiva.dto';
 
 @Injectable()
 export class PrendasService {
@@ -53,6 +54,7 @@ export class PrendasService {
         grupoId: dto.grupoId,
         tipoProductoId: dto.tipoProductoId,
         tallaId: dto.tallaId,
+        tallaShortId: dto.tallaShortId ?? null,
         numero: dto.numero,
         genero: (dto.genero as any) || 'SIN_ESPECIFICAR',
         tipoPrenda: (dto.tipoPrenda as any) || 'VENTA',
@@ -103,7 +105,7 @@ export class PrendasService {
     }
 
     if (prendaExiste.grupo?.pedidoId) {
-      const camposAuditables: Array<keyof UpdateFichaMinimaDto> = ['tallaId', 'numero', 'genero', 'nombreEnPrenda', 'colorId'];
+      const camposAuditables: Array<keyof UpdateFichaMinimaDto> = ['tallaId', 'tallaShortId', 'numero', 'genero', 'nombreEnPrenda', 'colorId', 'tipoPrenda', 'esArquero'];
       for (const campo of camposAuditables) {
         const valorNuevo = dto[campo];
         const valorAnterior = (prendaExiste as any)[campo];
@@ -129,10 +131,13 @@ export class PrendasService {
       where: { id },
       data: {
         tallaId: dto.tallaId,
+        tallaShortId: dto.tallaShortId !== undefined ? (dto.tallaShortId || null) : undefined,
         numero: dto.numero,
         genero: dto.genero as any,
         nombreEnPrenda: dto.nombreEnPrenda,
         colorId: dto.colorId,
+        ...(dto.tipoPrenda !== undefined ? { tipoPrenda: dto.tipoPrenda as any } : {}),
+        ...(dto.esArquero !== undefined ? { esArquero: dto.esArquero } : {}),
       },
     });
 
@@ -451,5 +456,93 @@ export class PrendasService {
       alertasInformativas,
     };
   }
+
+  async cargaMasiva(grupoId: string, filas: CargaMasivaFilaDto[], autor?: { id?: string; rol?: any }) {
+    const grupo = await this.prisma.grupo.findUnique({
+      where: { id: grupoId },
+      include: { tipoProducto: true },
+    });
+    if (!grupo) throw new NotFoundException(`Grupo ${grupoId} no encontrado.`);
+
+    await this.validarListaAbiertaPorPedidoId(grupo.pedidoId);
+
+    const tallasDisponibles = await this.prisma.tallaCatalogo.findMany({
+      where: { tipoProductoId: grupo.tipoProductoId, activo: true },
+    });
+
+    const resolverTalla = (codigo?: string) => {
+      if (!codigo) return null;
+      const norm = codigo.trim().toUpperCase();
+      return tallasDisponibles.find((t) => t.codigo.toUpperCase() === norm)?.id ?? null;
+    };
+
+    const creados: string[] = [];
+    const errores: { fila: number; error: string }[] = [];
+
+    for (let i = 0; i < filas.length; i++) {
+      const f = filas[i];
+      const nombreTrimmed = f.nombre?.trim();
+      if (!nombreTrimmed) {
+        errores.push({ fila: i + 1, error: 'El nombre es obligatorio.' });
+        continue;
+      }
+
+      try {
+        const token = `tok_${require('crypto').randomBytes(8).toString('hex')}`;
+        const expira = new Date();
+        expira.setDate(expira.getDate() + 7);
+
+        const participante = await this.prisma.participante.create({
+          data: {
+            grupoId,
+            nombrePersona: nombreTrimmed,
+            enlaceToken: token,
+            enlaceExpiraEn: expira,
+          },
+        });
+
+        const tallaId = resolverTalla(f.talla) ?? undefined;
+        const tallaShortId = f.tallaShort ? (resolverTalla(f.tallaShort) ?? undefined) : undefined;
+
+        await this.prisma.prenda.create({
+          data: {
+            participanteId: participante.id,
+            grupoId,
+            tipoProductoId: grupo.tipoProductoId,
+            tallaId: tallaId ?? null,
+            tallaShortId: tallaShortId ?? null,
+            numero: f.numero?.trim() || null,
+            nombreEnPrenda: (f.apodo?.trim() || nombreTrimmed).toUpperCase(),
+            genero: (f.genero?.toUpperCase() as any) || 'SIN_ESPECIFICAR',
+            tipoPrenda: (f.tipoPrenda?.toUpperCase() as any) || 'VENTA',
+            esArquero: Boolean(f.esArquero),
+          },
+        });
+
+        creados.push(nombreTrimmed);
+      } catch (err: any) {
+        errores.push({ fila: i + 1, error: err?.message || 'Error desconocido.' });
+      }
+    }
+
+    if (grupo.pedidoId) {
+      await this.prisma.registroCambio?.create?.({
+        data: {
+          pedidoId: grupo.pedidoId,
+          entidad: 'Prenda',
+          entidadId: grupoId,
+          campo: 'carga_masiva',
+          valorAnterior: null,
+          valorNuevo: `${creados.length} prendas creadas`,
+          origen: 'USUARIO',
+          autorUsuarioId: autor?.id ?? null,
+          autorRol: autor?.rol ?? null,
+        },
+      });
+    }
+
+    return { creados: creados.length, errores };
+  }
 }
+
 

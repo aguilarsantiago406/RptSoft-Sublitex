@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiDelete } from "@/lib/api/http";
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/http";
 
 export interface PersonalizacionParticipante {
   id: string;
@@ -64,6 +64,16 @@ export function getParticipanteDetalle(id: string) {
 export function revocarEnlaceParticipante(id: string) {
   return apiPost<ParticipanteDetalle>(
     `/api/participantes/${encodeURIComponent(id)}/revocar-enlace`
+  );
+}
+
+export function actualizarParticipante(
+  id: string,
+  dto: { nombrePersona: string }
+): Promise<ParticipanteDetalle> {
+  return apiPatch<ParticipanteDetalle>(
+    `/api/participantes/${encodeURIComponent(id)}`,
+    dto
   );
 }
 

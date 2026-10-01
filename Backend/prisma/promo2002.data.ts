@@ -220,3 +220,29 @@ function p(
 ): PrendaSeed {
   return { nombreEnPrenda, nombrePersona, numero, talla, genero, tipoPrenda, color };
 }
+
+export interface TarifaSeed {
+  tipo: 'PRODUCTO' | 'RECARGO_TALLA' | 'RECARGO_TELA' | 'RECARGO_CUELLO' | 'RECARGO_ACABADO' | 'ADICIONAL';
+  concepto: string;
+  valor: number;
+  nota?: string;
+}
+
+export const TARIFAS_SEED: TarifaSeed[] = [
+  // Productos Base (desde niños hasta talla L precio base)
+  { tipo: 'PRODUCTO', concepto: 'Camiseta', valor: 30.00, nota: 'Precio base camiseta (niños hasta L)' },
+  { tipo: 'PRODUCTO', concepto: 'Conjunto deportivo', valor: 45.00, nota: 'Precio base conjunto (niños hasta L)' },
+  { tipo: 'PRODUCTO', concepto: 'Kit completo', valor: 55.00, nota: 'Precio base kit completo' },
+  { tipo: 'PRODUCTO', concepto: 'Camiseta arquero', valor: 35.00, nota: 'Precio base camiseta arquero' },
+  { tipo: 'PRODUCTO', concepto: 'Short', valor: 18.00, nota: 'Precio base short' },
+  { tipo: 'PRODUCTO', concepto: 'Medias', valor: 12.00, nota: 'Precio base medias' },
+
+  // Recargos de Tallas especiales (R-K01)
+  // Tallas niños hasta L no tienen recargo (S/ 0)
+  // XL: S/ 3.00 adicionales (si base es 30 -> 33)
+  // XXL: S/ 6.00 adicionales (si base es 30 -> 36)
+  { tipo: 'RECARGO_TALLA', concepto: 'XL', valor: 3.00, nota: 'Recargo talla XL (+S/ 3.00)' },
+  { tipo: 'RECARGO_TALLA', concepto: 'XXL', valor: 6.00, nota: 'Recargo talla XXL (+S/ 6.00)' },
+  { tipo: 'RECARGO_TALLA', concepto: '2XL', valor: 6.00, nota: 'Recargo talla 2XL (+S/ 6.00 alias)' },
+  { tipo: 'RECARGO_TALLA', concepto: '3XL', valor: 9.00, nota: 'Recargo talla 3XL (+S/ 9.00)' },
+];

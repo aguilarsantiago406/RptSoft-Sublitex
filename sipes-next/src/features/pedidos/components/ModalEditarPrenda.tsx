@@ -43,8 +43,13 @@ export function ModalEditarPrenda({
   const [nombreEnPrenda, setNombreEnPrenda] = useState(prenda.nombreEnPrenda ?? "");
   const [numero, setNumero] = useState(prenda.numero ?? "");
   const [tallaId, setTallaId] = useState(prenda.tallaId ?? "");
+  const [tallaShortId, setTallaShortId] = useState(prenda.tallaShortId ?? "");
   const [genero, setGenero] = useState<GeneroTipo>((prenda.genero as GeneroTipo) ?? "SIN_ESPECIFICAR");
   const [colorId, setColorId] = useState(prenda.colorId ?? "");
+  const [tipoPrenda, setTipoPrenda] = useState<"VENTA" | "OBSEQUIO" | "MUESTRA">(
+    (prenda.tipoPrenda as "VENTA" | "OBSEQUIO" | "MUESTRA") || "VENTA"
+  );
+  const [esArquero, setEsArquero] = useState<boolean>(Boolean(prenda.esArquero));
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -57,8 +62,11 @@ export function ModalEditarPrenda({
         nombreEnPrenda: nombreEnPrenda.trim() || undefined,
         numero: numero.trim() || undefined,
         tallaId: tallaId || undefined,
+        tallaShortId: tallaShortId || null,
         genero,
         colorId: colorId || undefined,
+        tipoPrenda,
+        esArquero,
       });
       if (!res.ok) { setError(res.error || "No se pudo actualizar la prenda."); return; }
       onClose();
@@ -116,13 +124,22 @@ export function ModalEditarPrenda({
                 <input id="prenda-numero" type="text" placeholder="Ej: 10 o S/N" value={numero} onChange={(e) => setNumero(e.target.value)} className={styles.formInput} />
               </div>
               <div className={styles.formField}>
-                <label htmlFor="prenda-talla">Talla</label>
+                <label htmlFor="prenda-talla">Talla Camiseta</label>
                 <select id="prenda-talla" value={tallaId} onChange={(e) => setTallaId(e.target.value)} className={styles.formInput}>
                   <option value="">Sin especificar</option>
                   {tallasDisponibles.map((t) => <option key={t.id} value={t.id}>{t.etiqueta || t.codigo}</option>)}
                 </select>
               </div>
             </div>
+
+            <div className={styles.formField}>
+              <label htmlFor="prenda-talla-short">Talla Short <span style={{ color: "#94a3b8", fontWeight: 400 }}>(si difiere de la camiseta)</span></label>
+              <select id="prenda-talla-short" value={tallaShortId} onChange={(e) => setTallaShortId(e.target.value)} className={styles.formInput}>
+                <option value="">= Misma que la camiseta</option>
+                {tallasDisponibles.map((t) => <option key={t.id} value={t.id}>{t.etiqueta || t.codigo}</option>)}
+              </select>
+            </div>
+
 
             <div className={styles.twoColsLayout} style={{ gap: "10px" }}>
               <div className={styles.formField}>
@@ -140,13 +157,35 @@ export function ModalEditarPrenda({
               </div>
             </div>
 
-            <div className={styles.formField}>
-              <label htmlFor="prenda-tipo">Tipo</label>
-              <input
-                id="prenda-tipo" type="text" readOnly
-                value={`${prenda.tipoPrenda === "OBSEQUIO" ? "Obsequio" : prenda.tipoPrenda === "MUESTRA" ? "Muestra" : "Venta"}${prenda.esArquero ? " (Arquero)" : ""}`}
-                className={styles.formInput} style={{ background: "#f8fafc", color: "#64748b", cursor: "not-allowed" }}
-              />
+            <div className={styles.twoColsLayout} style={{ gap: "10px", alignItems: "center" }}>
+              <div className={styles.formField}>
+                <label htmlFor="prenda-tipo">Tipo Comercial</label>
+                <select
+                  id="prenda-tipo"
+                  value={tipoPrenda}
+                  onChange={(e) => setTipoPrenda(e.target.value as "VENTA" | "OBSEQUIO" | "MUESTRA")}
+                  className={styles.formInput}
+                >
+                  <option value="VENTA">Venta</option>
+                  <option value="OBSEQUIO">Obsequio (S/ 0.00)</option>
+                  <option value="MUESTRA">Muestra</option>
+                </select>
+              </div>
+
+              <div className={styles.formField} style={{ justifyContent: "flex-end" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingTop: "20px" }}>
+                  <input
+                    id="prenda-es-arquero"
+                    type="checkbox"
+                    checked={esArquero}
+                    onChange={(e) => setEsArquero(e.target.checked)}
+                    style={{ cursor: "pointer", width: 18, height: 18, accentColor: "#0284c7" }}
+                  />
+                  <label htmlFor="prenda-es-arquero" style={{ fontSize: "0.88rem", fontWeight: 600, cursor: "pointer", margin: 0 }}>
+                    ¿Es arquero?
+                  </label>
+                </div>
+              </div>
             </div>
 
             <div className={styles.modalFooter} style={{ marginTop: "14px", padding: 0 }}>

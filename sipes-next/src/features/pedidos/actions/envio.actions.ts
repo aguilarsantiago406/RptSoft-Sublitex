@@ -11,6 +11,7 @@ export type DatosEnvioForm = {
   agencia: string;
   referencia?: string;
   correo?: string;
+  codigoRecojo?: string;
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -56,6 +57,7 @@ function formToBody(data: DatosEnvioForm) {
     agencia: data.agencia.trim(),
     referencia: opcionalDefinido(data.referencia),
     correo: opcionalDefinido(data.correo),
+    codigoRecojo: opcionalDefinido(data.codigoRecojo),
   };
 }
 

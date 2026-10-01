@@ -5,10 +5,13 @@ import { apiDelete, apiPatch, apiPost, SipesApiError } from "@/lib/api/http";
 
 export interface UpdatePrendaParams {
   tallaId?: string;
+  tallaShortId?: string | null;
   numero?: string;
   genero?: "HOMBRE" | "MUJER" | "NINO" | "NINA" | "SIN_ESPECIFICAR";
   nombreEnPrenda?: string;
   colorId?: string | null;
+  tipoPrenda?: "VENTA" | "OBSEQUIO" | "MUESTRA";
+  esArquero?: boolean;
 }
 
 export async function actionActualizarPrenda(
@@ -19,10 +22,13 @@ export async function actionActualizarPrenda(
   try {
     await apiPatch(`/api/prendas/${encodeURIComponent(prendaId)}`, {
       tallaId: data.tallaId || undefined,
+      tallaShortId: data.tallaShortId !== undefined ? (data.tallaShortId || null) : undefined,
       numero: data.numero?.trim() || undefined,
       genero: data.genero || undefined,
       nombreEnPrenda: data.nombreEnPrenda?.trim() || undefined,
       colorId: data.colorId || undefined,
+      tipoPrenda: data.tipoPrenda || undefined,
+      esArquero: data.esArquero !== undefined ? data.esArquero : undefined,
     });
 
     revalidatePath(`/pedidos/${pedidoId}/prendas`);

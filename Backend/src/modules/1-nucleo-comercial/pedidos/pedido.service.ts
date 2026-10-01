@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
@@ -11,6 +12,7 @@ import { UpdateEstadoDto } from './dto/update-estado.dto';
 import { AddColorDto } from './dto/add-color.dto';
 import { EstadoPedido } from './estado-pedido.enum';
 import { transicionValida } from './estado-pedido.transitions';
+import { RolUsuario } from '@prisma/client';
 
 @Injectable()
 export class PedidoService {
@@ -338,7 +340,61 @@ export class PedidoService {
     };
   }
 
-  async updateEstado(id: string, dto: UpdateEstadoDto) {
+  // ─── Grupos de roles por capa de negocio ────────────────────────────────
+  private static readonly ROLES_COMERCIAL = [
+    RolUsuario.ADMINISTRADOR,
+    RolUsuario.VENDEDOR,
+    RolUsuario.VENDEDORA,
+    RolUsuario.COORDINADOR_OPERATIVO,
+  ];
+  private static readonly ROLES_COORDINACION = [
+    RolUsuario.ADMINISTRADOR,
+    RolUsuario.COORDINADOR_OPERATIVO,
+    RolUsuario.COORDINADOR_CLIENTE,
+  ];
+  private static readonly ROLES_PRODUCCION = [
+    RolUsuario.ADMINISTRADOR,
+    RolUsuario.PRODUCCION,
+  ];
+
+  /**
+   * Determina si el rol tiene permiso para ejecutar la transición al estado destino.
+   * Reglas de negocio Sublitex (R-A06):
+   *   - BORRADOR → EN_CONFIGURACION : COMERCIAL
+   *   - EN_CONFIGURACION → EN_RECOLECCION : COMERCIAL
+   *   - EN_RECOLECCION → EN_REVISION : COORDINACION
+   *   - EN_REVISION → EN_PRODUCCION : PRODUCCION
+   *   - EN_PRODUCCION → ENTREGADO/CERRADO : PRODUCCION
+   *   - ENTREGADO → CERRADO : PRODUCCION
+   *   - * → CANCELADO : COMERCIAL (cualquiera comercial puede cancelar)
+   */
+  private verificarPermisoTransicion(destino: EstadoPedido, rol: RolUsuario): void {
+    const { ROLES_COMERCIAL, ROLES_COORDINACION, ROLES_PRODUCCION } = PedidoService;
+
+    const permisos: Record<EstadoPedido, RolUsuario[]> = {
+      [EstadoPedido.EN_CONFIGURACION]: ROLES_COMERCIAL,
+      [EstadoPedido.EN_RECOLECCION]: ROLES_COMERCIAL,
+      [EstadoPedido.EN_REVISION]: ROLES_COORDINACION,
+      [EstadoPedido.EN_PRODUCCION]: ROLES_PRODUCCION,
+      [EstadoPedido.ENTREGADO]: ROLES_PRODUCCION,
+      [EstadoPedido.CERRADO]: ROLES_PRODUCCION,
+      [EstadoPedido.CANCELADO]: ROLES_COMERCIAL,
+      [EstadoPedido.BORRADOR]: ROLES_PRODUCCION, // no hay transición hacia BORRADOR
+    };
+
+    const rolesPermitidos = permisos[destino] ?? ROLES_PRODUCCION;
+    if (!rolesPermitidos.includes(rol)) {
+      throw new ForbiddenException(
+        `Tu rol (${rol}) no puede mover el pedido a estado ${destino}`,
+      );
+    }
+  }
+
+  async updateEstado(
+    id: string,
+    dto: UpdateEstadoDto,
+    rolUsuario: RolUsuario = RolUsuario.ADMINISTRADOR,
+  ) {
     const pedido = await this.findOne(id);
     const actual = pedido.estado as EstadoPedido;
     const destino = dto.estado;
@@ -348,6 +404,10 @@ export class PedidoService {
         `Transición inválida de ${actual} a ${destino} (R-A06)`,
       );
     }
+
+    // Validar que el rol del usuario pueda ejecutar esta transición
+    this.verificarPermisoTransicion(destino, rolUsuario);
+
     if (actual === EstadoPedido.BORRADOR && destino !== EstadoPedido.CANCELADO) {
       if (!pedido.fechaCompromiso) {
         throw new BadRequestException(
@@ -378,6 +438,10 @@ export class PedidoService {
           nombre: dto.nombre,
           codigoHex: dto.codigoHex,
           referenciaFisica: dto.referenciaFisica,
+          cmykC: dto.cmykC,
+          cmykM: dto.cmykM,
+          cmykY: dto.cmykY,
+          cmykK: dto.cmykK,
           pedido: { connect: { id: pedidoId } },
         },
       });
@@ -401,6 +465,10 @@ export class PedidoService {
               nombre: dto.nombre,
               codigoHex: dto.codigoHex,
               referenciaFisica: dto.referenciaFisica,
+              cmykC: dto.cmykC,
+              cmykM: dto.cmykM,
+              cmykY: dto.cmykY,
+              cmykK: dto.cmykK,
               pedido: { connect: { id: pedidoId } },
             },
           }),
@@ -411,6 +479,36 @@ export class PedidoService {
         throw new BadRequestException(
           'Ya existe un color con ese nombre en el pedido (R-K05)',
         );
+      }
+      throw error;
+    }
+  }
+
+  async updateColor(pedidoId: string, colorId: string, dto: Partial<AddColorDto>) {
+    await this.findOne(pedidoId);
+    const color = await this.prisma.colorPedido.findFirst({
+      where: { id: colorId, pedidoId },
+    });
+    if (!color) {
+      throw new NotFoundException('Color no encontrado: ' + colorId);
+    }
+
+    try {
+      return await this.prisma.colorPedido.update({
+        where: { id: colorId },
+        data: {
+          ...(dto.nombre !== undefined ? { nombre: dto.nombre } : {}),
+          ...(dto.codigoHex !== undefined ? { codigoHex: dto.codigoHex } : {}),
+          ...(dto.referenciaFisica !== undefined ? { referenciaFisica: dto.referenciaFisica } : {}),
+          ...(dto.cmykC !== undefined ? { cmykC: dto.cmykC } : {}),
+          ...(dto.cmykM !== undefined ? { cmykM: dto.cmykM } : {}),
+          ...(dto.cmykY !== undefined ? { cmykY: dto.cmykY } : {}),
+          ...(dto.cmykK !== undefined ? { cmykK: dto.cmykK } : {}),
+        },
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2002') {
+        throw new BadRequestException('Ya existe un color con ese nombre en el pedido (R-K05)');
       }
       throw error;
     }
@@ -470,4 +568,174 @@ export class PedidoService {
       throw error;
     }
   }
-}
+
+  async exportDiseno(pedidoId: string) {
+    const pedido = await this.findOne(pedidoId);
+    const prendas = await this.prisma.prenda.findMany({
+      where: { grupo: { pedidoId: pedido.id } },
+      include: {
+        talla: true,
+        tallaShort: true,
+        tipoProducto: true,
+        color: true,
+        excepciones: {
+          include: { atributo: true, valor: true },
+        },
+        grupo: {
+          include: {
+            tipoProducto: true,
+            configuracion: {
+              include: { atributo: true, valor: true },
+            },
+          },
+        },
+        participante: true,
+      },
+    });
+
+    const getTallaWeight = (tallaCodigo?: string | null): number => {
+      if (!tallaCodigo) return 999;
+      const clean = tallaCodigo.trim().toUpperCase();
+      const num = parseInt(clean, 10);
+      if (!isNaN(num) && /^\d+$/.test(clean)) {
+        return num;
+      }
+      const weightMap: Record<string, number> = {
+        '2': 2, '4': 4, '6': 6, '8': 8, '10': 10, '12': 12, '14': 14, '16': 16,
+        'XXS': 20, '2XS': 20, 'XS': 25, 'S': 30, 'M': 40, 'L': 50,
+        'XL': 60, 'XXL': 70, '2XL': 70, 'XXXL': 80, '3XL': 80, 'XXXXL': 90, '4XL': 90,
+        'UNICA': 100, 'ESTANDAR': 100,
+      };
+      return weightMap[clean] ?? 200;
+    };
+
+    prendas.sort((a, b) => {
+      const wA = getTallaWeight(a.talla?.codigo);
+      const wB = getTallaWeight(b.talla?.codigo);
+      if (wA !== wB) return wA - wB;
+      const numA = parseInt(a.numero || '9999', 10);
+      const numB = parseInt(b.numero || '9999', 10);
+      if (!isNaN(numA) && !isNaN(numB) && numA !== numB) return numA - numB;
+      return (a.nombreEnPrenda || '').localeCompare(b.nombreEnPrenda || '');
+    });
+
+    const escapeCsv = (val: any) => {
+      const str = String(val ?? '').trim();
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const rows = prendas.map((p) => {
+      const tallaBase = p.talla?.codigo || p.talla?.etiqueta || '';
+      const tallaShort = p.tallaShort?.codigo && p.tallaShort.codigo !== tallaBase
+        ? ` (Short ${p.tallaShort.codigo})`
+        : '';
+      const tallaCompleta = `${tallaBase}${tallaShort}`.trim();
+
+      const excepcionCorte = p.excepciones.find((e) => e.atributo.codigo === 'CORTE');
+      const grupoCorte = p.grupo.configuracion.find((c) => c.atributo.codigo === 'CORTE');
+      const corte =
+        excepcionCorte?.valor.etiqueta ||
+        excepcionCorte?.valor.codigo ||
+        grupoCorte?.valor.etiqueta ||
+        grupoCorte?.valor.codigo ||
+        (p.genero !== 'SIN_ESPECIFICAR' ? p.genero : 'ESTÁNDAR');
+
+      const excepcionColor = p.excepciones.find((e) => e.atributo.codigo === 'COLOR');
+      const grupoColor = p.grupo.configuracion.find((c) => c.atributo.codigo === 'COLOR');
+      const color =
+        p.color?.nombre ||
+        excepcionColor?.valor.etiqueta ||
+        grupoColor?.valor.etiqueta ||
+        p.color?.codigoHex ||
+        '-';
+
+      const tipoPrenda = p.tipoPrenda || 'VENTA';
+      const nombre = p.nombreEnPrenda || '';
+      const numero = p.numero || 'S/N';
+
+      return [
+        escapeCsv(tallaCompleta),
+        escapeCsv(nombre),
+        escapeCsv(numero),
+        escapeCsv(tipoPrenda),
+        escapeCsv(corte),
+        escapeCsv(color),
+      ].join(',');
+    });
+
+    const lines = [
+      'Talla,Nombre en prenda,Número,Tipo prenda,Corte,Color',
+      ...rows,
+    ];
+
+    const csvContent = '\uFEFF' + lines.join('\r\n');
+    return {
+      codigo: pedido.codigo,
+      filename: `EXPORT_COREL_${pedido.codigo}.csv`,
+      csvContent,
+      totalFilas: rows.length,
+    };
+  }
+
+  async crearBitacora(pedidoId: string, dto: { descripcionCambio: string; solicitadoPor: string; prendaId?: string }) {
+    const pedido = await this.findOne(pedidoId);
+    return this.prisma.bitacoraModificacion.create({
+      data: {
+        pedidoId: pedido.id,
+        prendaId: dto.prendaId || null,
+        descripcionCambio: dto.descripcionCambio,
+        solicitadoPor: dto.solicitadoPor,
+      },
+      include: {
+        prenda: { select: { id: true, nombreEnPrenda: true, numero: true } },
+        avisadoPor: { select: { id: true, nombre: true } },
+      },
+    });
+  }
+
+  async getBitacoras(pedidoId: string) {
+    const pedido = await this.findOne(pedidoId);
+    return this.prisma.bitacoraModificacion.findMany({
+      where: { pedidoId: pedido.id },
+      include: {
+        prenda: { select: { id: true, nombreEnPrenda: true, numero: true } },
+        avisadoPor: { select: { id: true, nombre: true } },
+      },
+      orderBy: { fechaSolicitud: 'desc' },
+    });
+  }
+
+  async avisarTallerBitacora(pedidoId: string, bitacoraId: string, avisado: boolean, userId?: string) {
+    const pedido = await this.findOne(pedidoId);
+    const bitacora = await this.prisma.bitacoraModificacion.findFirst({
+      where: { id: bitacoraId, pedidoId: pedido.id },
+    });
+    if (!bitacora) throw new NotFoundException('Registro de bitácora no encontrado');
+    return this.prisma.bitacoraModificacion.update({
+      where: { id: bitacoraId },
+      data: {
+        avisadoATaller: avisado,
+        avisadoEn: avisado ? new Date() : null,
+        avisadoPorId: avisado ? (userId ?? null) : null,
+      },
+      include: {
+        prenda: { select: { id: true, nombreEnPrenda: true, numero: true } },
+        avisadoPor: { select: { id: true, nombre: true } },
+      },
+    });
+  }
+
+  async eliminarBitacora(pedidoId: string, bitacoraId: string) {
+    const pedido = await this.findOne(pedidoId);
+    const bitacora = await this.prisma.bitacoraModificacion.findFirst({
+      where: { id: bitacoraId, pedidoId: pedido.id },
+    });
+    if (!bitacora) throw new NotFoundException('Registro de bitácora no encontrado');
+    return this.prisma.bitacoraModificacion.delete({
+      where: { id: bitacoraId },
+    });
+  }
+}

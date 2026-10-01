@@ -20,6 +20,7 @@ export interface DatosEnvioItem {
   agencia?: string | null;
   referencia?: string | null;
   correo?: string | null;
+  codigoRecojo?: string | null;
 }
 
 export interface ResumenProduccionItem {
@@ -126,4 +127,38 @@ export interface EmitirConfirmacionParams {
 export async function getConfirmaciones(pedidoId: string): Promise<ConfirmacionItem[]> {
   return apiGet<ConfirmacionItem[]>(`/api/comercial/pedidos/${encodeURIComponent(pedidoId)}/confirmaciones`).catch(() => []);
 }
+
+export interface PagoItem {
+  id: string;
+  pedidoId: string;
+  monto: number;
+  medio: "YAPE" | "PLIN" | "TRANSFERENCIA" | "EFECTIVO";
+  numeroOperacion?: string | null;
+  comprobanteUrl?: string | null;
+  fechaPago: string;
+  registradoPor?: {
+    id: string;
+    nombre: string;
+    email?: string;
+  } | null;
+  notas?: string | null;
+  creadoEn: string;
+}
+
+export interface ResumenPagos {
+  pagos: PagoItem[];
+  totalPedido: number;
+  totalPagado: number;
+  saldoPendiente: number;
+}
+
+export async function getPagos(pedidoId: string): Promise<ResumenPagos> {
+  return apiGet<ResumenPagos>(`/api/comercial/pedidos/${encodeURIComponent(pedidoId)}/pagos`).catch(() => ({
+    pagos: [],
+    totalPedido: 0,
+    totalPagado: 0,
+    saldoPendiente: 0,
+  }));
+}
+
 

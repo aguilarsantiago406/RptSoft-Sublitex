@@ -10,6 +10,7 @@ import {
 import { PrendasService } from './prendas.service';
 import { CreatePrendaDto } from './dto/create-prenda.dto';
 import { UpdateFichaMinimaDto } from './dto/update-ficha-minima.dto';
+import { CargaMasivaDto } from './dto/carga-masiva.dto';
 
 @ApiTags('Prendas')
 @Controller('api')
@@ -23,6 +24,13 @@ export class PrendasController {
   @ApiOperation({ summary: 'Crea una prenda asignada a un participante' })
   crear(@Body() dto: CreatePrendaDto, @Request() req?: any) {
     return this.service.crear(dto, req?.user);
+  }
+
+  @Post('grupos/:grupoId/prendas/carga-masiva')
+  @Roles(...ROLES_GESTION_LISTA)
+  @ApiOperation({ summary: 'Crea participantes y prendas en lote desde un CSV/Excel parseado (sin necesidad de portal individual)' })
+  cargaMasiva(@Param('grupoId') grupoId: string, @Body() dto: CargaMasivaDto, @Request() req?: any) {
+    return this.service.cargaMasiva(grupoId, dto.filas, req?.user);
   }
 
   @Patch('prendas/:id')

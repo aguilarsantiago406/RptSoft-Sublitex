@@ -8,6 +8,7 @@ import type { ParticipanteConPrendas } from "@/features/pedidos/api/pedidos.api"
 import { actionObtenerEnlacesGrupo } from "../actions/participantes.actions";
 import { ParticipantesTable } from "./ParticipantesTable";
 import { NuevoParticipanteModal } from "./NuevoParticipanteModal";
+import { ModalCargaMasiva } from "./ModalCargaMasiva";
 import styles from "./participantes.module.css";
 
 export interface ItemParticipante {
@@ -35,6 +36,7 @@ export function ParticipantesView({
   const [grupoActivo, setGrupoActivo] = useState<string>("TODOS");
   const [busqueda, setBusqueda] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCargaMasivaOpen, setIsCargaMasivaOpen] = useState(false);
   const [copiando, setCopiando] = useState(false);
   const [copiado, setCopiado] = useState(false);
 
@@ -124,6 +126,16 @@ export function ParticipantesView({
 
             <button
               type="button"
+              className={styles.secondaryAction}
+              onClick={() => setIsCargaMasivaOpen(true)}
+              title="Importar lista completa desde CSV sin esperar el portal individual"
+              style={{ background: "#f0fdf4", color: "#15803d", borderColor: "#bbf7d0" }}
+            >
+              <span>↑ Carga Masiva</span>
+            </button>
+
+            <button
+              type="button"
               className={styles.primaryButton}
               onClick={() => setIsModalOpen(true)}
             >
@@ -182,6 +194,13 @@ export function ParticipantesView({
       <NuevoParticipanteModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        grupos={grupos}
+        pedidoId={pedidoId}
+      />
+
+      <ModalCargaMasiva
+        isOpen={isCargaMasivaOpen}
+        onClose={() => setIsCargaMasivaOpen(false)}
         grupos={grupos}
         pedidoId={pedidoId}
       />

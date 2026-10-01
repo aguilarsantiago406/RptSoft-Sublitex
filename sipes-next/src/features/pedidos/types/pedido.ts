@@ -54,6 +54,10 @@ export interface PedidoDetalle {
     nombre: string;
     codigoHex: string;
     referenciaFisica?: string | null;
+    cmykC?: number | null;
+    cmykM?: number | null;
+    cmykY?: number | null;
+    cmykK?: number | null;
   }>;
   grupos: GrupoPedido[];
 }
@@ -64,6 +68,7 @@ export interface PrendaDetalle {
   grupoId: string;
   tipoProductoId: string;
   tallaId: string | null;
+  tallaShortId?: string | null;
   numero: string | null;
   genero: "HOMBRE" | "MUJER" | "NINO" | "NINA" | "SIN_ESPECIFICAR";
   tipoPrenda: "VENTA" | "OBSEQUIO" | "MUESTRA";
@@ -90,6 +95,11 @@ export interface PrendaDetalle {
     medias: number;
   } | null;
   talla?: {
+    id: string;
+    codigo: string;
+    etiqueta: string;
+  } | null;
+  tallaShort?: {
     id: string;
     codigo: string;
     etiqueta: string;

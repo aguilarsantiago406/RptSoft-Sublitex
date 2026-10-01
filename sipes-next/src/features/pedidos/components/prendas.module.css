@@ -387,3 +387,27 @@
   line-height: 1.3;
 }
 
+.btnExportDiseno {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #0284c7;
+  color: #ffffff !important;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid #0284c7;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btnExportDiseno:hover {
+  background: #0369a1;
+  border-color: #0369a1;
+  transform: translateY(-1px);
+}
+
+

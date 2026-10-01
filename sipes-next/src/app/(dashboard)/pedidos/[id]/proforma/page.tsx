@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getPedido, getParticipantesGrupo, getTallasCatalogo } from "@/features/pedidos/api/pedidos.api";
-import { getTarifasVigentes, getDatosEnvio, getConfirmaciones } from "@/features/pedidos/api/comercial.api";
+import { getTarifasVigentes, getDatosEnvio, getConfirmaciones, getPagos, type ResumenPagos } from "@/features/pedidos/api/comercial.api";
 import { getDisenosPedido } from "@/features/pedidos/api/disenos.api";
 import { ProformaView } from "@/features/pedidos/components/proforma/ProformaView";
 import type { PrendaProformaItem } from "@/features/pedidos/utils/proforma.utils";
@@ -19,6 +19,7 @@ export default async function ProformaPage({ params }: ProformaPageProps) {
   let tarifas = [];
   let datosEnvio = null;
   let confirmaciones = [];
+  let resumenPagos: ResumenPagos = { pagos: [], totalPedido: 0, totalPagado: 0, saldoPendiente: 0 };
   let mockupUrl: string | null = null;
   const prendasConsolidadas: PrendaProformaItem[] = [];
 
@@ -29,6 +30,7 @@ export default async function ProformaPage({ params }: ProformaPageProps) {
       tarifasRes,
       envioRes,
       confirmacionesRes,
+      pagosRes,
       disenosRes,
       tallasCatalogoRes,
       participantesRes,
@@ -36,6 +38,7 @@ export default async function ProformaPage({ params }: ProformaPageProps) {
       getTarifasVigentes(),
       getDatosEnvio(pedido.id),
       getConfirmaciones(pedido.id),
+      getPagos(pedido.id),
       getDisenosPedido(pedido.id).catch(() => []),
       getTallasCatalogo().catch(() => []),
       Promise.allSettled(pedido.grupos.map((g) => getParticipantesGrupo(g.id))),
@@ -44,6 +47,7 @@ export default async function ProformaPage({ params }: ProformaPageProps) {
     tarifas = tarifasRes;
     datosEnvio = envioRes;
     confirmaciones = confirmacionesRes;
+    resumenPagos = pagosRes;
 
     const disenoAprobado = (disenosRes ?? []).find((d) => d.estado === "APROBADO");
     mockupUrl = disenoAprobado?.imagenUrl ?? disenoAprobado?.archivoUrl ?? null;
@@ -115,6 +119,7 @@ export default async function ProformaPage({ params }: ProformaPageProps) {
         tarifas={tarifas}
         datosEnvio={datosEnvio}
         confirmaciones={confirmaciones}
+        resumenPagos={resumenPagos}
         prendas={prendasConsolidadas}
         mockupUrl={mockupUrl}
       />

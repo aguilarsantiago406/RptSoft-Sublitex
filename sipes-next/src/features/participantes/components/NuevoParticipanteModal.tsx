@@ -23,8 +23,6 @@ export function NuevoParticipanteModal({
   const isClient = useIsClient();
   const [nombrePersona, setNombrePersona] = useState("");
   const [grupoId, setGrupoId] = useState(grupos[0]?.id ?? "");
-  const [tipoPrenda, setTipoPrenda] = useState<"VENTA" | "OBSEQUIO" | "MUESTRA">("VENTA");
-  const [esArquero, setEsArquero] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,8 +32,6 @@ export function NuevoParticipanteModal({
 
   function handleResetAndClose() {
     setNombrePersona("");
-    setTipoPrenda("VENTA");
-    setEsArquero(false);
     setError(null);
     onClose();
   }
@@ -50,7 +46,7 @@ export function NuevoParticipanteModal({
       grupoValidoId,
       nombrePersona,
       pedidoId,
-      tipoProductoId ? { tipoProductoId, tipoPrenda, esArquero } : undefined
+      tipoProductoId ? { tipoProductoId, tipoPrenda: "VENTA", esArquero: false } : undefined
     );
     setLoading(false);
     if (!res.ok || !res.participante) {
@@ -106,20 +102,6 @@ export function NuevoParticipanteModal({
                 ))}
               </select>
             )}
-          </div>
-
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel} htmlFor="tipoPrenda">Tipo</label>
-            <select id="tipoPrenda" className={styles.formSelect} value={tipoPrenda} onChange={(e) => setTipoPrenda(e.target.value as "VENTA" | "OBSEQUIO" | "MUESTRA")}>
-              <option value="VENTA">Venta</option>
-              <option value="OBSEQUIO">Obsequio</option>
-              <option value="MUESTRA">Muestra</option>
-            </select>
-          </div>
-
-          <div style={{ margin: "6px 0 14px", display: "flex", alignItems: "center", gap: "8px" }}>
-            <input id="arqCheckNuevo" type="checkbox" checked={esArquero} onChange={(e) => setEsArquero(e.target.checked)} style={{ cursor: "pointer", width: 16, height: 16 }} />
-            <label htmlFor="arqCheckNuevo" style={{ fontSize: "0.85rem", fontWeight: 600, cursor: "pointer" }}>¿Es arquero?</label>
           </div>
 
           {error && <p style={{ color: "#b3261e", fontSize: "0.82rem", fontWeight: 700, margin: "8px 0" }}>{error}</p>}
